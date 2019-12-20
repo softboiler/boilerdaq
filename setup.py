@@ -17,7 +17,7 @@ setup(
     python_requires=">=3.7",
     install_requires=["mcculw", "PyQt5", "pyqtgraph"],
     extras_require={  # pip install -e .[dev]
-        "dev": ["black", "pylint", "rope"]
+        "dev": ["black", "pylint", "rope", "doc8"]
     },
     data_files=[
         ("config", ["config/flux_params.csv", "config/sensors.csv"])

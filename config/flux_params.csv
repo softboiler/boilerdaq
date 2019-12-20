@@ -1,0 +1,4 @@
+name,sensor_at_origin,sensor_at_length,conductivity,length
+Q01,T0,T1,400,0.012065
+Q12,T1,T2,400,0.012065
+Q23,T2,T3,400,0.012065

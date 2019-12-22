@@ -85,8 +85,7 @@ def calibrate_readings(readings):
         calibrated.append(
             Result(
                 reading.source,
-                reading.value * reading.source.scale
-                + reading.source.offset,
+                reading.value * reading.source.scale + reading.source.offset,
             )
         )
     return calibrated
@@ -143,38 +142,70 @@ def daq_loop(
 ):
     while do_plot:
         time_read, readings = read_sensors(sensors, delay)
-        csv_write_results(
-            results_raw_path, raw_fieldnames, time_read, readings
-        )
+        csv_write_results(results_raw_path, raw_fieldnames, time_read, readings)
 
         rand = readings[0].value
 
         readings = calibrate_readings(readings)
         fluxes = get_fluxes(readings, flux_params)
         csv_write_results(
-            results_cal_path,
-            cal_fieldnames,
-            time_read,
-            readings + fluxes,
+            results_cal_path, cal_fieldnames, time_read, readings + fluxes,
         )
 
         plot_cache.append(rand)
 
 
-def plot_loop():
-    global curve, plot_cache
+class Plot:
+    def __init__(
+        self,
+        window_title="window_title",
+        title="title",
+        curve_title="curve_title",
+        line_rgb=(0, 255, 0),
+        line_width=1,
+        legend_offset=(10, 5),
+        y_range=[0, 1],
+        x_label="time",
+        y_label="temperature",
+        plot_cache_length=100,
+        do_plot=True,
+    ):
+        self.do_plot = True
+        self.plot_cache = deque([], maxlen=plot_cache_length)
 
-    curve.setData(plot_cache)
+        self.win = pyqtgraph.GraphicsWindow()
+        self.win.setWindowTitle(window_title)
+        pyqtgraph.setConfigOption("foreground", "w")
+
+        self.plot = self.win.addPlot(title=title)
+        self.line = pyqtgraph.mkPen(line_rgb, width=line_width)
+        self.plot.addLegend(offset=legend_offset)
+
+        self.curve = self.plot.plot(self.plot_cache, pen=self.line, name=curve_title)
+
+        self.plot.setRange(yRange=y_range)
+        self.plot.setLabel("bottom", text=x_label)
+        self.plot.setLabel("left", text=y_label)
+        self.plot.showGrid(x=True, y=False)
+
+    def start(self):
+        plot_thread = pyqtgraph.QtCore.QTimer()
+        plot_thread.timeout.connect(self.plot_loop)
+        plot_thread.start()
+
+        pyqtgraph.Qt.QtGui.QApplication.instance().exec_()
+        self.do_plot = False
+
+    def plot_loop(self):
+        self.curve.setData(self.plot_cache)
 
 
 def main():
-    global curve, plot_cache
 
     sensors_path = "config/sensors.csv"
     flux_params_path = "config/flux_params.csv"
     results_raw_path = "results/results_raw.csv"
     results_cal_path = "results/results_cal.csv"
-    plot_cache_length = 100
     delay = 0.25
 
     # loop setup
@@ -192,17 +223,13 @@ def main():
         results_cal_path, time_read, readings + fluxes
     )
 
-    values = [reading.value for reading in readings]
-    pressure = values[0]
-
-    do_plot = True
-    plot_cache = deque([pressure], maxlen=plot_cache_length)
+    plot = Plot()
 
     # daq loop start in background
     daq_thread = Thread(
         target=daq_loop,
         args=(
-            do_plot,
+            plot.do_plot,
             sensors,
             delay,
             results_raw_path,
@@ -210,36 +237,13 @@ def main():
             flux_params,
             results_cal_path,
             cal_fieldnames,
-            plot_cache,
+            plot.plot_cache,
         ),
     )
     daq_thread.daemon = True
     daq_thread.start()
 
-    # plot loop setup
-    win = pyqtgraph.GraphicsWindow()
-    win.setWindowTitle("")
-    pyqtgraph.setConfigOption("foreground", "w")
-
-    plot = win.addPlot(title="")
-    line = pyqtgraph.mkPen((0, 255, 0), width=1)
-    plot.addLegend(offset=(10, 5))
-
-    curve = plot.plot(plot_cache, pen=line, name="",)
-
-    plot.setRange(yRange=[0, 1])
-    plot.setLabel(
-        "bottom", text="",
-    )
-    plot.showGrid(x=True, y=False)
-
-    # plot loop start
-    plot_thread = pyqtgraph.QtCore.QTimer()
-    plot_thread.timeout.connect(plot_loop)
-    plot_thread.start()
-
-    pyqtgraph.Qt.QtGui.QApplication.instance().exec_()
-    do_plot = False
+    plot.start()
 
 
 if __name__ == "__main__":

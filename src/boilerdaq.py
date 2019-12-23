@@ -8,7 +8,8 @@ from random import random
 import pyqtgraph
 from mcculw.ul import ULError, t_in, t_in_scan, v_in
 
-
+_debug = True
+pyqtgraph.setConfigOptions(antialias=True)
 Result = namedtuple("Result", ["source", "value"])
 
 
@@ -66,13 +67,14 @@ def read_sensors(sensors, delay):
     time_read = strftime("%Y-%m-%d %H:%M:%S", localtime())
     unit_types = {"C": 0, "F": 1, "K": 2, "V": 5}
     for sensor in sensors:
-        if sensor.type == "temperature":
+        if _debug:
+            reading = random()
+        elif sensor.type == "temperature":
             try:
                 unit_int = unit_types[sensor.raw_unit]
                 reading = t_in(sensor.board, sensor.channel, unit_int)
             except ULError:
-                # reading = float("nan")
-                reading = random()
+                reading = float("nan")
         elif sensor.type == "voltage":
             reading = v_in(sensor.board, sensor.channel, 0)
         readings.append(Result(sensor, reading))
@@ -138,66 +140,48 @@ def daq_loop(
     flux_params,
     results_cal_path,
     cal_fieldnames,
-    plot_cache,
+    caches,
 ):
     while do_plot:
         time_read, readings = read_sensors(sensors, delay)
         csv_write_results(results_raw_path, raw_fieldnames, time_read, readings)
 
-        rand = readings[0].value
+        # readings = calibrate_readings(readings)
+        # fluxes = get_fluxes(readings, flux_params)
+        # csv_write_results(
+        #     results_cal_path, cal_fieldnames, time_read, readings + fluxes,
+        # )
 
-        readings = calibrate_readings(readings)
-        fluxes = get_fluxes(readings, flux_params)
-        csv_write_results(
-            results_cal_path, cal_fieldnames, time_read, readings + fluxes,
-        )
-
-        plot_cache.append(rand)
+        for cache, reading in zip(caches, readings):
+            cache.append(reading.value)
 
 
 class Plot:
-    def __init__(
-        self,
-        window_title="window_title",
-        title="title",
-        curve_title="curve_title",
-        line_rgb=(0, 255, 0),
-        line_width=1,
-        legend_offset=(10, 5),
-        y_range=[0, 1],
-        x_label="time",
-        y_label="temperature",
-        plot_cache_length=100,
-        do_plot=True,
-    ):
+    def __init__(self, readings, window=pyqtgraph.GraphicsWindow(), cache_length=100):
         self.do_plot = True
-        self.plot_cache = deque([], maxlen=plot_cache_length)
+        self.window = window
 
-        self.win = pyqtgraph.GraphicsWindow()
-        self.win.setWindowTitle(window_title)
-        pyqtgraph.setConfigOption("foreground", "w")
+        self.caches = []
+        for reading in readings:
+            self.caches.append(deque([reading.value], maxlen=cache_length))
 
-        self.plot = self.win.addPlot(title=title)
-        self.line = pyqtgraph.mkPen(line_rgb, width=line_width)
-        self.plot.addLegend(offset=legend_offset)
+        self.plot = self.window.addPlot()
 
-        self.curve = self.plot.plot(self.plot_cache, pen=self.line, name=curve_title)
-
-        self.plot.setRange(yRange=y_range)
-        self.plot.setLabel("bottom", text=x_label)
-        self.plot.setLabel("left", text=y_label)
-        self.plot.showGrid(x=True, y=False)
+        self.curves = []
+        for cache in self.caches:
+            self.curves.append(self.plot.plot(cache))
 
     def start(self):
-        plot_thread = pyqtgraph.QtCore.QTimer()
-        plot_thread.timeout.connect(self.plot_loop)
-        plot_thread.start()
+        timer = pyqtgraph.QtCore.QTimer()
+        timer.timeout.connect(self.update_plot)
+        timer.start()
 
         pyqtgraph.Qt.QtGui.QApplication.instance().exec_()
         self.do_plot = False
 
-    def plot_loop(self):
-        self.curve.setData(self.plot_cache)
+    def update_plot(self):
+        for curve, cache in zip(self.curves, self.caches):
+            curve.setData(cache)
 
 
 def main():
@@ -217,13 +201,13 @@ def main():
         results_raw_path, time_read, readings
     )
 
+    plot = Plot(readings)
+
     readings = calibrate_readings(readings)
     fluxes = get_fluxes(readings, flux_params)
     results_cal_path, cal_fieldnames = csv_create_results(
         results_cal_path, time_read, readings + fluxes
     )
-
-    plot = Plot()
 
     # daq loop start in background
     daq_thread = Thread(
@@ -237,7 +221,7 @@ def main():
             flux_params,
             results_cal_path,
             cal_fieldnames,
-            plot.plot_cache,
+            plot.caches,
         ),
     )
     daq_thread.daemon = True

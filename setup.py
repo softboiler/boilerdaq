@@ -20,6 +20,6 @@ setup(
     python_requires=">=3.7",
     install_requires=["mcculw", "PyQt5", "pyqtgraph"],
     extras_require={  # pip install -e .[dev]
-        "dev": ["black", "pylint", "rope", "doc8"]
+        "dev": ["black", "pylint", "mypy", "rope", "doc8"]
     }
 )

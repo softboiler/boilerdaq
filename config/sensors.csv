@@ -1,4 +1,4 @@
-name,board,channel,type,raw_unit,scale,offset,cal_unit
+name,board,channel,reading,raw_unit,scale,offset,cal_unit
 T0,0,0,temperature,C,1.030894692,0.265530451,C
 T1,0,1,temperature,C,1.010179388,-0.212470305,C
 T2,0,2,temperature,C,1.010905386,-0.246514276,C

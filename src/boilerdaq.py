@@ -96,11 +96,11 @@ class ScaledParam(NamedTuple):
 
     @classmethod
     def get(cls, path: str) -> List[ScaledParam]:
-        scaled_params = []
+        params = []
         with open(path) as csv_file:
             reader = DictReader(csv_file)
             for row in reader:
-                scaled_params.append(
+                params.append(
                     cls(
                         row["name"],
                         row["unscaled_sensor"],
@@ -109,7 +109,7 @@ class ScaledParam(NamedTuple):
                         str(row["unit"]),
                     )
                 )
-        return scaled_params
+        return params
 
 
 class ScaledResult(Result):
@@ -144,11 +144,11 @@ class FluxParam(NamedTuple):
 
     @classmethod
     def get(cls, path: str) -> List[FluxParam]:
-        flux_params = []
+        params = []
         with open(path) as csv_file:
             reader = DictReader(csv_file)
             for row in reader:
-                flux_params.append(
+                params.append(
                     cls(
                         row["name"],
                         row["origin_sensor"],
@@ -157,7 +157,7 @@ class FluxParam(NamedTuple):
                         float(row["length"]),
                     )
                 )
-        return flux_params
+        return params
 
 
 class Flux(Result):
@@ -197,11 +197,11 @@ class ExtrapParam(NamedTuple):
 
     @classmethod
     def get(cls, path: str) -> List[ExtrapParam]:
-        extrap_params = []
+        params = []
         with open(path) as csv_file:
             reader = DictReader(csv_file)
             for row in reader:
-                extrap_params.append(
+                params.append(
                     cls(
                         row["name"],
                         row["origin_sensor"],
@@ -211,7 +211,7 @@ class ExtrapParam(NamedTuple):
                         row["unit"],
                     )
                 )
-        return extrap_params
+        return params
 
 
 class ExtrapResult(Result):

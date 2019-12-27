@@ -66,6 +66,13 @@ class Result:
     def update(self):
         self.history.append(self.value)
 
+    @staticmethod
+    def get(name: str, results: List[Result]) -> Result:
+        result_names = [result.source.name for result in results]
+        i = result_names.index(name)
+        result = results[i]
+        return result    
+
 
 class Reading(Result):
     unit_types = {"C": 0, "F": 1, "K": 2, "V": 5}
@@ -89,13 +96,6 @@ class Reading(Result):
         elif self.source.reading == "voltage":
             self.value = v_in(self.source.board, self.source.channel, 0)
         super().update()
-
-    @staticmethod
-    def get(name: str, readings: List[Reading]) -> Reading:
-        reading_names = [reading.source.name for reading in readings]
-        i = reading_names.index(name)
-        reading = readings[i]
-        return reading
 
 
 class ScaledReading(Result):

@@ -24,7 +24,7 @@ for sensor in all_sensors:
     all_scaled_readings.append(bd.ScaledResult(reading))
 
 # get flux parameters
-flux_params = bd.FluxParam.get(flux_params_path, all_sensors)
+flux_params = bd.FluxParam.get(flux_params_path)
 # get fluxes
 all_fluxes = []
 for flux_param in flux_params:

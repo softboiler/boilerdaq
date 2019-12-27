@@ -128,7 +128,7 @@ class FluxParam(NamedTuple):
     length: float
 
     @classmethod
-    def get(cls, path: str, sensors: List[Sensor]) -> List[FluxParam]:
+    def get(cls, path: str) -> List[FluxParam]:
         flux_params = []
         with open(path) as csv_file:
             reader = DictReader(csv_file)
@@ -188,12 +188,10 @@ class ExtrapParam(NamedTuple):
                         row["flux"],
                         float(row["conductivity"]),
                         float(row["length"]),
-                        row["unit"]
+                        row["unit"],
                     )
                 )
         return extrap_params
-
-    
 
 
 # class ExtrapResult(Result):

@@ -8,7 +8,7 @@ with open(path.join(here, "README.rst"), encoding="utf-8") as f:
 
 setup(
     name="boilerdaq",
-    version="2019.12.19",
+    version="19.12",
     long_description=long_description,
     url="https://github.com/blakeNaccarato/boilerdaq",
     author="Blake Naccarato",
@@ -20,6 +20,6 @@ setup(
     python_requires=">=3.7",
     install_requires=["mcculw", "PyQt5", "pyqtgraph"],
     extras_require={  # pip install -e .[dev]
-        "dev": ["black", "pylint", "rope", "doc8"]
+        "dev": ["black", "pylint", "mypy", "rope", "doc8"]
     }
 )

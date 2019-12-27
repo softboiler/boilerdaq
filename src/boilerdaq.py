@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from collections import deque, OrderedDict
+from collections import OrderedDict, deque
 from csv import DictReader, DictWriter
 from os.path import isfile, splitext
 from random import random
@@ -16,15 +16,13 @@ DEBUG = True
 HISTORY_LENGTH = 600
 
 
+# Sensor: used to obtain initial readings
 class Sensor(NamedTuple):
     name: str
     board: int
     channel: int
     reading: str
-    raw_unit: str
-    scale: float
-    offset: float
-    cal_unit: str
+    unit: str
 
     @classmethod
     def get(cls, path: str) -> List[Sensor]:
@@ -38,27 +36,13 @@ class Sensor(NamedTuple):
                         int(row["board"]),
                         int(row["channel"]),
                         row["reading"],
-                        row["raw_unit"],
-                        float(row["scale"]),
-                        float(row["offset"]),
-                        row["cal_unit"],
+                        row["unit"],
                     )
                 )
         return sensors
 
 
-class SensorGroup(NamedTuple):
-    name: str
-    sensors: List[Sensor]
-
-    @staticmethod
-    def get(group_name: str, groups: List[SensorGroup]) -> SensorGroup:
-        group_names = [group.name for group in groups]
-        i = group_names.index(group_name)
-        sensor_group = groups[i].sensors
-        return sensor_group
-
-
+# Result: parent of Reading, ScaledResult, Flux, and ExtrapResult
 class Result:
     def __init__(self, history_length: int = HISTORY_LENGTH):
         self.history = deque([], maxlen=history_length)
@@ -75,6 +59,7 @@ class Result:
         return result
 
 
+# Reading: child of Result
 class Reading(Result):
     unit_types = {"C": 0, "F": 1, "K": 2, "V": 5}
 
@@ -90,7 +75,7 @@ class Reading(Result):
             self.value = random()
         elif self.source.reading == "temperature":
             try:
-                unit_int = self.unit_types[self.source.raw_unit]
+                unit_int = self.unit_types[self.source.unit]
                 self.value = t_in(
                     self.source.board, self.source.channel, unit_int
                 )
@@ -101,15 +86,44 @@ class Reading(Result):
         super().update()
 
 
+# ScaledResult: child of Result, built by ScaledParam
+class ScaledParam(NamedTuple):
+    name: str
+    unscaled_sensor: str
+    scale: float
+    offset: float
+    unit: str
+
+    @classmethod
+    def get(cls, path: str) -> List[ScaledParam]:
+        scaled_params = []
+        with open(path) as csv_file:
+            reader = DictReader(csv_file)
+            for row in reader:
+                scaled_params.append(
+                    cls(
+                        row["name"],
+                        row["unscaled_sensor"],
+                        float(row["scale"]),
+                        float(row["offset"]),
+                        str(row["unit"]),
+                    )
+                )
+        return scaled_params
+
+
 class ScaledResult(Result):
     def __init__(
         self,
-        unscaled_result: Result,
+        scaled_param: ScaledParam,
+        results: List[Result],
         history_length: int = HISTORY_LENGTH,
     ):
         super().__init__(history_length)
-        self.source = unscaled_result.source
-        self.unscaled_result = unscaled_result
+        self.source = scaled_param
+        self.unscaled_result = Result.get(
+            scaled_param.unscaled_sensor, results
+        )
         self.update()
 
     def update(self):
@@ -120,10 +134,11 @@ class ScaledResult(Result):
         super().update()
 
 
+# Flux: child of Result, built by FluxParam
 class FluxParam(NamedTuple):
     name: str
-    sensor_at_origin: str
-    sensor_at_length: str
+    origin_sensor: str
+    distant_sensor: str
     conductivity: float
     length: float
 
@@ -136,8 +151,8 @@ class FluxParam(NamedTuple):
                 flux_params.append(
                     cls(
                         row["name"],
-                        row["sensor_at_origin"],
-                        row["sensor_at_length"],
+                        row["origin_sensor"],
+                        row["distant_sensor"],
                         float(row["conductivity"]),
                         float(row["length"]),
                     )
@@ -154,22 +169,27 @@ class Flux(Result):
     ):
         super().__init__(history_length)
         self.source = flux_param
-        self.origin = Reading.get(flux_param.sensor_at_origin, results)
-        self.length = Reading.get(flux_param.sensor_at_length, results)
+        self.origin_result = Result.get(
+            flux_param.origin_sensor, results
+        )
+        self.distant_result = Result.get(
+            flux_param.distant_sensor, results
+        )
         self.update()
 
     def update(self):
         self.value = (
             self.source.conductivity
             / self.source.length
-            * (self.length.value - self.origin.value)
+            * (self.distant_result.value - self.origin_result.value)
         )
         super().update()
 
 
+# ExtrapResult: child of Result, built by ExtrapParam
 class ExtrapParam(NamedTuple):
     name: str
-    sensor_at_origin: str
+    origin_sensor: str
     flux: str
     conductivity: float
     length: float
@@ -184,7 +204,7 @@ class ExtrapParam(NamedTuple):
                 extrap_params.append(
                     cls(
                         row["name"],
-                        row["sensor_at_origin"],
+                        row["origin_sensor"],
                         row["flux"],
                         float(row["conductivity"]),
                         float(row["length"]),
@@ -194,14 +214,33 @@ class ExtrapParam(NamedTuple):
         return extrap_params
 
 
-# class ExtrapResult(Result):
-#     def __init__(
-#         self,
-#         origin_result,
+class ExtrapResult(Result):
+    def __init__(
+        self,
+        extrap_param: ExtrapParam,
+        results: List[Result],
+        history_length: int = HISTORY_LENGTH,
+    ):
+        super().__init__(history_length)
+        self.source = extrap_param
+        self.origin_result = Result.get(
+            extrap_param.origin_sensor, results
+        )
+        self.flux_result = Result.get(extrap_param.flux, results)
 
-#     )
+        self.update()
+
+    def update(self):
+        self.value = (
+            self.origin_result.value
+            * self.flux_result.value
+            * self.source.length
+            / self.source.conductivity
+        )
+        super().update()
 
 
+# grouping, writing, and plotting
 class ResultGroup(OrderedDict):
     def __init__(self, group_dict: OrderedDict, results: List[Result]):
         for key, val in group_dict.items():

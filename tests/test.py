@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 from time import localtime, sleep, strftime
-from typing import List, NamedTuple
+from typing import List, NamedTuple, OrderedDict
 
 import boilerdaq as bd
 
@@ -31,43 +31,28 @@ for flux_param in flux_params:
 
 # start writing
 writer = bd.Writer(raw_results_path, time, all_readings)
-writer.create(results_path, time, all_scaled_readings + all_fluxes)
-for i in range(1000):
+writer.add(results_path, time, all_scaled_readings + all_fluxes)
+for _ in range(10):
     writer.update()
 
 
 # build list of sensor groups, grouped by name
-sensor_groups = [bd.SensorGroup("all", all_sensors)]
-raw_reading_groups = []
-scaled_reading_groups = []
-groups_dict = {
-    "base": [0],
-    "post": [1, 2, 3, 4],
-    "top": [5],
-    "water": [6, 7, 8],
-    "pressure": [9],
-}
-for name, idx in groups_dict.items():
-    sensors = [all_sensors[i] for i in idx]
-    sensor_group = bd.SensorGroup(name, sensors)
-    sensor_groups.append(sensor_group)
+group_dict = OrderedDict(
+    [
+        ("base", "T0"),
+        ("post", "T1 T2 T3 T4"),
+        # ("top", "T5 T6"),
+        ("top", "T5"),
+        ("water", "Tw1 Tw2 Tw3"),
+        ("pressure", "P"),
+        ("flux", "Q12 Q23 Q34"),
+    ]
+)
 
-    raw_reading_group = bd.ResultGroup.get(sensor_group, all_readings)
-    raw_reading_groups.append(raw_reading_group)
-
-    scaled_reading_group = bd.ResultGroup.get(
-        sensor_group, all_scaled_readings
-    )
-    scaled_reading_groups.append(scaled_reading_group)
-
-...
-# [r.update() for r in all_readings]
-# [f.update() for f in all_fluxes]
-
-
-# results_raw_path, raw_fieldnames = bd.csv_create_results(
-#     results_raw_path, time, all_readings
-# )
+group = bd.ResultGroup(group_dict, all_scaled_readings + all_fluxes)
+for key, val in group.items():
+    print(key)
+    print([r.source.name for r in val])
 
 # plot = bd.Plot(readings)
 

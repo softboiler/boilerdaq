@@ -1,18 +1,19 @@
 from __future__ import annotations
 
-from collections import deque
+from collections import deque, OrderedDict
 from csv import DictReader, DictWriter
 from os.path import isfile, splitext
 from random import random
 from threading import Thread
 from time import localtime, sleep, strftime
-from typing import ClassVar, List, NamedTuple, OrderedDict
+from typing import Dict, List, NamedTuple
 
 import pyqtgraph
 from mcculw.ul import ULError, t_in, t_in_scan, v_in
 
 pyqtgraph.setConfigOptions(antialias=True)
-debug = True
+DEBUG = True
+HISTORY_LENGTH = 600
 
 
 class Sensor(NamedTuple):
@@ -59,7 +60,7 @@ class SensorGroup(NamedTuple):
 
 
 class Result:
-    def __init__(self, history_length: int = 600):
+    def __init__(self, history_length: int = HISTORY_LENGTH):
         self.history = deque([], maxlen=history_length)
         self.value = None
 
@@ -71,19 +72,21 @@ class Result:
         result_names = [result.source.name for result in results]
         i = result_names.index(name)
         result = results[i]
-        return result    
+        return result
 
 
 class Reading(Result):
     unit_types = {"C": 0, "F": 1, "K": 2, "V": 5}
 
-    def __init__(self, sensor: Sensor, history_length: int = 600):
+    def __init__(
+        self, sensor: Sensor, history_length: int = HISTORY_LENGTH
+    ):
         super().__init__(history_length)
         self.source = sensor
         self.update()
 
     def update(self):
-        if debug:
+        if DEBUG:
             self.value = random()
         elif self.source.reading == "temperature":
             try:
@@ -99,7 +102,9 @@ class Reading(Result):
 
 
 class ScaledReading(Result):
-    def __init__(self, reading: Reading, history_length: int = 600):
+    def __init__(
+        self, reading: Reading, history_length: int = HISTORY_LENGTH
+    ):
         super().__init__(history_length)
         self.source = reading.source
         self.reading = reading
@@ -110,22 +115,6 @@ class ScaledReading(Result):
             self.reading.value * self.source.scale + self.source.offset
         )
         super().update()
-
-
-class ResultGroup(NamedTuple):
-    name: str
-    readings: List[Reading]
-
-    @classmethod
-    def get(
-        cls, sensor_group: SensorGroup, readings: List[Result],
-    ) -> ResultGroup:
-        sensor_names = [sensor.name for sensor in sensor_group.sensors]
-        readings = [
-            Reading.get(name, readings) for name in sensor_names
-        ]
-        reading_group = cls(sensor_group.name, readings)
-        return reading_group
 
 
 class FluxParam(NamedTuple):
@@ -157,13 +146,13 @@ class Flux(Result):
     def __init__(
         self,
         flux_param: FluxParam,
-        readings: List[Reading],
-        history_length: int = 600,
+        results: List[Result],
+        history_length: int = HISTORY_LENGTH,
     ):
         super().__init__(history_length)
         self.source = flux_param
-        self.origin = Reading.get(flux_param.sensor_at_origin, readings)
-        self.length = Reading.get(flux_param.sensor_at_length, readings)
+        self.origin = Reading.get(flux_param.sensor_at_origin, results)
+        self.length = Reading.get(flux_param.sensor_at_length, results)
         self.update()
 
     def update(self):
@@ -173,6 +162,17 @@ class Flux(Result):
             * (self.length.value - self.origin.value)
         )
         super().update()
+
+
+class ResultGroup(OrderedDict):
+    def __init__(self, group_dict: OrderedDict, results: List[Result]):
+        for key, val in group_dict.items():
+            result_names = val.split()
+            filtered_results = []
+            for name in result_names:
+                result = Result.get(name, results)
+                filtered_results.append(result)
+            self[key] = filtered_results
 
 
 class Writer:
@@ -187,13 +187,13 @@ class Writer:
         self.paths = []
         self.reading_groups = []
         self.fieldname_groups = []
-        if debug:
+        if DEBUG:
             self.delay = 0
         else:
             self.delay = delay
-        self.create(path, start_time, readings)
+        self.add(path, start_time, readings)
 
-    def create(self, path, start_time, readings):
+    def add(self, path, start_time, readings):
         (path, ext) = splitext(path)
         file_time = start_time.replace(" ", "_").replace(":", "-")
         path = path + "_" + file_time + ext

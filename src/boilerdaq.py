@@ -13,7 +13,7 @@ from mcculw.ul import ULError, t_in, t_in_scan, v_in
 
 pyqtgraph.setConfigOptions(antialias=True)
 DEBUG = True
-HISTORY_LENGTH = 600
+HISTORY_LENGTH = 100
 
 
 # Sensor: used to obtain initial readings
@@ -262,7 +262,6 @@ class Writer:
         results: List[Result],
         delay: float = 2,
     ):
-        self.do_write = True
         self.paths = []
         self.result_groups = []
         self.fieldname_groups = []
@@ -312,54 +311,49 @@ class Writer:
                 csv_writer.writerow(to_write)
 
 
-# class Plotter:
-#     def __init__(
-#         self,
+class Plotter:
+    window = pyqtgraph.GraphicsWindow()
 
-#     )
+    def __init__(
+        self, results: List[Result], row: int = 0, col: int = 0
+    ):
+        self.all_results = []
+        self.plots = []
+        self.all_curves = []
+        self.add(results, row, col)
 
-# class Plotter:
-#     def __init__(
-#         self, window=pyqtgraph.GraphicsWindow(), cache_length=100
-#     ):
-#         self.do_plot = True
-#         self.window = window
-#         self.cache_length = cache_length
-#         self.time_series = []
+    def add(self, results: List[Result], row: int, col: int):
+        plot = self.window.addPlot(row, col)
+        histories = [r.history for r in results]
+        for history in histories:
+            self.all_curves.append(plot.plot(history))
+        self.all_results.extend(results)
+        # self.plots.append(plot)
 
-#     def add_time_series(self, readings, row=0, col=0):
-#         data = TimeSeries(
-#             readings, self.window, self.cache_length, row, col
-#         )
-
-#         self.plots.append(plot)
-
-#     def start(self):
-#         timer = pyqtgraph.QtCore.QTimer()
-#         timer.timeout.connect(self.update_plot)
-#         timer.start()
-
-#         pyqtgraph.Qt.QtGui.QApplication.instance().exec_()
-#         self.do_plot = False
+    def update(self):
+        all_histories = [r.history for r in self.all_results]
+        for curve, history in zip(self.all_curves, all_histories):
+            curve.setData(history)
 
 
-# class TimeSeries:
-#     def __init__(self, readings, window, cache_length, row, col):
-#         self.caches = []
-#         for reading in readings:
-#             self.caches.append(
-#                 deque([reading.value], maxlen=cache_length)
-#             )
+class Looper:
+    def __init__(self, writer: Writer, plotter: Plotter):
+        self.writer = writer
+        self.plotter = plotter
 
-#         self.plot = window.addPlot(row, col)
+    def write_loop(self):
+        while self.plot_window_open:
+            self.writer.update()
 
-#         self.curves = []
-#         for cache in self.caches:
-#             self.curves.append(self.plot.plot(cache))
+    def plot_loop(self):
+        self.plotter.update()
 
-#     def update_plot(self):
-#         for curve, cache in zip(self.curves, self.caches):
-#             curve.setData(cache)
-
-#     def write(self):
-#         ...
+    def start(self):
+        self.plot_window_open = True
+        write_thread = Thread(target=self.write_loop)
+        write_thread.start()
+        plot_timer = pyqtgraph.QtCore.QTimer()
+        plot_timer.timeout.connect(self.plot_loop)
+        plot_timer.start()
+        pyqtgraph.Qt.QtGui.QApplication.instance().exec_()
+        self.plot_window_open = False

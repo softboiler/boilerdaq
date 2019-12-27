@@ -3,6 +3,8 @@ from __future__ import annotations
 from time import localtime, sleep, strftime
 from typing import List, NamedTuple, OrderedDict
 
+import pyqtgraph
+
 import boilerdaq as bd
 
 sensors_path = "config/0_sensors.csv"
@@ -50,9 +52,6 @@ results = scaled_results + fluxes + extrap_results
 # start writing
 writer = bd.Writer(readings_path, time, readings)
 writer.add(results_path, time, results)
-for _ in range(10):
-    writer.update()
-
 
 # build list of sensor groups, grouped by name
 group_dict = OrderedDict(
@@ -65,36 +64,15 @@ group_dict = OrderedDict(
         ("flux", "Q12 Q23 Q34"),
     ]
 )
-
 group = bd.ResultGroup(group_dict, results)
-for key, val in group.items():
-    print(key)
-    print([r.source.name for r in val])
 
-# plot = bd.Plot(readings)
+#
+plotter = bd.Plotter(group["base"], 0, 0)
+plotter.add(group["post"], 0, 1)
+plotter.add(group["top"], 0, 2)
+plotter.add(group["water"], 1, 0)
+plotter.add(group["pressure"], 1, 1)
+plotter.add(group["flux"], 1, 2)
 
-# readings = bd.calibrate_readings(readings)
-# all_fluxes = bd.get_fluxes(readings, flux_params)
-# results_cal_path, cal_fieldnames = bd.csv_create_results(
-#     results_cal_path, time_read, readings + all_fluxes
-# )
-
-# # daq loop start in background
-# daq_thread = bd.Thread(
-#     target=daq_loop,
-#     args=(
-#         plot.do_plot,
-#         sensors,
-#         delay,
-#         results_raw_path,
-#         raw_fieldnames,
-#         flux_params,
-#         results_cal_path,
-#         cal_fieldnames,
-#         plot.caches,
-#     ),
-# )
-# daq_thread.daemon = True
-# daq_thread.start()
-
-# plot.start()
+looper = bd.Looper(writer, plotter)
+looper.start()

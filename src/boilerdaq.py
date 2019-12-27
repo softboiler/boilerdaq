@@ -12,6 +12,7 @@ import pyqtgraph
 from mcculw.ul import ULError, t_in, t_in_scan, v_in
 
 pyqtgraph.setConfigOptions(antialias=True)
+debug = True
 
 
 class Sensor(NamedTuple):
@@ -49,41 +50,32 @@ class SensorGroup(NamedTuple):
     name: str
     sensors: List[Sensor]
 
-
-def get_group(group_name: str, groups: List[SensorGroup]):
-    group_names = [group.name for group in groups]
-    i = group_names.index(group_name)
-    return groups[i].sensors
-
-
-def get_reading(name: str, readings: List[Reading]):
-    reading_names = [reading.source.name for reading in readings]
-    i = reading_names.index(name)
-    return readings[i]
+    @staticmethod
+    def get(group_name: str, groups: List[SensorGroup]) -> SensorGroup:
+        group_names = [group.name for group in groups]
+        i = group_names.index(group_name)
+        sensor_group = groups[i].sensors
+        return sensor_group
 
 
-def get_group_readings(
-    group_name: str, groups: List[SensorGroup], readings: List[Reading]
-):
-    sensor_names = [
-        sensor.name for sensor in get_group(group_name, groups)
-    ]
-    group_readings = [
-        get_reading(name, readings) for name in sensor_names
-    ]
-    return group_readings
+class Result:
+    def __init__(self, history_length: int = 600):
+        self.history = deque([], maxlen=history_length)
+
+    def update(self, value):
+        self.history.append(value)
 
 
-class Reading:
-    debug = True
+class Reading(Result):
     unit_types = {"C": 0, "F": 1, "K": 2, "V": 5}
 
-    def __init__(self, sensor: Sensor):
+    def __init__(self, sensor: Sensor, history_length: int = 600):
+        super().__init__(history_length)
         self.source = sensor
         self.update()
 
     def update(self):
-        if self.debug:
+        if debug:
             self.value = random()
         elif self.source.reading == "temperature":
             try:
@@ -95,10 +87,19 @@ class Reading:
                 self.value = float("nan")
         elif self.source.reading == "voltage":
             self.value = v_in(self.source.board, self.source.channel, 0)
+        super().update(self.value)
+
+    @staticmethod
+    def get(name: str, readings: List[Reading]) -> Reading:
+        reading_names = [reading.source.name for reading in readings]
+        i = reading_names.index(name)
+        reading = readings[i]
+        return reading
 
 
-class ScaledReading:
-    def __init__(self, reading: Reading):
+class ScaledReading(Result):
+    def __init__(self, reading: Reading, history_length: int = 600):
+        super().__init__(history_length)
         self.source = reading.source
         self.reading = reading
         self.update()
@@ -107,6 +108,23 @@ class ScaledReading:
         self.value = (
             self.reading.value * self.source.scale + self.source.offset
         )
+        super().update(self.value)
+
+
+class ResultGroup(NamedTuple):
+    name: str
+    readings: List[Reading]
+
+    @classmethod
+    def get(
+        cls, sensor_group: SensorGroup, readings: List[Result],
+    ) -> ResultGroup:
+        sensor_names = [sensor.name for sensor in sensor_group.sensors]
+        readings = [
+            Reading.get(name, readings) for name in sensor_names
+        ]
+        reading_group = cls(sensor_group.name, readings)
+        return reading_group
 
 
 class FluxParam(NamedTuple):
@@ -134,11 +152,17 @@ class FluxParam(NamedTuple):
         return flux_params
 
 
-class Flux:
-    def __init__(self, flux_param: FluxParam, readings: List[Reading]):
+class Flux(Result):
+    def __init__(
+        self,
+        flux_param: FluxParam,
+        readings: List[Reading],
+        history_length: int = 600,
+    ):
+        super().__init__(history_length)
         self.source = flux_param
-        self.origin = get_reading(flux_param.sensor_at_origin, readings)
-        self.length = get_reading(flux_param.sensor_at_length, readings)
+        self.origin = Reading.get(flux_param.sensor_at_origin, readings)
+        self.length = Reading.get(flux_param.sensor_at_length, readings)
         self.update()
 
     def update(self):
@@ -147,15 +171,25 @@ class Flux:
             / self.source.length
             * (self.length.value - self.origin.value)
         )
+        super().update(self.value)
 
 
 class Writer:
-    def __init__(self, path, start_time, readings, delay=0.5):
+    def __init__(
+        self,
+        path: str,
+        start_time: str,
+        readings: List[Reading],
+        delay: float = 2,
+    ):
         self.do_write = True
         self.paths = []
         self.reading_groups = []
         self.fieldname_groups = []
-        self.delay = delay
+        if debug:
+            self.delay = 0
+        else:
+            self.delay = delay
         self.create(path, start_time, readings)
 
     def create(self, path, start_time, readings):
@@ -194,6 +228,12 @@ class Writer:
                 csv_writer = DictWriter(csv_file, fieldnames=fieldnames)
                 csv_writer.writerow(to_write)
 
+
+# class Plotter:
+#     def __init__(
+#         self,
+
+#     )
 
 # class Plotter:
 #     def __init__(

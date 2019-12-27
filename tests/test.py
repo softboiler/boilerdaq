@@ -7,6 +7,7 @@ import boilerdaq as bd
 
 sensors_path = "config/sensors.csv"
 flux_params_path = "config/flux_params.csv"
+extrap_params_path = "config/extrap_params.csv"
 raw_results_path = "results/raw_results.csv"
 results_path = "results/results.csv"
 delay = 0.25
@@ -20,7 +21,7 @@ all_scaled_readings = []
 for sensor in all_sensors:
     reading = bd.Reading(sensor)
     all_readings.append(reading)
-    all_scaled_readings.append(bd.ScaledReading(reading))
+    all_scaled_readings.append(bd.ScaledResult(reading))
 
 # get flux parameters
 flux_params = bd.FluxParam.get(flux_params_path, all_sensors)
@@ -28,6 +29,9 @@ flux_params = bd.FluxParam.get(flux_params_path, all_sensors)
 all_fluxes = []
 for flux_param in flux_params:
     all_fluxes.append(bd.Flux(flux_param, all_scaled_readings))
+
+# get extrapolation parameters
+extrap_params = bd.ExtrapParam.get(extrap_params_path)
 
 # start writing
 writer = bd.Writer(raw_results_path, time, all_readings)

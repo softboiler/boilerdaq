@@ -101,18 +101,21 @@ class Reading(Result):
         super().update()
 
 
-class ScaledReading(Result):
+class ScaledResult(Result):
     def __init__(
-        self, reading: Reading, history_length: int = HISTORY_LENGTH
+        self,
+        unscaled_result: Result,
+        history_length: int = HISTORY_LENGTH,
     ):
         super().__init__(history_length)
-        self.source = reading.source
-        self.reading = reading
+        self.source = unscaled_result.source
+        self.unscaled_result = unscaled_result
         self.update()
 
     def update(self):
         self.value = (
-            self.reading.value * self.source.scale + self.source.offset
+            self.unscaled_result.value * self.source.scale
+            + self.source.offset
         )
         super().update()
 
@@ -162,6 +165,43 @@ class Flux(Result):
             * (self.length.value - self.origin.value)
         )
         super().update()
+
+
+class ExtrapParam(NamedTuple):
+    name: str
+    sensor_at_origin: str
+    flux: str
+    conductivity: float
+    length: float
+    unit: str
+
+    @classmethod
+    def get(cls, path: str) -> List[ExtrapParam]:
+        extrap_params = []
+        with open(path) as csv_file:
+            reader = DictReader(csv_file)
+            for row in reader:
+                extrap_params.append(
+                    cls(
+                        row["name"],
+                        row["sensor_at_origin"],
+                        row["flux"],
+                        float(row["conductivity"]),
+                        float(row["length"]),
+                        row["unit"]
+                    )
+                )
+        return extrap_params
+
+    
+
+
+# class ExtrapResult(Result):
+#     def __init__(
+#         self,
+#         origin_result,
+
+#     )
 
 
 class ResultGroup(OrderedDict):

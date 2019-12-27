@@ -141,6 +141,7 @@ class FluxParam(NamedTuple):
     distant_sensor: str
     conductivity: float
     length: float
+    unit: str
 
     @classmethod
     def get(cls, path: str) -> List[FluxParam]:
@@ -155,6 +156,7 @@ class FluxParam(NamedTuple):
                         row["distant_sensor"],
                         float(row["conductivity"]),
                         float(row["length"]),
+                        row["unit"],
                     )
                 )
         return params
@@ -257,26 +259,29 @@ class Writer:
         self,
         path: str,
         start_time: str,
-        readings: List[Reading],
+        results: List[Result],
         delay: float = 2,
     ):
         self.do_write = True
         self.paths = []
-        self.reading_groups = []
+        self.result_groups = []
         self.fieldname_groups = []
         if DEBUG:
             self.delay = 0
         else:
             self.delay = delay
-        self.add(path, start_time, readings)
+        self.add(path, start_time, results)
 
-    def add(self, path, start_time, readings):
+    def add(self, path, start_time, results):
         (path, ext) = splitext(path)
         file_time = start_time.replace(" ", "_").replace(":", "-")
         path = path + "_" + file_time + ext
 
-        fieldnames = ["time"] + [r.source.name for r in readings]
-        values = [start_time] + [r.value for r in readings]
+        sources = [
+            r.source.name + " (" + r.source.unit + ")" for r in results
+        ]
+        fieldnames = ["time"] + sources
+        values = [start_time] + [r.value for r in results]
         to_write = dict(zip(fieldnames, values))
 
         with open(path, "w", newline="") as csv_file:
@@ -285,21 +290,21 @@ class Writer:
             csv_writer.writerow(to_write)
 
         self.paths.append(path)
-        self.reading_groups.append(readings)
+        self.result_groups.append(results)
         self.fieldname_groups.append(fieldnames)
 
     def update(self):
         self.update_time = strftime("%Y-%m-%d %H:%M:%S", localtime())
-        for readings in self.reading_groups:
+        for results in self.result_groups:
             sleep(self.delay)
-            [r.update() for r in readings]
+            [r.update() for r in results]
         self.write()
 
     def write(self):
-        for path, readings, fieldnames in zip(
-            self.paths, self.reading_groups, self.fieldname_groups
+        for path, results, fieldnames in zip(
+            self.paths, self.result_groups, self.fieldname_groups
         ):
-            values = [self.update_time] + [r.value for r in readings]
+            values = [self.update_time] + [r.value for r in results]
             to_write = dict(zip(fieldnames, values))
 
             with open(path, "a", newline="") as csv_file:

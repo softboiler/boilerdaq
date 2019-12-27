@@ -61,9 +61,10 @@ class SensorGroup(NamedTuple):
 class Result:
     def __init__(self, history_length: int = 600):
         self.history = deque([], maxlen=history_length)
+        self.value = None
 
-    def update(self, value):
-        self.history.append(value)
+    def update(self):
+        self.history.append(self.value)
 
 
 class Reading(Result):
@@ -87,7 +88,7 @@ class Reading(Result):
                 self.value = float("nan")
         elif self.source.reading == "voltage":
             self.value = v_in(self.source.board, self.source.channel, 0)
-        super().update(self.value)
+        super().update()
 
     @staticmethod
     def get(name: str, readings: List[Reading]) -> Reading:
@@ -108,7 +109,7 @@ class ScaledReading(Result):
         self.value = (
             self.reading.value * self.source.scale + self.source.offset
         )
-        super().update(self.value)
+        super().update()
 
 
 class ResultGroup(NamedTuple):
@@ -171,7 +172,7 @@ class Flux(Result):
             / self.source.length
             * (self.length.value - self.origin.value)
         )
-        super().update(self.value)
+        super().update()
 
 
 class Writer:

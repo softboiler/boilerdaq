@@ -14,6 +14,7 @@ from mcculw.ul import ULError, t_in, t_in_scan, v_in
 pyqtgraph.setConfigOptions(antialias=True)
 DEBUG = True
 HISTORY_LENGTH = 100
+DELAY = 2
 
 
 # Sensor: used to obtain initial readings
@@ -260,15 +261,10 @@ class Writer:
         path: str,
         start_time: str,
         results: List[Result],
-        delay: float = 2,
     ):
         self.paths = []
         self.result_groups = []
         self.fieldname_groups = []
-        if DEBUG:
-            self.delay = 0
-        else:
-            self.delay = delay
         self.add(path, start_time, results)
 
     def add(self, path, start_time, results):
@@ -293,9 +289,9 @@ class Writer:
         self.fieldname_groups.append(fieldnames)
 
     def update(self):
+        sleep(DELAY)
         self.update_time = strftime("%Y-%m-%d %H:%M:%S", localtime())
         for results in self.result_groups:
-            sleep(self.delay)
             [r.update() for r in results]
         self.write()
 
@@ -315,25 +311,40 @@ class Plotter:
     window = pyqtgraph.GraphicsWindow()
 
     def __init__(
-        self, results: List[Result], row: int = 0, col: int = 0
+        self,
+        title: str,
+        results: List[Result],
+        row: int = 0,
+        col: int = 0,
     ):
         self.all_results = []
-        self.plots = []
         self.all_curves = []
-        self.add(results, row, col)
+        self.add(title, results, row, col)
 
-    def add(self, results: List[Result], row: int, col: int):
+    def add(
+        self, title: str, results: List[Result], row: int, col: int
+    ):
+        i = 0
         plot = self.window.addPlot(row, col)
+        plot.addLegend()
+        plot.setLabel("left", units=results[0].source.unit)
+        plot.setLabel("bottom", units="s")
+        plot.setTitle(title)
         histories = [r.history for r in results]
-        for history in histories:
-            self.all_curves.append(plot.plot(history))
+        names = [r.source.name for r in results]
+        for history, name in zip(histories, names):
+            x = range(0, len(history)*DELAY, DELAY)
+            self.all_curves.append(
+                plot.plot(x, history, pen=pyqtgraph.intColor(i), name=name)
+            )
+            i += 1
         self.all_results.extend(results)
-        # self.plots.append(plot)
 
     def update(self):
         all_histories = [r.history for r in self.all_results]
         for curve, history in zip(self.all_curves, all_histories):
-            curve.setData(history)
+            x = range(0, len(history)*DELAY, DELAY)
+            curve.setData(x, history)
 
 
 class Looper:

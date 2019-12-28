@@ -66,13 +66,14 @@ group_dict = OrderedDict(
 )
 group = bd.ResultGroup(group_dict, results)
 
-#
-plotter = bd.Plotter(group["base"], 0, 0)
-plotter.add(group["post"], 0, 1)
-plotter.add(group["top"], 0, 2)
-plotter.add(group["water"], 1, 0)
-plotter.add(group["pressure"], 1, 1)
-plotter.add(group["flux"], 1, 2)
+# add groups of curves to different plot regions
+plotter = bd.Plotter("base", group["base"], 0, 0)
+plotter.add("post", group["post"], 0, 1)
+plotter.add("top", group["top"], 0, 2)
+plotter.add("water", group["water"], 1, 0)
+plotter.add("pressure", group["pressure"], 1, 1)
+plotter.add("flux", group["flux"], 1, 2)
 
+# start the write and plot loops
 looper = bd.Looper(writer, plotter)
 looper.start()

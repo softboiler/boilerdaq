@@ -1,29 +1,32 @@
 from __future__ import annotations
 
-from collections import deque
+from collections import OrderedDict, deque
 from csv import DictReader, DictWriter
 from os.path import isfile, splitext
 from random import random
 from threading import Thread
 from time import localtime, sleep, strftime
-from typing import ClassVar, List, NamedTuple, OrderedDict
+from typing import Dict, List, NamedTuple
 
 import pyqtgraph
 from mcculw.ul import ULError, t_in, t_in_scan, v_in
 
 pyqtgraph.setConfigOptions(antialias=True)
-debug = True
+DEBUG = True
+if DEBUG:
+    DELAY = 0.2
+    HISTORY_LENGTH = 100
+else:
+    DELAY = 2
+    HISTORY_LENGTH = 300
 
-
+# Sensor: used to obtain initial readings
 class Sensor(NamedTuple):
     name: str
     board: int
     channel: int
     reading: str
-    raw_unit: str
-    scale: float
-    offset: float
-    cal_unit: str
+    unit: str
 
     @classmethod
     def get(cls, path: str) -> List[Sensor]:
@@ -37,50 +40,48 @@ class Sensor(NamedTuple):
                         int(row["board"]),
                         int(row["channel"]),
                         row["reading"],
-                        row["raw_unit"],
-                        float(row["scale"]),
-                        float(row["offset"]),
-                        row["cal_unit"],
+                        row["unit"],
                     )
                 )
         return sensors
 
 
-class SensorGroup(NamedTuple):
-    name: str
-    sensors: List[Sensor]
-
-    @staticmethod
-    def get(group_name: str, groups: List[SensorGroup]) -> SensorGroup:
-        group_names = [group.name for group in groups]
-        i = group_names.index(group_name)
-        sensor_group = groups[i].sensors
-        return sensor_group
-
-
+# Result: parent of Reading, ScaledResult, Flux, and ExtrapResult
 class Result:
-    def __init__(self, history_length: int = 600):
+    def __init__(self, history_length: int = HISTORY_LENGTH):
         self.history = deque([], maxlen=history_length)
+        for _ in range(history_length):
+            self.history.append(0)
         self.value = None
 
     def update(self):
         self.history.append(self.value)
 
+    @staticmethod
+    def get(name: str, results: List[Result]) -> Result:
+        result_names = [result.source.name for result in results]
+        i = result_names.index(name)
+        result = results[i]
+        return result
 
+
+# Reading: child of Result
 class Reading(Result):
     unit_types = {"C": 0, "F": 1, "K": 2, "V": 5}
 
-    def __init__(self, sensor: Sensor, history_length: int = 600):
+    def __init__(
+        self, sensor: Sensor, history_length: int = HISTORY_LENGTH
+    ):
         super().__init__(history_length)
         self.source = sensor
         self.update()
 
     def update(self):
-        if debug:
+        if DEBUG:
             self.value = random()
         elif self.source.reading == "temperature":
             try:
-                unit_int = self.unit_types[self.source.raw_unit]
+                unit_int = self.unit_types[self.source.unit]
                 self.value = t_in(
                     self.source.board, self.source.channel, unit_int
                 )
@@ -90,116 +91,194 @@ class Reading(Result):
             self.value = v_in(self.source.board, self.source.channel, 0)
         super().update()
 
-    @staticmethod
-    def get(name: str, readings: List[Reading]) -> Reading:
-        reading_names = [reading.source.name for reading in readings]
-        i = reading_names.index(name)
-        reading = readings[i]
-        return reading
+
+# ScaledResult: child of Result, built by ScaledParam
+class ScaledParam(NamedTuple):
+    name: str
+    unscaled_sensor: str
+    scale: float
+    offset: float
+    unit: str
+
+    @classmethod
+    def get(cls, path: str) -> List[ScaledParam]:
+        params = []
+        with open(path) as csv_file:
+            reader = DictReader(csv_file)
+            for row in reader:
+                params.append(
+                    cls(
+                        row["name"],
+                        row["unscaled_sensor"],
+                        float(row["scale"]),
+                        float(row["offset"]),
+                        str(row["unit"]),
+                    )
+                )
+        return params
 
 
-class ScaledReading(Result):
-    def __init__(self, reading: Reading, history_length: int = 600):
+class ScaledResult(Result):
+    def __init__(
+        self,
+        scaled_param: ScaledParam,
+        results: List[Result],
+        history_length: int = HISTORY_LENGTH,
+    ):
         super().__init__(history_length)
-        self.source = reading.source
-        self.reading = reading
+        self.source = scaled_param
+        self.unscaled_result = Result.get(
+            scaled_param.unscaled_sensor, results
+        )
         self.update()
 
     def update(self):
         self.value = (
-            self.reading.value * self.source.scale + self.source.offset
+            self.unscaled_result.value * self.source.scale
+            + self.source.offset
         )
         super().update()
 
 
-class ResultGroup(NamedTuple):
-    name: str
-    readings: List[Reading]
-
-    @classmethod
-    def get(
-        cls, sensor_group: SensorGroup, readings: List[Result],
-    ) -> ResultGroup:
-        sensor_names = [sensor.name for sensor in sensor_group.sensors]
-        readings = [
-            Reading.get(name, readings) for name in sensor_names
-        ]
-        reading_group = cls(sensor_group.name, readings)
-        return reading_group
-
-
+# Flux: child of Result, built by FluxParam
 class FluxParam(NamedTuple):
     name: str
-    sensor_at_origin: str
-    sensor_at_length: str
+    origin_sensor: str
+    distant_sensor: str
     conductivity: float
     length: float
+    unit: str
 
     @classmethod
-    def get(cls, path: str, sensors: List[Sensor]) -> List[FluxParam]:
-        flux_params = []
+    def get(cls, path: str) -> List[FluxParam]:
+        params = []
         with open(path) as csv_file:
             reader = DictReader(csv_file)
             for row in reader:
-                flux_params.append(
+                params.append(
                     cls(
                         row["name"],
-                        row["sensor_at_origin"],
-                        row["sensor_at_length"],
+                        row["origin_sensor"],
+                        row["distant_sensor"],
                         float(row["conductivity"]),
                         float(row["length"]),
+                        row["unit"],
                     )
                 )
-        return flux_params
+        return params
 
 
 class Flux(Result):
     def __init__(
         self,
         flux_param: FluxParam,
-        readings: List[Reading],
-        history_length: int = 600,
+        results: List[Result],
+        history_length: int = HISTORY_LENGTH,
     ):
         super().__init__(history_length)
         self.source = flux_param
-        self.origin = Reading.get(flux_param.sensor_at_origin, readings)
-        self.length = Reading.get(flux_param.sensor_at_length, readings)
+        self.origin_result = Result.get(
+            flux_param.origin_sensor, results
+        )
+        self.distant_result = Result.get(
+            flux_param.distant_sensor, results
+        )
         self.update()
 
     def update(self):
         self.value = (
             self.source.conductivity
             / self.source.length
-            * (self.length.value - self.origin.value)
+            * (self.distant_result.value - self.origin_result.value)
         )
         super().update()
 
 
-class Writer:
+# ExtrapResult: child of Result, built by ExtrapParam
+class ExtrapParam(NamedTuple):
+    name: str
+    origin_sensor: str
+    flux: str
+    conductivity: float
+    length: float
+    unit: str
+
+    @classmethod
+    def get(cls, path: str) -> List[ExtrapParam]:
+        params = []
+        with open(path) as csv_file:
+            reader = DictReader(csv_file)
+            for row in reader:
+                params.append(
+                    cls(
+                        row["name"],
+                        row["origin_sensor"],
+                        row["flux"],
+                        float(row["conductivity"]),
+                        float(row["length"]),
+                        row["unit"],
+                    )
+                )
+        return params
+
+
+class ExtrapResult(Result):
     def __init__(
         self,
-        path: str,
-        start_time: str,
-        readings: List[Reading],
-        delay: float = 2,
+        extrap_param: ExtrapParam,
+        results: List[Result],
+        history_length: int = HISTORY_LENGTH,
     ):
-        self.do_write = True
-        self.paths = []
-        self.reading_groups = []
-        self.fieldname_groups = []
-        if debug:
-            self.delay = 0
-        else:
-            self.delay = delay
-        self.create(path, start_time, readings)
+        super().__init__(history_length)
+        self.source = extrap_param
+        self.origin_result = Result.get(
+            extrap_param.origin_sensor, results
+        )
+        self.flux_result = Result.get(extrap_param.flux, results)
 
-    def create(self, path, start_time, readings):
+        self.update()
+
+    def update(self):
+        self.value = (
+            self.origin_result.value
+            * self.flux_result.value
+            * self.source.length
+            / self.source.conductivity
+        )
+        super().update()
+
+
+# grouping, writing, and plotting
+class ResultGroup(OrderedDict):
+    def __init__(self, group_dict: OrderedDict, results: List[Result]):
+        for key, val in group_dict.items():
+            result_names = val.split()
+            filtered_results = []
+            for name in result_names:
+                result = Result.get(name, results)
+                filtered_results.append(result)
+            self[key] = filtered_results
+
+
+class Writer:
+    def __init__(
+        self, path: str, start_time: str, results: List[Result],
+    ):
+        self.paths = []
+        self.result_groups = []
+        self.fieldname_groups = []
+        self.add(path, start_time, results)
+
+    def add(self, path, start_time, results):
         (path, ext) = splitext(path)
         file_time = start_time.replace(" ", "_").replace(":", "-")
         path = path + "_" + file_time + ext
 
-        fieldnames = ["time"] + [r.source.name for r in readings]
-        values = [start_time] + [r.value for r in readings]
+        sources = [
+            r.source.name + " (" + r.source.unit + ")" for r in results
+        ]
+        fieldnames = ["time"] + sources
+        values = [start_time] + [r.value for r in results]
         to_write = dict(zip(fieldnames, values))
 
         with open(path, "w", newline="") as csv_file:
@@ -208,21 +287,21 @@ class Writer:
             csv_writer.writerow(to_write)
 
         self.paths.append(path)
-        self.reading_groups.append(readings)
+        self.result_groups.append(results)
         self.fieldname_groups.append(fieldnames)
 
     def update(self):
+        sleep(DELAY)
         self.update_time = strftime("%Y-%m-%d %H:%M:%S", localtime())
-        for readings in self.reading_groups:
-            sleep(self.delay)
-            [r.update() for r in readings]
+        for results in self.result_groups:
+            [r.update() for r in results]
         self.write()
 
     def write(self):
-        for path, readings, fieldnames in zip(
-            self.paths, self.reading_groups, self.fieldname_groups
+        for path, results, fieldnames in zip(
+            self.paths, self.result_groups, self.fieldname_groups
         ):
-            values = [self.update_time] + [r.value for r in readings]
+            values = [self.update_time] + [r.value for r in results]
             to_write = dict(zip(fieldnames, values))
 
             with open(path, "a", newline="") as csv_file:
@@ -230,54 +309,68 @@ class Writer:
                 csv_writer.writerow(to_write)
 
 
-# class Plotter:
-#     def __init__(
-#         self,
+class Plotter:
+    window = pyqtgraph.GraphicsWindow()
 
-#     )
+    def __init__(
+        self,
+        title: str,
+        results: List[Result],
+        row: int = 0,
+        col: int = 0,
+    ):
+        self.all_results = []
+        self.all_curves = []
+        self.time = []
+        for i in range(0,HISTORY_LENGTH):
+            self.time.append(-i*DELAY)
+        self.time.reverse()
+        self.add(title, results, row, col)
 
-# class Plotter:
-#     def __init__(
-#         self, window=pyqtgraph.GraphicsWindow(), cache_length=100
-#     ):
-#         self.do_plot = True
-#         self.window = window
-#         self.cache_length = cache_length
-#         self.time_series = []
+    def add(
+        self, title: str, results: List[Result], row: int, col: int
+    ):
+        i = 0
+        plot = self.window.addPlot(row, col)
+        plot.addLegend()
+        plot.setLabel("left", units=results[0].source.unit)
+        plot.setLabel("bottom", units="s")
+        plot.setTitle(title)
+        histories = [r.history for r in results]
+        names = [r.source.name for r in results]
+        for history, name in zip(histories, names):
+            self.all_curves.append(
+                plot.plot(
+                    self.time, history, pen=pyqtgraph.intColor(i), name=name
+                )
+            )
+            i += 1
+        self.all_results.extend(results)
 
-#     def add_time_series(self, readings, row=0, col=0):
-#         data = TimeSeries(
-#             readings, self.window, self.cache_length, row, col
-#         )
-
-#         self.plots.append(plot)
-
-#     def start(self):
-#         timer = pyqtgraph.QtCore.QTimer()
-#         timer.timeout.connect(self.update_plot)
-#         timer.start()
-
-#         pyqtgraph.Qt.QtGui.QApplication.instance().exec_()
-#         self.do_plot = False
+    def update(self):
+        all_histories = [r.history for r in self.all_results]
+        for curve, history in zip(self.all_curves, all_histories):
+            curve.setData(self.time, history)
 
 
-# class TimeSeries:
-#     def __init__(self, readings, window, cache_length, row, col):
-#         self.caches = []
-#         for reading in readings:
-#             self.caches.append(
-#                 deque([reading.value], maxlen=cache_length)
-#             )
+class Looper:
+    def __init__(self, writer: Writer, plotter: Plotter):
+        self.writer = writer
+        self.plotter = plotter
 
-#         self.plot = window.addPlot(row, col)
+    def write_loop(self):
+        while self.plot_window_open:
+            self.writer.update()
 
-#         self.curves = []
-#         for cache in self.caches:
-#             self.curves.append(self.plot.plot(cache))
+    def plot_loop(self):
+        self.plotter.update()
 
-#     def update_plot(self):
-#         for curve, cache in zip(self.curves, self.caches):
-#             curve.setData(cache)
-
-#     def write(self):
-#         ...
+    def start(self):
+        self.plot_window_open = True
+        write_thread = Thread(target=self.write_loop)
+        write_thread.start()
+        plot_timer = pyqtgraph.QtCore.QTimer()
+        plot_timer.timeout.connect(self.plot_loop)
+        plot_timer.start()
+        pyqtgraph.Qt.QtGui.QApplication.instance().exec_()
+        self.plot_window_open = False

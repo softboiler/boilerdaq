@@ -1,98 +1,79 @@
 from __future__ import annotations
 
 from time import localtime, sleep, strftime
-from typing import List, NamedTuple
+from typing import List, NamedTuple, OrderedDict
+
+import pyqtgraph
 
 import boilerdaq as bd
 
-sensors_path = "config/sensors.csv"
-flux_params_path = "config/flux_params.csv"
-raw_results_path = "results/raw_results.csv"
+sensors_path = "config/0_sensors.csv"
+scaled_params_path = "config/1_scaled_params.csv"
+flux_params_path = "config/2_flux_params.csv"
+extrap_params_path = "config/3_extrap_params.csv"
+readings_path = "results/readings.csv"
 results_path = "results/results.csv"
-delay = 0.25
-
 
 # get all readings
 all_sensors = bd.Sensor.get(sensors_path)
 time = strftime("%Y-%m-%d %H:%M:%S", localtime())
-all_readings = []
-all_scaled_readings = []
+readings = []
 for sensor in all_sensors:
     reading = bd.Reading(sensor)
-    all_readings.append(reading)
-    all_scaled_readings.append(bd.ScaledReading(reading))
+    readings.append(reading)
+
+# get scaled parameters
+scaled_params = bd.ScaledParam.get(scaled_params_path)
+# get scaled results
+scaled_results = []
+for param in scaled_params:
+    result = bd.ScaledResult(param, readings)
+    scaled_results.append(result)
 
 # get flux parameters
-flux_params = bd.FluxParam.get(flux_params_path, all_sensors)
+flux_params = bd.FluxParam.get(flux_params_path)
 # get fluxes
-all_fluxes = []
-for flux_param in flux_params:
-    all_fluxes.append(bd.Flux(flux_param, all_scaled_readings))
+fluxes = []
+for param in flux_params:
+    result = bd.Flux(param, scaled_results)
+    fluxes.append(result)
+
+# get extrapolation parameters
+extrap_params = bd.ExtrapParam.get(extrap_params_path)
+# get extrapolated results
+extrap_results = []
+for param in extrap_params:
+    result = bd.ExtrapResult(param, scaled_results + fluxes)
+    extrap_results.append(result)
+
+# combine calculated results into one list
+results = scaled_results + fluxes + extrap_results
 
 # start writing
-writer = bd.Writer(raw_results_path, time, all_readings)
-writer.create(results_path, time, all_scaled_readings + all_fluxes)
-for i in range(1000):
-    writer.update()
-
+writer = bd.Writer(readings_path, time, readings)
+writer.add(results_path, time, results)
 
 # build list of sensor groups, grouped by name
-sensor_groups = [bd.SensorGroup("all", all_sensors)]
-raw_reading_groups = []
-scaled_reading_groups = []
-groups_dict = {
-    "base": [0],
-    "post": [1, 2, 3, 4],
-    "top": [5],
-    "water": [6, 7, 8],
-    "pressure": [9],
-}
-for name, idx in groups_dict.items():
-    sensors = [all_sensors[i] for i in idx]
-    sensor_group = bd.SensorGroup(name, sensors)
-    sensor_groups.append(sensor_group)
+group_dict = OrderedDict(
+    [
+        ("base", "T0cal"),
+        ("post", "T1cal T2cal T3cal T4cal"),
+        ("top", "T5cal T6ext"),
+        ("water", "Tw1cal Tw2cal Tw3cal"),
+        ("pressure", "Pcal"),
+        ("flux", "Q12 Q23 Q34"),
+    ]
+)
+group = bd.ResultGroup(group_dict, results)
 
-    raw_reading_group = bd.ResultGroup.get(sensor_group, all_readings)
-    raw_reading_groups.append(raw_reading_group)
+# add groups of curves to different plot regions
+plotter = bd.Plotter("base", group["base"], 0, 0)
+plotter.add("post", group["post"], 0, 1)
+plotter.add("top", group["top"], 0, 2)
+plotter.add("water", group["water"], 1, 0)
+plotter.add("pressure", group["pressure"], 1, 1)
+plotter.add("flux", group["flux"], 1, 2)
 
-    scaled_reading_group = bd.ResultGroup.get(
-        sensor_group, all_scaled_readings
-    )
-    scaled_reading_groups.append(scaled_reading_group)
-
-...
-# [r.update() for r in all_readings]
-# [f.update() for f in all_fluxes]
-
-
-# results_raw_path, raw_fieldnames = bd.csv_create_results(
-#     results_raw_path, time, all_readings
-# )
-
-# plot = bd.Plot(readings)
-
-# readings = bd.calibrate_readings(readings)
-# all_fluxes = bd.get_fluxes(readings, flux_params)
-# results_cal_path, cal_fieldnames = bd.csv_create_results(
-#     results_cal_path, time_read, readings + all_fluxes
-# )
-
-# # daq loop start in background
-# daq_thread = bd.Thread(
-#     target=daq_loop,
-#     args=(
-#         plot.do_plot,
-#         sensors,
-#         delay,
-#         results_raw_path,
-#         raw_fieldnames,
-#         flux_params,
-#         results_cal_path,
-#         cal_fieldnames,
-#         plot.caches,
-#     ),
-# )
-# daq_thread.daemon = True
-# daq_thread.start()
-
-# plot.start()
+# start the write and plot loops
+looper = bd.Looper(writer, plotter)
+looper.start()

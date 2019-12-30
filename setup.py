@@ -8,7 +8,7 @@ with open(path.join(here, "README.rst"), encoding="utf-8") as f:
 
 setup(
     name="boilerdaq",
-    version="0.1",
+    version="0.2",
     long_description=long_description,
     url="https://github.com/blakeNaccarato/boilerdaq",
     author="Blake Naccarato",

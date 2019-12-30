@@ -257,10 +257,7 @@ class ResultGroup(OrderedDict):
 
 class Writer:
     def __init__(
-        self,
-        path: str,
-        start_time: str,
-        results: List[Result],
+        self, path: str, start_time: str, results: List[Result],
     ):
         self.paths = []
         self.result_groups = []

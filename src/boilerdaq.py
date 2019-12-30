@@ -13,9 +13,12 @@ from mcculw.ul import ULError, t_in, t_in_scan, v_in
 
 pyqtgraph.setConfigOptions(antialias=True)
 DEBUG = True
-HISTORY_LENGTH = 100
-DELAY = 2
-
+if DEBUG:
+    DELAY = 0.2
+    HISTORY_LENGTH = 100
+else:
+    DELAY = 2
+    HISTORY_LENGTH = 300
 
 # Sensor: used to obtain initial readings
 class Sensor(NamedTuple):

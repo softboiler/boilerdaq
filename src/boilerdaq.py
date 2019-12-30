@@ -47,6 +47,8 @@ class Sensor(NamedTuple):
 class Result:
     def __init__(self, history_length: int = HISTORY_LENGTH):
         self.history = deque([], maxlen=history_length)
+        for _ in range(history_length):
+            self.history.append(0)
         self.value = None
 
     def update(self):

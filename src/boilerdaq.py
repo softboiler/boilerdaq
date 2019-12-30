@@ -319,6 +319,10 @@ class Plotter:
     ):
         self.all_results = []
         self.all_curves = []
+        self.time = []
+        for i in range(0,HISTORY_LENGTH):
+            self.time.append(-i*DELAY)
+        self.time.reverse()
         self.add(title, results, row, col)
 
     def add(
@@ -333,9 +337,10 @@ class Plotter:
         histories = [r.history for r in results]
         names = [r.source.name for r in results]
         for history, name in zip(histories, names):
-            x = range(0, len(history)*DELAY, DELAY)
             self.all_curves.append(
-                plot.plot(x, history, pen=pyqtgraph.intColor(i), name=name)
+                plot.plot(
+                    self.time, history, pen=pyqtgraph.intColor(i), name=name
+                )
             )
             i += 1
         self.all_results.extend(results)
@@ -343,8 +348,7 @@ class Plotter:
     def update(self):
         all_histories = [r.history for r in self.all_results]
         for curve, history in zip(self.all_curves, all_histories):
-            x = range(0, len(history)*DELAY, DELAY)
-            curve.setData(x, history)
+            curve.setData(self.time, history)
 
 
 class Looper:

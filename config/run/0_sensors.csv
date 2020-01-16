@@ -1,0 +1,11 @@
+name,board,channel,reading,unit
+T0,0,0,temperature,C
+T1,0,1,temperature,C
+T2,0,2,temperature,C
+T3,0,3,temperature,C
+T4,1,0,temperature,C
+T5,1,1,temperature,C
+Tw1,1,2,temperature,C
+Tw2,1,3,temperature,C
+Tw3,2,0,temperature,C
+P,0,0,voltage,V

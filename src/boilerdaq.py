@@ -12,7 +12,7 @@ import pyqtgraph
 from mcculw.ul import ULError, t_in, t_in_scan, v_in
 
 pyqtgraph.setConfigOptions(antialias=True)
-DEBUG = True
+DEBUG = False
 if DEBUG:
     DELAY = 0.2
     HISTORY_LENGTH = 100

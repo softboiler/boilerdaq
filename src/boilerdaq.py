@@ -17,7 +17,7 @@ if DEBUG:
     DELAY = 0.2
     HISTORY_LENGTH = 100
 else:
-    DELAY = 2
+    DELAY = 0.5
     HISTORY_LENGTH = 300
 
 # Sensor: used to obtain initial readings

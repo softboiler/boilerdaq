@@ -69,9 +69,7 @@ class Result:
 class Reading(Result):
     unit_types = {"C": 0, "F": 1, "K": 2, "V": 5}
 
-    def __init__(
-        self, sensor: Sensor, history_length: int = HISTORY_LENGTH
-    ):
+    def __init__(self, sensor: Sensor, history_length: int = HISTORY_LENGTH):
         super().__init__(history_length)
         self.source = sensor
         self.update()
@@ -127,15 +125,12 @@ class ScaledResult(Result):
     ):
         super().__init__(history_length)
         self.source = scaled_param
-        self.unscaled_result = Result.get(
-            scaled_param.unscaled_sensor, results
-        )
+        self.unscaled_result = Result.get(scaled_param.unscaled_sensor, results)
         self.update()
 
     def update(self):
         self.value = (
-            self.unscaled_result.value * self.source.scale
-            + self.source.offset
+            self.unscaled_result.value * self.source.scale + self.source.offset
         )
         super().update()
 
@@ -177,12 +172,8 @@ class Flux(Result):
     ):
         super().__init__(history_length)
         self.source = flux_param
-        self.origin_result = Result.get(
-            flux_param.origin_sensor, results
-        )
-        self.distant_result = Result.get(
-            flux_param.distant_sensor, results
-        )
+        self.origin_result = Result.get(flux_param.origin_sensor, results)
+        self.distant_result = Result.get(flux_param.distant_sensor, results)
         self.update()
 
     def update(self):
@@ -231,9 +222,7 @@ class ExtrapResult(Result):
     ):
         super().__init__(history_length)
         self.source = extrap_param
-        self.origin_result = Result.get(
-            extrap_param.origin_sensor, results
-        )
+        self.origin_result = Result.get(extrap_param.origin_sensor, results)
         self.flux_result = Result.get(extrap_param.flux, results)
 
         self.update()
@@ -274,9 +263,7 @@ class Writer:
         file_time = start_time.replace(" ", "_").replace(":", "-")
         path = path + "_" + file_time + ext
 
-        sources = [
-            r.source.name + " (" + r.source.unit + ")" for r in results
-        ]
+        sources = [r.source.name + " (" + r.source.unit + ")" for r in results]
         fieldnames = ["time"] + sources
         values = [start_time] + [r.value for r in results]
         to_write = dict(zip(fieldnames, values))
@@ -313,23 +300,17 @@ class Plotter:
     window = pyqtgraph.GraphicsWindow()
 
     def __init__(
-        self,
-        title: str,
-        results: List[Result],
-        row: int = 0,
-        col: int = 0,
+        self, title: str, results: List[Result], row: int = 0, col: int = 0,
     ):
         self.all_results = []
         self.all_curves = []
         self.time = []
-        for i in range(0,HISTORY_LENGTH):
-            self.time.append(-i*DELAY)
+        for i in range(0, HISTORY_LENGTH):
+            self.time.append(-i * DELAY)
         self.time.reverse()
         self.add(title, results, row, col)
 
-    def add(
-        self, title: str, results: List[Result], row: int, col: int
-    ):
+    def add(self, title: str, results: List[Result], row: int, col: int):
         i = 0
         plot = self.window.addPlot(row, col)
         plot.addLegend()

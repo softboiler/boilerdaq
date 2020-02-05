@@ -228,9 +228,8 @@ class ExtrapResult(Result):
         self.update()
 
     def update(self):
-        self.value = (
-            self.origin_result.value
-            * self.flux_result.value
+        self.value = self.origin_result.value + (
+            self.flux_result.value
             * self.source.length
             / self.source.conductivity
         )

@@ -180,7 +180,7 @@ class Flux(Result):
         self.value = (
             self.source.conductivity
             / self.source.length
-            * (self.distant_result.value - self.origin_result.value)
+            * (self.origin_result.value - self.distant_result.value)
         )
         super().update()
 
@@ -228,7 +228,7 @@ class ExtrapResult(Result):
         self.update()
 
     def update(self):
-        self.value = self.origin_result.value + (
+        self.value = self.origin_result.value - (
             self.flux_result.value
             * self.source.length
             / self.source.conductivity

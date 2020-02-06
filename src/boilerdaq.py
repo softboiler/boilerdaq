@@ -4,6 +4,7 @@ from collections import OrderedDict, deque
 from csv import DictReader, DictWriter
 from os.path import isfile, splitext
 from random import random
+from statistics import mean
 from threading import Thread
 from time import localtime, sleep, strftime
 from typing import Dict, List, NamedTuple
@@ -17,8 +18,9 @@ if DEBUG:
     DELAY = 0.2
     HISTORY_LENGTH = 100
 else:
-    DELAY = 0.5
+    DELAY = 2
     HISTORY_LENGTH = 300
+SUBHIST_LENGTH = int(0.1 * HISTORY_LENGTH)
 
 # Sensor: used to obtain initial readings
 class Sensor(NamedTuple):
@@ -48,14 +50,23 @@ class Sensor(NamedTuple):
 
 # Result: parent of Reading, ScaledResult, Flux, and ExtrapResult
 class Result:
-    def __init__(self, history_length: int = HISTORY_LENGTH):
-        self.history = deque([], maxlen=history_length)
-        for _ in range(history_length):
+    def __init__(self):
+        self.history = deque([], maxlen=HISTORY_LENGTH)
+        for _ in range(HISTORY_LENGTH):
             self.history.append(0)
+        self._subhist_new = deque([], maxlen=SUBHIST_LENGTH)
+        self._subhist_old = deque([], maxlen=SUBHIST_LENGTH)
+        for _ in range(SUBHIST_LENGTH):
+            self._subhist_new.append(0)
+            self._subhist_old.append(0)
         self.value = None
 
     def update(self):
         self.history.append(self.value)
+        self._subhist_old.append(self.history[0])
+        self._subhist_new.append(self.value)
+        self.avg_old = mean(self._subhist_old)
+        self.avg_new = mean(self._subhist_new)
 
     @staticmethod
     def get(name: str, results: List[Result]) -> Result:
@@ -70,7 +81,7 @@ class Reading(Result):
     unit_types = {"C": 0, "F": 1, "K": 2, "V": 5}
 
     def __init__(self, sensor: Sensor, history_length: int = HISTORY_LENGTH):
-        super().__init__(history_length)
+        super().__init__()
         self.source = sensor
         self.update()
 
@@ -123,7 +134,7 @@ class ScaledResult(Result):
         results: List[Result],
         history_length: int = HISTORY_LENGTH,
     ):
-        super().__init__(history_length)
+        super().__init__()
         self.source = scaled_param
         self.unscaled_result = Result.get(scaled_param.unscaled_sensor, results)
         self.update()
@@ -170,7 +181,7 @@ class Flux(Result):
         results: List[Result],
         history_length: int = HISTORY_LENGTH,
     ):
-        super().__init__(history_length)
+        super().__init__()
         self.source = flux_param
         self.origin_result = Result.get(flux_param.origin_sensor, results)
         self.distant_result = Result.get(flux_param.distant_sensor, results)
@@ -220,7 +231,7 @@ class ExtrapResult(Result):
         results: List[Result],
         history_length: int = HISTORY_LENGTH,
     ):
-        super().__init__(history_length)
+        super().__init__()
         self.source = extrap_param
         self.origin_result = Result.get(extrap_param.origin_sensor, results)
         self.flux_result = Result.get(extrap_param.flux, results)
@@ -301,8 +312,11 @@ class Plotter:
     def __init__(
         self, title: str, results: List[Result], row: int = 0, col: int = 0,
     ):
+        self.all_plots = []
         self.all_results = []
         self.all_curves = []
+        self.all_labels = []
+        self.all_sigs = []
         self.time = []
         for i in range(0, HISTORY_LENGTH):
             self.time.append(-i * DELAY)
@@ -312,24 +326,46 @@ class Plotter:
     def add(self, title: str, results: List[Result], row: int, col: int):
         i = 0
         plot = self.window.addPlot(row, col)
-        plot.addLegend()
+        legend = plot.addLegend()
         plot.setLabel("left", units=results[0].source.unit)
         plot.setLabel("bottom", units="s")
         plot.setTitle(title)
         histories = [r.history for r in results]
         names = [r.source.name for r in results]
-        for history, name in zip(histories, names):
-            self.all_curves.append(
-                plot.plot(
-                    self.time, history, pen=pyqtgraph.intColor(i), name=name
-                )
+        avg_olds = [r.avg_old for r in results]
+        avg_news = [r.avg_new for r in results]
+        for history, name, avg_old, avg_new in zip(
+            histories, names, avg_olds, avg_news
+        ):
+            curve = plot.plot(
+                self.time, history, pen=pyqtgraph.intColor(i), name=name
             )
+            self.all_curves.append(curve)
+
+            label = legend.items[-1][-1]
+            sig = label.text
+            diff = " (diff: " + str(avg_new - avg_old)[0:7] + ")"
+            label.setText(sig + diff)
+            self.all_labels.append(label)
+            self.all_sigs.append(sig)
             i += 1
+        self.all_plots.append(plot)
         self.all_results.extend(results)
 
     def update(self):
+        avg_olds = [r.avg_old for r in self.all_results]
+        avg_news = [r.avg_new for r in self.all_results]
         all_histories = [r.history for r in self.all_results]
-        for curve, history in zip(self.all_curves, all_histories):
+        for label, sig, curve, avg_new, avg_old, history in zip(
+            self.all_labels,
+            self.all_sigs,
+            self.all_curves,
+            avg_olds,
+            avg_news,
+            all_histories,
+        ):
+            diff = " (diff: " + str(avg_new - avg_old)[0:7] + ")"
+            label.setText(sig + diff)
             curve.setData(self.time, history)
 
 

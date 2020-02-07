@@ -356,7 +356,7 @@ class Plotter:
         avg_olds = [r.avg_old for r in self.all_results]
         avg_news = [r.avg_new for r in self.all_results]
         all_histories = [r.history for r in self.all_results]
-        for label, sig, curve, avg_new, avg_old, history in zip(
+        for label, sig, curve, avg_old, avg_new, history in zip(
             self.all_labels,
             self.all_sigs,
             self.all_curves,

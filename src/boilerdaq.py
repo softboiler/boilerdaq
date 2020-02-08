@@ -13,6 +13,7 @@ import pyqtgraph
 from mcculw.ul import ULError, t_in, t_in_scan, v_in
 
 pyqtgraph.setConfigOptions(antialias=True)
+START_TIME = strftime("%Y-%m-%d %H:%M:%S", localtime())
 DEBUG = False
 if DEBUG:
     DELAY = 0.2
@@ -261,21 +262,21 @@ class ResultGroup(OrderedDict):
 
 class Writer:
     def __init__(
-        self, path: str, start_time: str, results: List[Result],
+        self, path: str, results: List[Result],
     ):
         self.paths = []
         self.result_groups = []
         self.fieldname_groups = []
-        self.add(path, start_time, results)
+        self.add(path, results)
 
-    def add(self, path, start_time, results):
+    def add(self, path, results):
         (path, ext) = splitext(path)
-        file_time = start_time.replace(" ", "_").replace(":", "-")
+        file_time = START_TIME.replace(" ", "_").replace(":", "-")
         path = path + "_" + file_time + ext
 
         sources = [r.source.name + " (" + r.source.unit + ")" for r in results]
         fieldnames = ["time"] + sources
-        values = [start_time] + [r.value for r in results]
+        values = [START_TIME] + [r.value for r in results]
         to_write = dict(zip(fieldnames, values))
 
         with open(path, "w", newline="") as csv_file:

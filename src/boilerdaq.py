@@ -16,8 +16,10 @@ pyqtgraph.setConfigOptions(antialias=True)
 START_TIME = strftime("%Y-%m-%d %H:%M:%S", localtime())
 DEBUG = False
 if DEBUG:
-    DELAY = 0.2
-    HISTORY_LENGTH = 100
+    DELAY = 2
+    HISTORY_LENGTH = 300
+    GAIN_DEBUG = 100
+    TAU_DEBUG = DELAY * HISTORY_LENGTH * 5
 else:
     DELAY = 2
     HISTORY_LENGTH = 300
@@ -88,7 +90,9 @@ class Reading(Result):
 
     def update(self):
         if DEBUG:
-            self.value = random()
+            self.value = GAIN_DEBUG * (
+                1 - exp(-self.time[-1] / TAU_DEBUG)
+            ) + random.normal(scale=1e-2 * GAIN_DEBUG)
         elif self.source.reading == "temperature":
             try:
                 unit_int = self.unit_types[self.source.unit]
@@ -289,6 +293,7 @@ class Writer:
         self.fieldname_groups.append(fieldnames)
 
     def update(self):
+        if not DEBUG:
         sleep(DELAY)
         self.update_time = strftime("%Y-%m-%d %H:%M:%S", localtime())
         for results in self.result_groups:

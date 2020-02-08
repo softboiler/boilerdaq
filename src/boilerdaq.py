@@ -11,6 +11,8 @@ from typing import Dict, List, NamedTuple
 
 import pyqtgraph
 from mcculw.ul import ULError, t_in, t_in_scan, v_in
+from numpy import exp, linspace, random
+from scipy.optimize import curve_fit
 
 pyqtgraph.setConfigOptions(antialias=True)
 START_TIME = strftime("%Y-%m-%d %H:%M:%S", localtime())
@@ -54,22 +56,45 @@ class Sensor(NamedTuple):
 # Result: parent of Reading, ScaledResult, Flux, and ExtrapResult
 class Result:
     def __init__(self):
+        self.time = deque([], maxlen=HISTORY_LENGTH)
         self.history = deque([], maxlen=HISTORY_LENGTH)
+        self.subhist_new = deque([], maxlen=SUBHIST_LENGTH)
+        self.subhist_ini = []
         for _ in range(HISTORY_LENGTH):
+            self.time.append(0)
             self.history.append(0)
-        self._subhist_new = deque([], maxlen=SUBHIST_LENGTH)
-        self._subhist_old = deque([], maxlen=SUBHIST_LENGTH)
-        for _ in range(SUBHIST_LENGTH):
-            self._subhist_new.append(0)
-            self._subhist_old.append(0)
+            self.subhist_new.append(0)
+        self.time.reverse()
         self.value = None
+        self.gain_guess = 0
+        self.tau_guess = DELAY / 3
+        self.rise = 0
 
     def update(self):
         self.history.append(self.value)
-        self._subhist_old.append(self.history[0])
-        self._subhist_new.append(self.value)
-        self.avg_old = mean(self._subhist_old)
-        self.avg_new = mean(self._subhist_new)
+        self.subhist_new.append(self.value)
+        if len(self.subhist_ini) < SUBHIST_LENGTH:
+            self.subhist_ini.append(self.value)
+            self.avg_ini = mean(self.subhist_ini)
+            self.time.append(self.time[-1] + DELAY)
+        elif self.time[0] == 0:
+            self.time.append(self.time[-1] + DELAY)
+        else:
+            self.avg_new = mean(self.subhist_new)
+            try:
+                fit = curve_fit(
+                    lambda time, gain, tau: gain * (1 - exp(-time / tau)),
+                    list(self.time),
+                    list(self.history),
+                    p0=(self.gain_guess, self.tau_guess),
+                )
+                gain_fit = fit[0][0]
+                self.rise = self.gain_guess / gain_fit
+            except RuntimeError:
+                self.rise = float("nan")
+            self.time.append(self.time[-1] + DELAY)
+            self.gain_guess = self.avg_new - self.avg_ini
+            self.tau_guess = (self.time[-1]) / 3
 
     @staticmethod
     def get(name: str, results: List[Result]) -> Result:
@@ -100,7 +125,7 @@ class Reading(Result):
                     self.source.board, self.source.channel, unit_int
                 )
             except ULError:
-                self.value = float("nan")
+                self.value = 0
         elif self.source.reading == "voltage":
             self.value = v_in(self.source.board, self.source.channel, 0)
         super().update()
@@ -294,7 +319,7 @@ class Writer:
 
     def update(self):
         if not DEBUG:
-        sleep(DELAY)
+            sleep(DELAY)
         self.update_time = strftime("%Y-%m-%d %H:%M:%S", localtime())
         for results in self.result_groups:
             [r.update() for r in results]
@@ -338,11 +363,8 @@ class Plotter:
         plot.setTitle(title)
         histories = [r.history for r in results]
         names = [r.source.name for r in results]
-        avg_olds = [r.avg_old for r in results]
-        avg_news = [r.avg_new for r in results]
-        for history, name, avg_old, avg_new in zip(
-            histories, names, avg_olds, avg_news
-        ):
+        rises = [r.rise for r in results]
+        for history, name, rise in zip(histories, names, rises):
             curve = plot.plot(
                 self.time, history, pen=pyqtgraph.intColor(i), name=name
             )
@@ -350,8 +372,8 @@ class Plotter:
 
             label = legend.items[-1][-1]
             sig = label.text
-            diff = " (diff: " + str(avg_new - avg_old)[0:7] + ")"
-            label.setText(sig + diff)
+            rise_str = " (rise: " + str(rise)[0:7] + ")"
+            label.setText(sig + rise_str)
             self.all_labels.append(label)
             self.all_sigs.append(sig)
             i += 1
@@ -359,19 +381,17 @@ class Plotter:
         self.all_results.extend(results)
 
     def update(self):
-        avg_olds = [r.avg_old for r in self.all_results]
-        avg_news = [r.avg_new for r in self.all_results]
+        rises = [r.rise for r in self.all_results]
         all_histories = [r.history for r in self.all_results]
-        for label, sig, curve, avg_old, avg_new, history in zip(
+        for label, sig, curve, rise, history in zip(
             self.all_labels,
             self.all_sigs,
             self.all_curves,
-            avg_olds,
-            avg_news,
+            rises,
             all_histories,
         ):
-            diff = " (diff: " + str(avg_new - avg_old)[0:7] + ")"
-            label.setText(sig + diff)
+            rise_str = " (rise: " + str(rise)[0:7] + ")"
+            label.setText(sig + rise_str)
             curve.setData(self.time, history)
 
 

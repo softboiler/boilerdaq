@@ -18,7 +18,7 @@ setup(
     # packages=find_packages(where="src"),  # use for building packages
     
     python_requires=">=3.7",
-    install_requires=["mcculw", "PyQt5", "pyqtgraph"],
+    install_requires=["mcculw", "PyQt5", "pyqtgraph", "scipy", "numpy"],
     extras_require={  # pip install -e .[dev]
         "dev": ["black", "pylint", "mypy", "rope", "doc8"]
     }

@@ -1,17 +1,18 @@
+# A data acquisition system for nucleate pool boiling.
+
 from __future__ import annotations
 
 from collections import OrderedDict, deque
 from csv import DictReader, DictWriter
-from os.path import isfile, splitext
-from random import random
+from os.path import splitext
 from statistics import mean
 from threading import Thread
 from time import localtime, sleep, strftime
-from typing import Dict, List, NamedTuple
+from typing import List, NamedTuple
 
 import pyqtgraph
-from mcculw.ul import ULError, t_in, t_in_scan, v_in
-from numpy import exp, linspace, random
+from mcculw.ul import ULError, t_in, v_in
+from numpy import exp, random
 from scipy.optimize import curve_fit
 
 pyqtgraph.setConfigOptions(antialias=True)
@@ -27,7 +28,7 @@ else:
     HISTORY_LENGTH = 300
 SUBHIST_LENGTH = int(0.1 * HISTORY_LENGTH)
 
-# Sensor: used to obtain initial readings
+
 class Sensor(NamedTuple):
     name: str
     board: int
@@ -53,9 +54,10 @@ class Sensor(NamedTuple):
         return sensors
 
 
-# Result: parent of Reading, ScaledResult, Flux, and ExtrapResult
 class Result:
     def __init__(self):
+        self.source = None
+        self.value = None
         self.time = deque([], maxlen=HISTORY_LENGTH)
         self.history = deque([], maxlen=HISTORY_LENGTH)
         self.subhist_new = deque([], maxlen=SUBHIST_LENGTH)
@@ -65,14 +67,15 @@ class Result:
             self.history.append(0)
             self.subhist_new.append(0)
         self.time.reverse()
-        self.value = None
         self.gain_guess = 0
         self.tau_guess = DELAY / 3
         self.rise = 0
 
     def update(self):
+
         self.history.append(self.value)
         self.subhist_new.append(self.value)
+
         if len(self.subhist_ini) < SUBHIST_LENGTH:
             self.subhist_ini.append(self.value)
             self.avg_ini = mean(self.subhist_ini)
@@ -104,7 +107,6 @@ class Result:
         return result
 
 
-# Reading: child of Result
 class Reading(Result):
     unit_types = {"C": 0, "F": 1, "K": 2, "V": 5}
 
@@ -131,7 +133,6 @@ class Reading(Result):
         super().update()
 
 
-# ScaledResult: child of Result, built by ScaledParam
 class ScaledParam(NamedTuple):
     name: str
     unscaled_sensor: str
@@ -176,7 +177,6 @@ class ScaledResult(Result):
         super().update()
 
 
-# Flux: child of Result, built by FluxParam
 class FluxParam(NamedTuple):
     name: str
     origin_sensor: str
@@ -226,7 +226,6 @@ class Flux(Result):
         super().update()
 
 
-# ExtrapResult: child of Result, built by ExtrapParam
 class ExtrapParam(NamedTuple):
     name: str
     origin_sensor: str
@@ -277,7 +276,6 @@ class ExtrapResult(Result):
         super().update()
 
 
-# grouping, writing, and plotting
 class ResultGroup(OrderedDict):
     def __init__(self, group_dict: OrderedDict, results: List[Result]):
         for key, val in group_dict.items():
@@ -293,9 +291,9 @@ class Writer:
     def __init__(
         self, path: str, results: List[Result],
     ):
-        self.paths = []
-        self.result_groups = []
-        self.fieldname_groups = []
+        self.paths: List[str] = []
+        self.result_groups: List[List[Result]] = []
+        self.fieldname_groups: List[str] = []
         self.add(path, results)
 
     def add(self, path, results):
@@ -343,11 +341,10 @@ class Plotter:
     def __init__(
         self, title: str, results: List[Result], row: int = 0, col: int = 0,
     ):
-        self.all_plots = []
-        self.all_results = []
-        self.all_curves = []
-        self.all_labels = []
-        self.all_sigs = []
+        self.all_results: List[Result] = []
+        self.all_curves: List[pyqtgraph.PlotCurveItem] = []
+        self.all_labels: List[pyqtgraph.LabelItem] = []
+        self.all_sigs: List[str] = []
         self.time = []
         for i in range(0, HISTORY_LENGTH):
             self.time.append(-i * DELAY)
@@ -377,7 +374,6 @@ class Plotter:
             self.all_labels.append(label)
             self.all_sigs.append(sig)
             i += 1
-        self.all_plots.append(plot)
         self.all_results.extend(results)
 
     def update(self):

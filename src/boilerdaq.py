@@ -2,33 +2,40 @@ from __future__ import annotations
 
 from collections import OrderedDict, deque
 from csv import DictReader, DictWriter
-from os.path import isfile, splitext
-from random import random
+from os.path import splitext
 from statistics import mean
 from threading import Thread
 from time import localtime, sleep, strftime
-from typing import Dict, List, NamedTuple
+from typing import Deque, List, NamedTuple
 
 import pyqtgraph
-from mcculw.ul import ULError, t_in, t_in_scan, v_in
+from mcculw.ul import ULError, t_in, v_in
+from numpy import exp, log, random
+from scipy.optimize import curve_fit
 
 pyqtgraph.setConfigOptions(antialias=True)
-DEBUG = False
+START_TIME = strftime("%Y-%m-%d %H:%M:%S", localtime())
+DELAY = 2  # read/write/plot timestep
+HISTORY_LENGTH = 300  # points to keep for plotting
+SUBHIST_LENGTH = int(0.1 * HISTORY_LENGTH)  # history for running avg
+DEBUG = True  # run with simulated DAQs when real DAQs unavailable
+RISE_DESIRED = 0.85
+NUM_TAUS = -log(1 - RISE_DESIRED)
 if DEBUG:
-    DELAY = 0.2
-    HISTORY_LENGTH = 100
-else:
-    DELAY = 2
-    HISTORY_LENGTH = 300
-SUBHIST_LENGTH = int(0.1 * HISTORY_LENGTH)
+    DELAY_DEBUG = 0.05  # actual timestep, still use DELAY in plot
+    # parameters for simulated noisy 1st-order system signal
+    GAIN_DEBUG = 100
+    TAU_DEBUG = DELAY * HISTORY_LENGTH
+    NOISE_SCALE = 1e-2
 
-# Sensor: used to obtain initial readings
+
 class Sensor(NamedTuple):
     name: str
     board: int
     channel: int
     reading: str
     unit: str
+    est_rise: bool
 
     @classmethod
     def get(cls, path: str) -> List[Sensor]:
@@ -43,71 +50,19 @@ class Sensor(NamedTuple):
                         int(row["channel"]),
                         row["reading"],
                         row["unit"],
+                        bool(int(row["est_rise"])),
                     )
                 )
         return sensors
 
 
-# Result: parent of Reading, ScaledResult, Flux, and ExtrapResult
-class Result:
-    def __init__(self):
-        self.history = deque([], maxlen=HISTORY_LENGTH)
-        for _ in range(HISTORY_LENGTH):
-            self.history.append(0)
-        self._subhist_new = deque([], maxlen=SUBHIST_LENGTH)
-        self._subhist_old = deque([], maxlen=SUBHIST_LENGTH)
-        for _ in range(SUBHIST_LENGTH):
-            self._subhist_new.append(0)
-            self._subhist_old.append(0)
-        self.value = None
-
-    def update(self):
-        self.history.append(self.value)
-        self._subhist_old.append(self.history[0])
-        self._subhist_new.append(self.value)
-        self.avg_old = mean(self._subhist_old)
-        self.avg_new = mean(self._subhist_new)
-
-    @staticmethod
-    def get(name: str, results: List[Result]) -> Result:
-        result_names = [result.source.name for result in results]
-        i = result_names.index(name)
-        result = results[i]
-        return result
-
-
-# Reading: child of Result
-class Reading(Result):
-    unit_types = {"C": 0, "F": 1, "K": 2, "V": 5}
-
-    def __init__(self, sensor: Sensor, history_length: int = HISTORY_LENGTH):
-        super().__init__()
-        self.source = sensor
-        self.update()
-
-    def update(self):
-        if DEBUG:
-            self.value = random()
-        elif self.source.reading == "temperature":
-            try:
-                unit_int = self.unit_types[self.source.unit]
-                self.value = t_in(
-                    self.source.board, self.source.channel, unit_int
-                )
-            except ULError:
-                self.value = float("nan")
-        elif self.source.reading == "voltage":
-            self.value = v_in(self.source.board, self.source.channel, 0)
-        super().update()
-
-
-# ScaledResult: child of Result, built by ScaledParam
 class ScaledParam(NamedTuple):
     name: str
     unscaled_sensor: str
     scale: float
     offset: float
     unit: str
+    est_rise: bool
 
     @classmethod
     def get(cls, path: str) -> List[ScaledParam]:
@@ -122,9 +77,150 @@ class ScaledParam(NamedTuple):
                         float(row["scale"]),
                         float(row["offset"]),
                         str(row["unit"]),
+                        bool(int(row["est_rise"])),
                     )
                 )
         return params
+
+
+class FluxParam(NamedTuple):
+    name: str
+    origin_sensor: str
+    distant_sensor: str
+    conductivity: float
+    length: float
+    unit: str
+    est_rise: bool
+
+    @classmethod
+    def get(cls, path: str) -> List[FluxParam]:
+        params = []
+        with open(path) as csv_file:
+            reader = DictReader(csv_file)
+            for row in reader:
+                params.append(
+                    cls(
+                        row["name"],
+                        row["origin_sensor"],
+                        row["distant_sensor"],
+                        float(row["conductivity"]),
+                        float(row["length"]),
+                        row["unit"],
+                        bool(int(row["est_rise"])),
+                    )
+                )
+        return params
+
+
+class ExtrapParam(NamedTuple):
+    name: str
+    origin_sensor: str
+    flux: str
+    conductivity: float
+    length: float
+    unit: str
+    est_rise: bool
+
+    @classmethod
+    def get(cls, path: str) -> List[ExtrapParam]:
+        params = []
+        with open(path) as csv_file:
+            reader = DictReader(csv_file)
+            for row in reader:
+                params.append(
+                    cls(
+                        row["name"],
+                        row["origin_sensor"],
+                        row["flux"],
+                        float(row["conductivity"]),
+                        float(row["length"]),
+                        row["unit"],
+                        bool(int(row["est_rise"])),
+                    )
+                )
+        return params
+
+
+class Result:
+    def __init__(self):
+        self.source = None
+        self.value = None
+        self.time = deque([], maxlen=HISTORY_LENGTH)
+        self.history = deque([], maxlen=HISTORY_LENGTH)
+        self.subhist_new = deque([], maxlen=SUBHIST_LENGTH)
+        self.subhist_ini = []
+        for _ in range(HISTORY_LENGTH):
+            self.time.append(0)
+            self.history.append(0)
+            self.subhist_new.append(0)
+        self.gain_guess = 0
+        self.tau_guess = DELAY / 3
+        self.rise = float("nan")
+        self.timeleft = float("nan")
+
+    def update(self):
+        self.history.append(self.value)
+        self.subhist_new.append(self.value)
+        if self.source.est_rise:
+            if len(self.subhist_ini) < SUBHIST_LENGTH:
+                self.subhist_ini.append(self.value)
+                self.avg_ini = mean(self.subhist_ini)
+            elif self.time[0] > 0:
+                self.avg_new = mean(self.subhist_new)
+                try:
+                    fit = curve_fit(
+                        lambda time, gain, tau: gain * (1 - exp(-time / tau)),
+                        list(self.time),
+                        list(self.history) - self.avg_ini,
+                        p0=(self.gain_guess, self.tau_guess),
+                    )
+                    gain_fit = fit[0][0]
+                    self.rise = self.gain_guess / gain_fit
+                    tau_fit = fit[0][1]
+                    self.timeleft = (NUM_TAUS * tau_fit - self.time[-1]) / 60
+                except RuntimeError:
+                    self.rise = float("nan")
+                    self.timeleft = float("nan")
+                self.gain_guess = self.avg_new - self.avg_ini
+                self.tau_guess = (self.time[-1]) / 3
+        self.time.append(self.time[-1] + DELAY)
+
+    @staticmethod
+    def get(name: str, results: List[Result]) -> Result:
+        result_names = [result.source.name for result in results]
+        i = result_names.index(name)
+        result = results[i]
+        return result
+
+
+class Reading(Result):
+    unit_types = {"C": 0, "F": 1, "K": 2, "V": 5}
+
+    def __init__(self, sensor: Sensor, history_length: int = HISTORY_LENGTH):
+        super().__init__()
+        if DEBUG:
+            self.debug_offset = random.normal(scale=GAIN_DEBUG)
+        self.source = sensor
+        self.update()
+
+    def update(self):
+        if DEBUG:
+            self.value = (
+                self.debug_offset
+                + GAIN_DEBUG * (1 - exp(-self.time[-1] / TAU_DEBUG))
+                + random.normal(scale=NOISE_SCALE * GAIN_DEBUG)
+            )
+        elif self.source.reading == "temperature":
+            try:
+                unit_int = self.unit_types[self.source.unit]
+                self.value = t_in(
+                    self.source.board, self.source.channel, unit_int
+                )
+            except ULError:
+                self.value = 0
+        elif self.source.reading == "voltage":
+            self.value = v_in(self.source.board, self.source.channel, 0)
+        super().update()
 
 
 class ScaledResult(Result):
@@ -144,34 +240,6 @@ class ScaledResult(Result):
             self.unscaled_result.value * self.source.scale + self.source.offset
         )
         super().update()
-
-
-# Flux: child of Result, built by FluxParam
-class FluxParam(NamedTuple):
-    name: str
-    origin_sensor: str
-    distant_sensor: str
-    conductivity: float
-    length: float
-    unit: str
-
-    @classmethod
-    def get(cls, path: str) -> List[FluxParam]:
-        params = []
-        with open(path) as csv_file:
-            reader = DictReader(csv_file)
-            for row in reader:
-                params.append(
-                    cls(
-                        row["name"],
-                        row["origin_sensor"],
-                        row["distant_sensor"],
-                        float(row["conductivity"]),
-                        float(row["length"]),
-                        row["unit"],
-                    )
-                )
-        return params
 
 
 class Flux(Result):
@@ -194,34 +262,6 @@ class Flux(Result):
             * (self.origin_result.value - self.distant_result.value)
         )
         super().update()
-
-
-# ExtrapResult: child of Result, built by ExtrapParam
-class ExtrapParam(NamedTuple):
-    name: str
-    origin_sensor: str
-    flux: str
-    conductivity: float
-    length: float
-    unit: str
-
-    @classmethod
-    def get(cls, path: str) -> List[ExtrapParam]:
-        params = []
-        with open(path) as csv_file:
-            reader = DictReader(csv_file)
-            for row in reader:
-                params.append(
-                    cls(
-                        row["name"],
-                        row["origin_sensor"],
-                        row["flux"],
-                        float(row["conductivity"]),
-                        float(row["length"]),
-                        row["unit"],
-                    )
-                )
-        return params
 
 
 class ExtrapResult(Result):
@@ -247,7 +287,6 @@ class ExtrapResult(Result):
         super().update()
 
 
-# grouping, writing, and plotting
 class ResultGroup(OrderedDict):
     def __init__(self, group_dict: OrderedDict, results: List[Result]):
         for key, val in group_dict.items():
@@ -261,21 +300,21 @@ class ResultGroup(OrderedDict):
 
 class Writer:
     def __init__(
-        self, path: str, start_time: str, results: List[Result],
+        self, path: str, results: List[Result],
     ):
-        self.paths = []
-        self.result_groups = []
-        self.fieldname_groups = []
-        self.add(path, start_time, results)
+        self.paths: List[str] = []
+        self.result_groups: List[List[Result]] = []
+        self.fieldname_groups: List[str] = []
+        self.add(path, results)
 
-    def add(self, path, start_time, results):
+    def add(self, path, results):
         (path, ext) = splitext(path)
-        file_time = start_time.replace(" ", "_").replace(":", "-")
+        file_time = START_TIME.replace(" ", "_").replace(":", "-")
         path = path + "_" + file_time + ext
 
         sources = [r.source.name + " (" + r.source.unit + ")" for r in results]
         fieldnames = ["time"] + sources
-        values = [start_time] + [r.value for r in results]
+        values = [START_TIME] + [r.value for r in results]
         to_write = dict(zip(fieldnames, values))
 
         with open(path, "w", newline="") as csv_file:
@@ -288,7 +327,10 @@ class Writer:
         self.fieldname_groups.append(fieldnames)
 
     def update(self):
-        sleep(DELAY)
+        if DEBUG:
+            sleep(DELAY_DEBUG)
+        else:
+            sleep(DELAY)
         self.update_time = strftime("%Y-%m-%d %H:%M:%S", localtime())
         for results in self.result_groups:
             [r.update() for r in results]
@@ -312,11 +354,11 @@ class Plotter:
     def __init__(
         self, title: str, results: List[Result], row: int = 0, col: int = 0,
     ):
-        self.all_plots = []
-        self.all_results = []
-        self.all_curves = []
-        self.all_labels = []
-        self.all_sigs = []
+        self.all_results: List[Result] = []
+        self.all_curves: List[pyqtgraph.PlotCurveItem] = []
+        self.all_labels: List[pyqtgraph.LabelItem] = []
+        self.all_sigs: List[str] = []
+        self.all_histories: List[Deque] = []
         self.time = []
         for i in range(0, HISTORY_LENGTH):
             self.time.append(-i * DELAY)
@@ -330,42 +372,36 @@ class Plotter:
         plot.setLabel("left", units=results[0].source.unit)
         plot.setLabel("bottom", units="s")
         plot.setTitle(title)
+        self.all_results.extend(results)
         histories = [r.history for r in results]
+        self.all_histories.extend(histories)
         names = [r.source.name for r in results]
-        avg_olds = [r.avg_old for r in results]
-        avg_news = [r.avg_new for r in results]
-        for history, name, avg_old, avg_new in zip(
-            histories, names, avg_olds, avg_news
-        ):
+        for history, name in zip(histories, names):
             curve = plot.plot(
                 self.time, history, pen=pyqtgraph.intColor(i), name=name
             )
             self.all_curves.append(curve)
-
             label = legend.items[-1][-1]
-            sig = label.text
-            diff = " (diff: " + str(avg_new - avg_old)[0:7] + ")"
-            label.setText(sig + diff)
             self.all_labels.append(label)
+            sig = label.text
             self.all_sigs.append(sig)
             i += 1
-        self.all_plots.append(plot)
-        self.all_results.extend(results)
 
     def update(self):
-        avg_olds = [r.avg_old for r in self.all_results]
-        avg_news = [r.avg_new for r in self.all_results]
-        all_histories = [r.history for r in self.all_results]
-        for label, sig, curve, avg_old, avg_new, history in zip(
+        self.zipped = zip(
+            self.all_curves,
             self.all_labels,
             self.all_sigs,
-            self.all_curves,
-            avg_olds,
-            avg_news,
-            all_histories,
-        ):
-            diff = " (diff: " + str(avg_new - avg_old)[0:7] + ")"
-            label.setText(sig + diff)
+            self.all_histories,
+            [r.rise for r in self.all_results],
+            [r.timeleft for r in self.all_results],
+            [r.source.est_rise for r in self.all_results],
+        )
+        for curve, label, sig, history, rise, timeleft, est_rise in self.zipped:
+            if est_rise:
+                rise_str = "rise: " + str(rise)[0:4]
+                timeleft_str = "time left: " + str(timeleft)[0:4] + " min"
+                label.setText(sig + " (" + rise_str + ", " + timeleft_str + ")")
             curve.setData(self.time, history)
 
 

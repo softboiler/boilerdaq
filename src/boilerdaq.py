@@ -19,10 +19,10 @@ DELAY = 2  # read/write/plot timestep
 HISTORY_LENGTH = 300  # points to keep for plotting
 SUBHIST_LENGTH = int(0.1 * HISTORY_LENGTH)  # history for running avg
 DEBUG = False  # run with simulated DAQs when real DAQs unavailable
-RISE_DESIRED = 0.85
+RISE_DESIRED = 0.90
 NUM_TAUS = -log(1 - RISE_DESIRED)
 if DEBUG:
-    DELAY_DEBUG = 0.05  # actual timestep, still use DELAY in plot
+    DELAY_DEBUG = 0.01  # actual timestep, still use DELAY in plot
     # parameters for simulated noisy 1st-order system signal
     GAIN_DEBUG = 100
     TAU_DEBUG = DELAY * HISTORY_LENGTH
@@ -158,6 +158,10 @@ class Result:
         self.rise = float("nan")
         self.timeleft = float("nan")
 
+    @staticmethod
+    def function_to_fit(time, gain, tau):
+        return gain * (1 - exp(-time / tau))
+
     def update(self):
         self.history.append(self.value)
         self.subhist_new.append(self.value)
@@ -166,13 +170,12 @@ class Result:
                 self.subhist_ini.append(self.value)
                 self.avg_ini = mean(self.subhist_ini)
             elif self.time[0] > 0:
-                self.avg_new = mean(self.subhist_new)
+                time = list(self.time)
+                values = [value - self.avg_ini for value in self.history]
+                guess = (self.gain_guess, self.tau_guess)
                 try:
                     fit = curve_fit(
-                        lambda time, gain, tau: gain * (1 - exp(-time / tau)),
-                        list(self.time),
-                        list(self.history) - self.avg_ini,
-                        p0=(self.gain_guess, self.tau_guess),
+                        self.function_to_fit, time, values, p0=guess
                     )
                     gain_fit = fit[0][0]
                     self.rise = self.gain_guess / gain_fit
@@ -181,6 +184,7 @@ class Result:
                 except RuntimeError:
                     self.rise = float("nan")
                     self.timeleft = float("nan")
+                self.avg_new = mean(self.subhist_new)
                 self.gain_guess = self.avg_new - self.avg_ini
                 self.tau_guess = (self.time[-1]) / 3
         self.time.append(self.time[-1] + DELAY)
@@ -400,7 +404,13 @@ class Plotter:
         for curve, label, sig, history, rise, timeleft, est_rise in self.zipped:
             if est_rise:
                 rise_str = "rise: " + str(rise)[0:4]
-                timeleft_str = "time left: " + str(timeleft)[0:4] + " min"
+                timeleft_str = (
+                    "time until "
+                    + str(RISE_DESIRED)[0:4]
+                    + ": "
+                    + str(timeleft)[0:4]
+                    + " min"
+                )
                 label.setText(sig + " (" + rise_str + ", " + timeleft_str + ")")
             curve.setData(self.time, history)
 

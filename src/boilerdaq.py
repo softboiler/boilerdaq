@@ -18,7 +18,7 @@ START_TIME = strftime("%Y-%m-%d %H:%M:%S", localtime())
 DELAY = 2  # read/write/plot timestep
 HISTORY_LENGTH = 300  # points to keep for plotting
 SUBHIST_LENGTH = int(0.1 * HISTORY_LENGTH)  # history for running avg
-DEBUG = True  # run with simulated DAQs when real DAQs unavailable
+DEBUG = False  # run with simulated DAQs when real DAQs unavailable
 RISE_DESIRED = 0.85
 NUM_TAUS = -log(1 - RISE_DESIRED)
 if DEBUG:

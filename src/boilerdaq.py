@@ -14,13 +14,16 @@ from numpy import exp, log, random
 from scipy.optimize import curve_fit
 
 pyqtgraph.setConfigOptions(antialias=True)
-START_TIME = strftime("%Y-%m-%d %H:%M:%S", localtime())
 DELAY = 2  # read/write/plot timestep
-HISTORY_LENGTH = 300  # points to keep for plotting
-SUBHIST_LENGTH = int(0.1 * HISTORY_LENGTH)  # history for running avg
-DEBUG = False  # run with simulated DAQs when real DAQs unavailable
-RISE_DESIRED = 0.90
-NUM_TAUS = -log(1 - RISE_DESIRED)
+HISTORY_LENGTH = 300  # points to keep for plotting and fitting
+SUBHIST_RATIO = 0.2  # portion of history length to base initial averages off of
+RISE_DESIRED = 0.90  # desired rise as a fraction of total estimated rise
+DEBUG = False  # if True, run with simulated DAQs
+
+START_TIME = strftime("%Y-%m-%d %H:%M:%S", localtime())
+SUBHIST_LENGTH = int(SUBHIST_RATIO * HISTORY_LENGTH)  # history for running avg
+NUM_TAUS = -log(1 - RISE_DESIRED)  # to estimate time until desired rise
+
 if DEBUG:
     DELAY_DEBUG = 0.01  # actual timestep, still use DELAY in plot
     # parameters for simulated noisy 1st-order system signal
@@ -30,6 +33,24 @@ if DEBUG:
 
 
 class Sensor(NamedTuple):
+    """
+    Information about a sensor.
+
+    A subclass of `NamedTuple`,
+
+    Attributes:
+    - `name (str)`: Name of the sensor.
+    - `board (int)`: Which board the sensor belongs to.
+    - `channel (int)`: The channel pointing to this sensor on the board.
+    - `reading (int)`: The sensor type, either "Temperature" or "Voltage"
+    - `unit (str)`: The unit type for values reported by the board.
+
+    Methods:
+    - `get(cls, path: str) -> List[Sensor]`
+        - Processes a CSV file at `path`, returning a `List` of `Sensor`.
+
+    """
+
     name: str
     board: int
     channel: int
@@ -154,7 +175,7 @@ class Result:
             self.history.append(0)
             self.subhist_new.append(0)
         self.gain_guess = 0
-        self.tau_guess = DELAY / 3
+        self.tau_guess = DELAY
         self.rise = float("nan")
         self.timeleft = float("nan")
 
@@ -173,9 +194,23 @@ class Result:
                 time = list(self.time)
                 values = [value - self.avg_ini for value in self.history]
                 guess = (self.gain_guess, self.tau_guess)
+                gain_bounds = sorted([0, 100 * self.gain_guess])
+                if gain_bounds[0] == gain_bounds[1]:
+                    gain_bounds[1] = gain_bounds[0] + 1
+                tau_bounds = sorted([0, 100 * self.tau_guess])
+                if tau_bounds[0] == tau_bounds[1]:
+                    tau_bounds[1] = tau_bounds[0] + 1
+                bounds = (
+                    [gain_bounds[0], tau_bounds[0]],
+                    [gain_bounds[1], tau_bounds[1]],
+                )
                 try:
                     fit = curve_fit(
-                        self.function_to_fit, time, values, p0=guess
+                        self.function_to_fit,
+                        time,
+                        values,
+                        p0=guess,
+                        bounds=bounds,
                     )
                     gain_fit = fit[0][0]
                     self.rise = self.gain_guess / gain_fit
@@ -186,7 +221,7 @@ class Result:
                     self.timeleft = float("nan")
                 self.avg_new = mean(self.subhist_new)
                 self.gain_guess = self.avg_new - self.avg_ini
-                self.tau_guess = (self.time[-1]) / 3
+                self.tau_guess = self.time[-1]
         self.time.append(self.time[-1] + DELAY)
 
     @staticmethod

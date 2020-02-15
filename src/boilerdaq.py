@@ -6,12 +6,13 @@ from os.path import splitext
 from statistics import mean
 from threading import Thread
 from time import localtime, sleep, strftime
-from typing import Deque, List, NamedTuple
+from typing import Deque, List, NamedTuple, Tuple
 
 import pyqtgraph
 from mcculw.ul import ULError, t_in, v_in
 from numpy import exp, log, random
 from scipy.optimize import curve_fit
+from simple_pid import PID
 
 pyqtgraph.setConfigOptions(antialias=True)
 DELAY = 2  # read/write/plot timestep
@@ -160,6 +161,20 @@ class ExtrapParam(NamedTuple):
                     )
                 )
         return params
+
+
+class PowerParam(NamedTuple):
+    name: str
+    unit: str
+
+    @classmethod
+    def get(cls, path: str) -> List[PowerParam]:
+        power_supplies = []
+        with open(path) as csv_file:
+            reader = DictReader(csv_file)
+            for row in reader:
+                power_supplies.append(cls(row["name"], row["unit"],))
+        return power_supplies
 
 
 class Result:
@@ -326,6 +341,31 @@ class ExtrapResult(Result):
         super().update()
 
 
+class PowerResult(Result):
+    def __init__(
+        self,
+        power_param: PowerParam,
+        instrument,
+        history_length: int = HISTORY_LENGTH,
+    ):
+        self.source = power_param
+        self.instrument = instrument
+        self.update()
+
+    def update(self):
+        if self.source.name == "V":
+            self.value = float(self.instrument.query("measure:voltage?"))
+        elif self.source.name == "I":
+            self.value = float(self.instrument.query("measure:current?"))
+        pass
+
+    def write(self, value):
+        if self.source.name == "V":
+            self.instrument.write("source:voltage " + str(value))
+        elif self.source.name == "I":
+            self.instrument.write("source:current " + str(value))
+
+
 class ResultGroup(OrderedDict):
     def __init__(self, group_dict: OrderedDict, results: List[Result]):
         for key, val in group_dict.items():
@@ -335,6 +375,28 @@ class ResultGroup(OrderedDict):
                 result = Result.get(name, results)
                 filtered_results.append(result)
             self[key] = filtered_results
+
+
+class Controller:
+    def __init__(
+        self,
+        control_result: PowerResult,
+        feedback_result: Result,
+        setpoint: float,
+        gains: List[float],
+        output_limits: Tuple[float, float],
+    ):
+        self.control_result = control_result
+        self.feedback_result = feedback_result
+        self.pid = PID(
+            gains[0], gains[1], gains[2], setpoint, output_limits=output_limits
+        )
+
+    def update(self):
+        feedback_value = self.feedback_result.value
+        control_value = self.pid(feedback_value)
+        print(f"{feedback_value} {control_value}")
+        self.control_result.write(control_value)
 
 
 class Writer:
@@ -451,9 +513,15 @@ class Plotter:
 
 
 class Looper:
-    def __init__(self, writer: Writer, plotter: Plotter):
+    def __init__(
+        self, writer: Writer, plotter: Plotter, controller: Controller = None
+    ):
         self.writer = writer
         self.plotter = plotter
+        if controller is None:
+            self.controller = None
+        else:
+            self.controller = controller
 
     def write_loop(self):
         while self.plot_window_open:
@@ -462,10 +530,21 @@ class Looper:
     def plot_loop(self):
         self.plotter.update()
 
+    def write_control_loop(self):
+        while self.plot_window_open:
+            self.writer.update()
+            self.controller.update()
+
     def start(self):
         self.plot_window_open = True
-        write_thread = Thread(target=self.write_loop)
-        write_thread.start()
+
+        if self.controller is None:
+            write_thread = Thread(target=self.write_loop)
+            write_thread.start()
+        else:
+            write_thread = Thread(target=self.write_control_loop)
+            write_thread.start()
+
         plot_timer = pyqtgraph.QtCore.QTimer()
         plot_timer.timeout.connect(self.plot_loop)
         plot_timer.start()

@@ -8,7 +8,15 @@ setup(
     package_dir={"": "src"},
     py_modules=["boilerdaq"],  # use for building a single module
     python_requires=">=3.7",
-    install_requires=["mcculw", "PyQt5", "pyqtgraph", "scipy", "numpy"],
+    install_requires=[
+        "mcculw",
+        "PyQt5",
+        "pyqtgraph",
+        "pyvisa",
+        "simple-pid",
+        "scipy",
+        "numpy",
+    ],
     extras_require={  # pip install -e .[dev]
         "dev": [
             # lint

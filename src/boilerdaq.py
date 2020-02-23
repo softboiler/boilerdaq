@@ -2,10 +2,11 @@ from __future__ import annotations
 
 from collections import OrderedDict, deque
 from csv import DictReader, DictWriter
+from datetime import datetime
 from os.path import splitext
 from statistics import mean
 from threading import Thread
-from time import localtime, sleep, strftime
+from time import sleep
 from typing import Deque, List, NamedTuple, Tuple
 
 import pyqtgraph
@@ -21,13 +22,11 @@ SUBHIST_RATIO = 0.2  # portion of history length to base initial averages off of
 RISE_DESIRED = 0.90  # desired rise as a fraction of total estimated rise
 DEBUG = False  # if True, run with simulated DAQs
 
-START_TIME = strftime("%Y-%m-%d %H:%M:%S", localtime())
 SUBHIST_LENGTH = int(SUBHIST_RATIO * HISTORY_LENGTH)  # history for running avg
 NUM_TAUS = -log(1 - RISE_DESIRED)  # to estimate time until desired rise
 
 if DEBUG:
-    DELAY_DEBUG = 0.01  # actual timestep, still use DELAY in plot
-    # parameters for simulated noisy 1st-order system signal
+    DELAY_DEBUG = 0.2
     GAIN_DEBUG = 100
     TAU_DEBUG = DELAY * HISTORY_LENGTH
     NOISE_SCALE = 1e-2
@@ -410,12 +409,13 @@ class Writer:
 
     def add(self, path, results):
         (path, ext) = splitext(path)
-        file_time = START_TIME.replace(" ", "_").replace(":", "-")
+        start_time = datetime.now()
+        file_time = start_time.isoformat(timespec="seconds").replace(":", "-")
         path = path + "_" + file_time + ext
 
         sources = [r.source.name + " (" + r.source.unit + ")" for r in results]
         fieldnames = ["time"] + sources
-        values = [START_TIME] + [r.value for r in results]
+        values = [start_time.isoformat()] + [r.value for r in results]
         to_write = dict(zip(fieldnames, values))
 
         with open(path, "w", newline="") as csv_file:
@@ -432,7 +432,7 @@ class Writer:
             sleep(DELAY_DEBUG)
         else:
             sleep(DELAY)
-        self.update_time = strftime("%Y-%m-%d %H:%M:%S", localtime())
+        self.update_time = datetime.now().isoformat()
         for results in self.result_groups:
             [r.update() for r in results]
         self.write()
@@ -537,7 +537,6 @@ class Looper:
 
     def start(self):
         self.plot_window_open = True
-
         if self.controller is None:
             write_thread = Thread(target=self.write_loop)
             write_thread.start()

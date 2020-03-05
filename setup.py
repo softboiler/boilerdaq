@@ -19,18 +19,18 @@ setup(
     ],
     extras_require={  # pip install -e .[dev]
         "dev": [
-            # lint
-            "pylint",
-            "mypy",
-            "flake8",
-            # refactor
-            "rope",
-            # format
-            "black",
             # document
             "doc8",
             # experiment
             "jupyter",
+            # format
+            "black",
+            # lint
+            "flake8",
+            "mypy",
+            "pylint",
+            # refactor
+            "rope",
         ],
     },
 )

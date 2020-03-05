@@ -220,11 +220,7 @@ class Result:
                 )
                 try:
                     fit = curve_fit(
-                        self.function_to_fit,
-                        time,
-                        values,
-                        p0=guess,
-                        bounds=bounds,
+                        self.function_to_fit, time, values, p0=guess, bounds=bounds,
                     )
                     gain_fit = fit[0][0]
                     self.rise = self.gain_guess / gain_fit
@@ -266,9 +262,7 @@ class Reading(Result):
         elif self.source.reading == "temperature":
             try:
                 unit_int = self.unit_types[self.source.unit]
-                self.value = t_in(
-                    self.source.board, self.source.channel, unit_int
-                )
+                self.value = t_in(self.source.board, self.source.channel, unit_int)
             except ULError:
                 self.value = 0
         elif self.source.reading == "voltage":
@@ -289,9 +283,7 @@ class ScaledResult(Result):
         self.update()
 
     def update(self):
-        self.value = (
-            self.unscaled_result.value * self.source.scale + self.source.offset
-        )
+        self.value = self.unscaled_result.value * self.source.scale + self.source.offset
         super().update()
 
 
@@ -333,19 +325,14 @@ class ExtrapResult(Result):
 
     def update(self):
         self.value = self.origin_result.value - (
-            self.flux_result.value
-            * self.source.length
-            / self.source.conductivity
+            self.flux_result.value * self.source.length / self.source.conductivity
         )
         super().update()
 
 
 class PowerResult(Result):
     def __init__(
-        self,
-        power_param: PowerParam,
-        instrument,
-        history_length: int = HISTORY_LENGTH,
+        self, power_param: PowerParam, instrument, history_length: int = HISTORY_LENGTH,
     ):
         self.source = power_param
         self.instrument = instrument
@@ -478,9 +465,7 @@ class Plotter:
         self.all_histories.extend(histories)
         names = [r.source.name for r in results]
         for history, name in zip(histories, names):
-            curve = plot.plot(
-                self.time, history, pen=pyqtgraph.intColor(i), name=name
-            )
+            curve = plot.plot(self.time, history, pen=pyqtgraph.intColor(i), name=name)
             self.all_curves.append(curve)
             label = legend.items[-1][-1]
             self.all_labels.append(label)
@@ -513,9 +498,7 @@ class Plotter:
 
 
 class Looper:
-    def __init__(
-        self, writer: Writer, plotter: Plotter, controller: Controller = None
-    ):
+    def __init__(self, writer: Writer, plotter: Plotter, controller: Controller = None):
         self.writer = writer
         self.plotter = plotter
         if controller is None:

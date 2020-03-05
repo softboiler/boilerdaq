@@ -2,7 +2,7 @@ from __future__ import annotations
 
 from collections import OrderedDict, deque
 from csv import DictReader, DictWriter
-from datetime import datetime
+from datetime import datetime, timedelta
 from os.path import splitext
 from statistics import mean
 from threading import Thread
@@ -371,16 +371,21 @@ class Controller:
         setpoint: float,
         gains: List[float],
         output_limits: Tuple[float, float],
+        start_delay: float = 0
     ):
         self.control_result = control_result
         self.feedback_result = feedback_result
         self.pid = PID(*gains, setpoint, output_limits=output_limits)
+        self.start_time = datetime.now()
+        self.start_delay = timedelta(seconds=start_delay)
 
     def update(self):
-        feedback_value = self.feedback_result.value
-        control_value = self.pid(feedback_value)
-        print(f"{feedback_value} {control_value}")
-        self.control_result.write(control_value)
+        time_elapsed = datetime.now() - self.start_time
+        if time_elapsed > self.start_delay:
+            feedback_value = self.feedback_result.value
+            control_value = self.pid(feedback_value)
+            print(f"{feedback_value} {control_value}")
+            self.control_result.write(control_value)
 
 
 class Writer:

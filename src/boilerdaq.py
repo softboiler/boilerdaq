@@ -374,9 +374,7 @@ class Controller:
     ):
         self.control_result = control_result
         self.feedback_result = feedback_result
-        self.pid = PID(
-            gains[0], gains[1], gains[2], setpoint, output_limits=output_limits
-        )
+        self.pid = PID(*gains, setpoint, output_limits=output_limits)
 
     def update(self):
         feedback_value = self.feedback_result.value

@@ -19,6 +19,13 @@ setup(
     ],
     extras_require={  # pip install -e .[dev]
         "dev": [
+            # build
+            "setuptools",
+            "wheel",
+            "twine",
+            # data science
+            "dtale",
+            "pandas",
             # document
             "doc8",
             # experiment
@@ -29,6 +36,9 @@ setup(
             "flake8",
             "mypy",
             "pylint",
+            # matplotlib w/ backend
+            "matplotlib",
+            "PyQt5",
             # refactor
             "rope",
         ],

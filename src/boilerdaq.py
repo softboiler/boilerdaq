@@ -15,6 +15,8 @@ from numpy import exp, log, random
 from scipy.optimize import curve_fit
 from simple_pid import PID
 
+from pyvisa import VisaIOError
+
 pyqtgraph.setConfigOptions(antialias=True)
 DELAY = 2  # read/write/plot timestep
 HISTORY_LENGTH = 300  # points to keep for plotting and fitting
@@ -332,10 +334,17 @@ class ExtrapResult(Result):
 
 class PowerResult(Result):
     def __init__(
-        self, power_param: PowerParam, instrument, history_length: int = HISTORY_LENGTH,
+        self,
+        power_param: PowerParam,
+        instrument,
+        current_limit: float,
+        history_length: int = HISTORY_LENGTH,
     ):
         self.source = power_param
         self.instrument = instrument
+        if self.source.name == "V":
+            self.instrument.write("output:state on")
+            self.instrument.write("source:current " + str(current_limit))
         self.update()
 
     def update(self):
@@ -346,10 +355,13 @@ class PowerResult(Result):
         pass
 
     def write(self, value):
-        if self.source.name == "V":
-            self.instrument.write("source:voltage " + str(value))
-        elif self.source.name == "I":
-            self.instrument.write("source:current " + str(value))
+        try:
+            if self.source.name == "V":
+                self.instrument.write("source:voltage " + str(value))
+            elif self.source.name == "I":
+                self.instrument.write("source:current " + str(value))
+        except VisaIOError as exc:
+            print(exc)
 
 
 class ResultGroup(OrderedDict):
@@ -371,7 +383,7 @@ class Controller:
         setpoint: float,
         gains: List[float],
         output_limits: Tuple[float, float],
-        start_delay: float = 0
+        start_delay: float = 0,
     ):
         self.control_result = control_result
         self.feedback_result = feedback_result

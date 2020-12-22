@@ -1,13 +1,29 @@
-# Linter config
-.flake8
+# * -------------------------------------------------------------------------------- * #
+# * CUSTOMIZATIONS
 
-# VSCode
+# vscode
 .vscode
 
-# module-specific 
+# Project specific 
 results/
 config/
 examples/
+
+# Dev specific
+/.vscode
+/.env
+/.flake8
+/.mypy.ini
+/.pylintrc
+/.rstcheck.cfg
+/requirements.txt
+
+# reStructuredText
+/docs/_build/*
+/docs/_static/*
+
+# * -------------------------------------------------------------------------------- * #
+# * https://raw.githubusercontent.com/github/gitignore/master/Python.gitignore
 
 # Byte-compiled / optimized / DLL files
 __pycache__/
@@ -31,7 +47,6 @@ parts/
 sdist/
 var/
 wheels/
-pip-wheel-metadata/
 share/python-wheels/
 *.egg-info/
 .installed.cfg
@@ -80,10 +95,8 @@ instance/
 # Scrapy stuff:
 .scrapy
 
-# Sphinx documentation
-docs/_build/
-
 # PyBuilder
+.pybuilder/
 target/
 
 # Jupyter Notebook
@@ -144,3 +157,6 @@ dmypy.json
 
 # pytype static type analyzer
 .pytype/
+
+# Cython debug symbols
+cython_debug/

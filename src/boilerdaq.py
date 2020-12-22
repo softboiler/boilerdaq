@@ -1,5 +1,8 @@
+"""Data acquisition and control of a boiler."""
+
 from __future__ import annotations
 
+import os
 from collections import OrderedDict, deque
 from csv import DictReader, DictWriter
 from datetime import datetime, timedelta
@@ -11,14 +14,17 @@ from typing import Deque, List, NamedTuple, Optional, Tuple
 import pyqtgraph
 from mcculw.ul import ULError, t_in, v_in
 from numpy import exp, random
-from simple_pid import PID
-
 from pyvisa import VisaIOError
+from simple_pid import PID
 
 pyqtgraph.setConfigOptions(antialias=True)
 DELAY = 2  # read/write/plot timestep
 HISTORY_LENGTH = 300  # points to keep for plotting and fitting
-DEBUG = False  # if True, run with simulated DAQs
+
+if os.environ.get("BOILERDAQ_DEBUG") == "True":
+    DEBUG = True
+else:
+    DEBUG = False
 
 if DEBUG:
     DELAY_DEBUG = 0.2
@@ -29,21 +35,20 @@ if DEBUG:
 
 class Sensor(NamedTuple):
     """
-    Information about a sensor.
+    Sensor parameters.
 
-    A subclass of `NamedTuple`,
-
-    Attributes:
-    - `name (str)`: Name of the sensor.
-    - `board (int)`: Which board the sensor belongs to.
-    - `channel (int)`: The channel pointing to this sensor on the board.
-    - `reading (int)`: The sensor type, either "Temperature" or "Voltage"
-    - `unit (str)`: The unit type for values reported by the board.
-
-    Methods:
-    - `get(cls, path: str) -> List[Sensor]`
-        - Processes a CSV file at `path`, returning a `List` of `Sensor`.
-
+    Parameters
+    ----------
+    name: str
+        Name of the sensor.
+    board: int
+        Which board the sensor belongs to.
+    channel: int
+        The channel pointing to this sensor on the board.
+    reading: int
+        The sensor type, either "Temperature" or "Voltage".
+    unit: str
+        The unit type for values reported by the board.
     """
 
     name: str
@@ -54,6 +59,8 @@ class Sensor(NamedTuple):
 
     @classmethod
     def get(cls, path: str) -> List[Sensor]:
+        """Process a CSV file at ``path``, returning a ``List`` of ``Sensor``."""
+
         sensors = []
         with open(path) as csv_file:
             reader = DictReader(csv_file)
@@ -71,6 +78,23 @@ class Sensor(NamedTuple):
 
 
 class ScaledParam(NamedTuple):
+    """
+    Parameters for scalar modification of a sensor.
+
+    Parameters
+    ----------
+    name: str
+        Name of the scaled value.
+    unscaled_sensor: str
+        Name of the sensor to be scaled.
+    scale: float
+        The scale to apply.
+    offset: float
+        The offset to apply.
+    unit: str
+        The unit type after scaling.
+    """
+
     name: str
     unscaled_sensor: str
     scale: float
@@ -79,6 +103,8 @@ class ScaledParam(NamedTuple):
 
     @classmethod
     def get(cls, path: str) -> List[ScaledParam]:
+        """Process a CSV file at ``path``, returning a ``List`` of ``ScaledParam``."""
+
         params = []
         with open(path) as csv_file:
             reader = DictReader(csv_file)
@@ -96,6 +122,25 @@ class ScaledParam(NamedTuple):
 
 
 class FluxParam(NamedTuple):
+    """
+    Parameters for the flux between two sensors.
+
+    Parameters
+    ----------
+    name: str
+        The name of the flux.
+    origin_sensor: str
+        The name of the sensor at the origin.
+    distant_sensor: str
+        The name of the sensor not at the origin.
+    conductivity: float
+        The conductivity of the path between the sensors.
+    length: float
+        The length of the path between the sensors.
+    unit: str
+        The unit type of the flux.
+    """
+
     name: str
     origin_sensor: str
     distant_sensor: str
@@ -105,6 +150,8 @@ class FluxParam(NamedTuple):
 
     @classmethod
     def get(cls, path: str) -> List[FluxParam]:
+        """Process a CSV file at ``path``, returning a ``List`` of ``FluxParam``."""
+
         params = []
         with open(path) as csv_file:
             reader = DictReader(csv_file)
@@ -123,6 +170,25 @@ class FluxParam(NamedTuple):
 
 
 class ExtrapParam(NamedTuple):
+    """
+    Parameters for extrapolation from two sensors and a flux to a point of interest.
+
+    Parameters
+    ----------
+    name: str
+        The name of the extrapolation.
+    origin_sensor: str
+        The name of the sensor at the origin.
+    distant_sensor: str
+        The name of the sensor not at the origin.
+    conductivity: float
+        The conductivity of the path from ``distant_sensor`` to the point of interest.
+    length: float
+        The length of the path from ``distant_sensor`` to the point of interest.
+    unit: str
+        The unit type of the extrapolation.
+    """
+
     name: str
     origin_sensor: str
     flux: str
@@ -132,6 +198,8 @@ class ExtrapParam(NamedTuple):
 
     @classmethod
     def get(cls, path: str) -> List[ExtrapParam]:
+        """Process a CSV file at ``path``, returning a ``List`` of ``ExtrapParam``."""
+
         params = []
         with open(path) as csv_file:
             reader = DictReader(csv_file)
@@ -150,11 +218,24 @@ class ExtrapParam(NamedTuple):
 
 
 class PowerParam(NamedTuple):
+    """
+    Parameters for power supplies.
+
+    Parameters
+    ----------
+    name: str
+        The name of the power supply parameter.
+    unit:
+        The unit of the power supply parameter.
+    """
+
     name: str
     unit: str
 
     @classmethod
     def get(cls, path: str) -> List[PowerParam]:
+        """Process a CSV file at ``path``, returning a ``List`` of ``ExtrapParam``."""
+
         power_supplies = []
         with open(path) as csv_file:
             reader = DictReader(csv_file)
@@ -169,6 +250,21 @@ class PowerParam(NamedTuple):
 
 
 class Result:
+    """
+    A result.
+
+    Attributes
+    ----------
+    source: str
+        The source of the result.
+    value: float
+        The value of the result.
+    time: float
+        The time that the result was taken, with the oldest result at zero.
+    history: Deque[float]
+        Previous values resulting from the source.
+    """
+
     def __init__(self):
         self.source = None
         self.value = None
@@ -179,11 +275,15 @@ class Result:
             self.history.append(0)
 
     def update(self):
+        """Update the result."""
+
         self.history.append(self.value)
         self.time.append(self.time[-1] + DELAY)
 
     @staticmethod
     def get(name: str, results: List[Result]) -> Result:
+        """Get a result or results by the source name."""
+
         result_names = [result.source.name for result in results]
         i = result_names.index(name)
         result = results[i]
@@ -191,6 +291,22 @@ class Result:
 
 
 class Reading(Result):
+    """
+    A reading directly from a sensor.
+
+    Parameters
+    ----------
+    sensor: Sensor
+        The sensor parameters used to get a result.
+
+    Attributes
+    ----------
+    unit_types: Dict[str: int]
+        Enumeration of unit types supported by the board on which the sensor resides.
+    debug_offset: float
+        A random offset to use when debugging.
+    """
+
     unit_types = {"C": 0, "F": 1, "K": 2, "V": 5}
 
     def __init__(self, sensor: Sensor):
@@ -201,6 +317,8 @@ class Reading(Result):
         self.update()
 
     def update(self):
+        """Update the result."""
+
         if DEBUG:
             self.value = (
                 self.debug_offset
@@ -219,6 +337,22 @@ class Reading(Result):
 
 
 class ScaledResult(Result):
+    """
+    A scaled result.
+
+    Parameters
+    ----------
+    scaled_param: ScaledParam
+        The parameters for obtaining a scaled result.
+    results: List[Result]
+        A list of results containing the source to be scaled.
+
+    Attributes
+    ----------
+    unscaled_result: Result
+        The unscaled result.
+    """
+
     def __init__(
         self,
         scaled_param: ScaledParam,
@@ -230,11 +364,31 @@ class ScaledResult(Result):
         self.update()
 
     def update(self):
+        """Update the result."""
+
         self.value = self.unscaled_result.value * self.source.scale + self.source.offset
         super().update()
 
 
 class Flux(Result):
+    """
+    A flux result.
+
+    Parameters
+    ----------
+    flux_param: FluxParam
+        The parameters for obtaining a flux result.
+    results: List[Result]
+        A list of results containing the source to be scaled.
+
+    Attributes
+    ----------
+    origin_result: Result
+        The result of the source at the origin.
+    distant_result: Result
+        The result of the source not at the origin.
+    """
+
     def __init__(
         self,
         flux_param: FluxParam,
@@ -247,6 +401,8 @@ class Flux(Result):
         self.update()
 
     def update(self):
+        """Update the result."""
+
         self.value = (
             self.source.conductivity
             / self.source.length
@@ -256,6 +412,24 @@ class Flux(Result):
 
 
 class ExtrapResult(Result):
+    """
+    An extrapolated result.
+
+    Parameters
+    ----------
+    extrap_param: ExtrapParam
+        The parameters for obtaining an extrapolated result.
+    results: List[Result]
+        A list of results containing the source to be scaled.
+
+    Attributes
+    ----------
+    origin_result: Result
+        The result of the source at the origin.
+    distant_result: Result
+        The result of the source not at the origin.
+    """
+
     def __init__(
         self,
         extrap_param: ExtrapParam,
@@ -269,6 +443,8 @@ class ExtrapResult(Result):
         self.update()
 
     def update(self):
+        """Update the result."""
+
         self.value = self.origin_result.value - (
             self.flux_result.value * self.source.length / self.source.conductivity
         )
@@ -276,6 +452,19 @@ class ExtrapResult(Result):
 
 
 class PowerResult(Result):
+    """
+    A result from a power supply.
+
+    Parameters
+    ----------
+    power_param: PowerParam
+        The parameters for obtaining a result from the power supply.
+    instrument
+        The VISA instrument from which to obtain the result.
+    current_limit: float
+        The current limit to be set.
+    """
+
     def __init__(
         self,
         power_param: PowerParam,
@@ -290,12 +479,16 @@ class PowerResult(Result):
         self.update()
 
     def update(self):
+        """Update the result."""
+
         if self.source.name == "V":
             self.value = float(self.instrument.query("measure:voltage?"))
         elif self.source.name == "I":
             self.value = float(self.instrument.query("measure:current?"))
 
     def write(self, value):
+        """Write a value back to the instrument."""
+
         try:
             if self.source.name == "V":
                 self.instrument.write("source:voltage " + str(value))
@@ -306,6 +499,17 @@ class PowerResult(Result):
 
 
 class ResultGroup(OrderedDict):
+    """
+    A group of results.
+
+    Parameters
+    ----------
+    group_dict
+        Dictionary of result groupings.
+    results: List[Result]
+        List of results containing the results to be grouped.
+    """
+
     def __init__(self, group_dict: OrderedDict, results: List[Result]):
         for key, val in group_dict.items():
             result_names = val.split()
@@ -317,6 +521,32 @@ class ResultGroup(OrderedDict):
 
 
 class Controller:
+    """
+    A PID controller.
+
+    Parameters
+    ----------
+    control_result: PowerResult
+        The result to control based on feedback.
+    feedback_result: Result
+        The result to get feedback from.
+    setpoint: float
+        The value that the feedback should be coerced to through PID control.
+    gains: List[float]
+        List of the proportional, integral, and derivative gains of the PID controller.
+    output_limits: Tuple[float, float]
+        Limits of the PID controller.
+    start_delay: float
+        Time to wait before activating PID.
+
+    Attributes
+    ----------
+    pid: PID
+        The PID controller.
+    start_time
+        The time that the controller was created.
+    """
+
     def __init__(
         self,
         control_result: PowerResult,
@@ -333,6 +563,8 @@ class Controller:
         self.start_delay = timedelta(seconds=start_delay)
 
     def update(self):
+        """Update the PID controller."""
+
         time_elapsed = datetime.now() - self.start_time
         if time_elapsed > self.start_delay:
             feedback_value = self.feedback_result.value

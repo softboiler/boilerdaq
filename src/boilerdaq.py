@@ -574,6 +574,29 @@ class Controller:
 
 
 class Writer:
+    """A CSV file writer.
+
+    Parameters
+    ----------
+    path: str
+        Base name of the first results CSV to be written (e.g. `results.csv`). The ISO
+        time of creation of the file will be appended to the provided path (e.g.
+        `results_yyyy_mm_ddThh-mm-ss.csv`).
+    results: List[Result]
+        The first list of results to be written to a file.
+
+    Attributes
+    ----------
+    paths: List[str]
+        Base names of multiple results CSVs to be written to.
+    result_groups: List[List[Result]]
+        Groups of results to be written to each of the names in `paths`.
+    fieldname_groups: List[str]
+        Groups of fieldnames to be written to each of the names in `paths`.
+    time: datetime
+        The time that the last value was taken.
+    """
+
     def __init__(
         self,
         path: str,
@@ -581,45 +604,69 @@ class Writer:
     ):
         self.paths: List[str] = []
         self.result_groups: List[List[Result]] = []
-        self.fieldname_groups: List[str] = []
+        self.fieldname_groups: List[List[str]] = []
+        self.time = datetime.now()
         self.add(path, results)
 
-    def add(self, path, results):
+    def add(self, path: str, results: List[Result]):
+        """Add a CSV file to be written to and a set of results to write to it.
+
+        Parameters
+        ----------
+        path: str
+            Base name of additional results CSVs to be written (e.g. `results.csv`). The
+            ISO time of creation of the file will be appended to the provided path (e.g.
+            `results_yyyy_mm_ddThh-mm-ss.csv`).
+        results: List[Result]
+            Additonal list of results to be written to a file.
+        """
+
         (path, ext) = splitext(path)
-        start_time = datetime.now()
-        file_time = start_time.isoformat(timespec="seconds").replace(":", "-")
+
+        # The ":" in ISO time strings is not supported by filenames
+        file_time = self.time.isoformat(timespec="seconds").replace(":", "-")
+
         path = path + "_" + file_time + ext
 
-        sources = [r.source.name + " (" + r.source.unit + ")" for r in results]
+        # Compose the fieldnames and first row of values
+        sources = [
+            result.source.name + " (" + result.source.unit + ")" for result in results
+        ]
         fieldnames = ["time"] + sources
-        values = [start_time.isoformat()] + [r.value for r in results]
+        values = [self.time.isoformat()] + [result.value for result in results]
         to_write = dict(zip(fieldnames, values))
 
+        # Create the CSV, writing the header and the first row of values
         with open(path, "w", newline="") as csv_file:
             csv_writer = DictWriter(csv_file, fieldnames=fieldnames)
             csv_writer.writeheader()
             csv_writer.writerow(to_write)
 
+        # Record the file and results for writing additional rows later.
         self.paths.append(path)
         self.result_groups.append(results)
         self.fieldname_groups.append(fieldnames)
 
     def update(self):
+        """Update results and write the new data to CSV."""
+
         if DEBUG:
             sleep(DELAY_DEBUG)
         else:
             sleep(DELAY)
-        self.update_time = datetime.now().isoformat()
+        self.time = datetime.now().isoformat()
         for results in self.result_groups:
-            for r in results:
-                r.update()
+            for result in results:
+                result.update()
         self.write()
 
     def write(self):
+        """Write data to CSV."""
+
         for path, results, fieldnames in zip(
             self.paths, self.result_groups, self.fieldname_groups
         ):
-            values = [self.update_time] + [r.value for r in results]
+            values = [self.time] + [result.value for result in results]
             to_write = dict(zip(fieldnames, values))
 
             with open(path, "a", newline="") as csv_file:
@@ -628,6 +675,27 @@ class Writer:
 
 
 class Plotter:
+    """A plotter for data.
+
+    Parameters
+    ----------
+    title: str
+        The title of the first plot.
+    results: List[Result]
+        The results to plot.
+    row: int = 0
+        The window row to place the first plot.
+    col: int = 0
+        The window column to place the first plot.
+
+    Attributes
+    ----------
+    all_results: List[Result]
+    all_curves: List[pyqtgraph.PlotCurveItem]
+    all_histories: List[Deque]
+    time: List[int]
+    """
+
     window = pyqtgraph.GraphicsWindow()
 
     def __init__(
@@ -640,13 +708,26 @@ class Plotter:
         self.all_results: List[Result] = []
         self.all_curves: List[pyqtgraph.PlotCurveItem] = []
         self.all_histories: List[Deque] = []
-        self.time = []
+        self.time: List[int] = []
         for i in range(0, HISTORY_LENGTH):
             self.time.append(-i * DELAY)
         self.time.reverse()
         self.add(title, results, row, col)
 
     def add(self, title: str, results: List[Result], row: int, col: int):
+        """Plot results to a new pane in the plot window.
+
+        Parameters
+        ----------
+        title: str
+            The title of an additional plot.
+        results: List[Result]
+            The results to plot.
+        row: int = 0
+            The window row to place an additional plot.
+        col: int = 0
+            The window column to place an additional plot.
+        """
         i = 0
         plot = self.window.addPlot(row, col)
         plot.addLegend()
@@ -654,24 +735,38 @@ class Plotter:
         plot.setLabel("bottom", units="s")
         plot.setTitle(title)
         self.all_results.extend(results)
-        histories = [r.history for r in results]
+        histories = [result.history for result in results]
         self.all_histories.extend(histories)
-        names = [r.source.name for r in results]
+        names = [result.source.name for result in results]
         for history, name in zip(histories, names):
             curve = plot.plot(self.time, history, pen=pyqtgraph.intColor(i), name=name)
             self.all_curves.append(curve)
             i += 1
 
     def update(self):
-        self.zipped = zip(
-            self.all_curves,
-            self.all_histories,
-        )
-        for curve, history in self.zipped:
+        """Update plots."""
+        for curve, history in zip(self.all_curves, self.all_histories):
             curve.setData(self.time, history)
 
 
 class Looper:
+    """Handles threads for plotting, writing, and control.
+
+    Parameters
+    ----------
+    writer: Writer
+        The writer.
+    plotter: Plotter
+        The plotter.
+    controller: Optional[Controller]
+        The controller.
+
+    Attributes
+    ----------
+    plot_window_open: bool
+        Whether the plot window is currently open.
+    """
+
     def __init__(
         self, writer: Writer, plotter: Plotter, controller: Optional[Controller] = None
     ):
@@ -681,20 +776,29 @@ class Looper:
             self.controller = None
         else:
             self.controller = controller
+        self.plot_window_open = False
 
     def write_loop(self):
+        """The CSV writer function to be looped in the write/control thread."""
+
         while self.plot_window_open:
             self.writer.update()
 
     def plot_loop(self):
+        """The function to be looped in the plot thread."""
+
         self.plotter.update()
 
     def write_control_loop(self):
+        """The control function to be looped in the write/control thread."""
+
         while self.plot_window_open:
             self.writer.update()
             self.controller.update()
 
     def start(self):
+        """Start the write/control thread and plot on the main thread."""
+
         self.plot_window_open = True
         if self.controller is None:
             write_thread = Thread(target=self.write_loop)

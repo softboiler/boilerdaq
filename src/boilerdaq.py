@@ -567,9 +567,14 @@ class Controller:
 
         time_elapsed = datetime.now() - self.start_time
         if time_elapsed > self.start_delay:
-            feedback_value = self.feedback_result.value
-            control_value = self.pid(feedback_value)
-            print(f"{feedback_value} {control_value}")
+            last_feedback_value = self.feedback_value
+            self.feedback_value = self.feedback_result.value
+            feedback_value_change = abs(self.feedback_value - last_feedback_value)
+            if feedback_value_change > 10 or self.feedback_value < 0:
+                self.control_result.write(0)
+                raise Exception("PID feedback sensor value seems incorrect. Aborting.")
+            control_value = self.pid(self.feedback_value)
+            print(f"{self.feedback_value} {control_value}")
             self.control_result.write(control_value)
 
 

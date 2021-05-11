@@ -2,7 +2,7 @@ from setuptools import setup
 
 setup(
     name="boilerdaq",
-    version="0.3",
+    version="0.4",
     url="https://github.com/blakeNaccarato/boilerdaq",
     author="Blake Naccarato",
     package_dir={"": "src"},

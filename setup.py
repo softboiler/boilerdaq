@@ -17,20 +17,4 @@ setup(
         "scipy",
         "numpy",
     ],
-    extras_require={  # pip install -e .[dev]
-        "dev": [
-            # lint
-            "pylint",
-            "mypy",
-            "flake8",
-            # refactor
-            "rope",
-            # format
-            "black",
-            # document
-            "doc8",
-            # experiment
-            "jupyter",
-        ],
-    },
 )

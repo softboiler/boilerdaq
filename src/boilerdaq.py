@@ -481,10 +481,13 @@ class PowerResult(Result):
     def update(self):
         """Update the result."""
 
-        if self.source.name == "V":
-            self.value = float(self.instrument.query("measure:voltage?"))
-        elif self.source.name == "I":
-            self.value = float(self.instrument.query("measure:current?"))
+        try:
+            if self.source.name == "V":
+                self.value = float(self.instrument.query("measure:voltage?"))
+            elif self.source.name == "I":
+                self.value = float(self.instrument.query("measure:current?"))
+        except VisaIOError as exc:
+            print(exc)
 
     def write(self, value):
         """Write a value back to the instrument."""

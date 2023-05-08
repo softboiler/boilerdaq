@@ -1,5 +1,6 @@
 """Data acquisition and control of a boiler."""
 
+
 from __future__ import annotations
 
 import os
@@ -21,11 +22,7 @@ pyqtgraph.setConfigOptions(antialias=True)
 DELAY = 2  # read/write/plot timestep
 HISTORY_LENGTH = 300  # points to keep for plotting and fitting
 
-if os.environ.get("BOILERDAQ_DEBUG") == "True":
-    DEBUG = True
-else:
-    DEBUG = False
-
+DEBUG = os.environ.get("BOILERDAQ_DEBUG") == "True"
 if DEBUG:
     DELAY_DEBUG = 0.2
     GAIN_DEBUG = 100
@@ -64,16 +61,16 @@ class Sensor(NamedTuple):
         sensors = []
         with open(path) as csv_file:
             reader = DictReader(csv_file)
-            for row in reader:
-                sensors.append(
-                    cls(
-                        row["name"],
-                        int(row["board"]),
-                        int(row["channel"]),
-                        row["reading"],
-                        row["unit"],
-                    )
+            sensors.extend(
+                cls(
+                    row["name"],
+                    int(row["board"]),
+                    int(row["channel"]),
+                    row["reading"],
+                    row["unit"],
                 )
+                for row in reader
+            )
         return sensors
 
 
@@ -108,16 +105,16 @@ class ScaledParam(NamedTuple):
         params = []
         with open(path) as csv_file:
             reader = DictReader(csv_file)
-            for row in reader:
-                params.append(
-                    cls(
-                        row["name"],
-                        row["unscaled_sensor"],
-                        float(row["scale"]),
-                        float(row["offset"]),
-                        str(row["unit"]),
-                    )
+            params.extend(
+                cls(
+                    row["name"],
+                    row["unscaled_sensor"],
+                    float(row["scale"]),
+                    float(row["offset"]),
+                    str(row["unit"]),
                 )
+                for row in reader
+            )
         return params
 
 
@@ -155,17 +152,17 @@ class FluxParam(NamedTuple):
         params = []
         with open(path) as csv_file:
             reader = DictReader(csv_file)
-            for row in reader:
-                params.append(
-                    cls(
-                        row["name"],
-                        row["origin_sensor"],
-                        row["distant_sensor"],
-                        float(row["conductivity"]),
-                        float(row["length"]),
-                        row["unit"],
-                    )
+            params.extend(
+                cls(
+                    row["name"],
+                    row["origin_sensor"],
+                    row["distant_sensor"],
+                    float(row["conductivity"]),
+                    float(row["length"]),
+                    row["unit"],
                 )
+                for row in reader
+            )
         return params
 
 
@@ -203,17 +200,17 @@ class ExtrapParam(NamedTuple):
         params = []
         with open(path) as csv_file:
             reader = DictReader(csv_file)
-            for row in reader:
-                params.append(
-                    cls(
-                        row["name"],
-                        row["origin_sensor"],
-                        row["flux"],
-                        float(row["conductivity"]),
-                        float(row["length"]),
-                        row["unit"],
-                    )
+            params.extend(
+                cls(
+                    row["name"],
+                    row["origin_sensor"],
+                    row["flux"],
+                    float(row["conductivity"]),
+                    float(row["length"]),
+                    row["unit"],
                 )
+                for row in reader
+            )
         return params
 
 
@@ -239,13 +236,13 @@ class PowerParam(NamedTuple):
         power_supplies = []
         with open(path) as csv_file:
             reader = DictReader(csv_file)
-            for row in reader:
-                power_supplies.append(
-                    cls(
-                        row["name"],
-                        row["unit"],
-                    )
+            power_supplies.extend(
+                cls(
+                    row["name"],
+                    row["unit"],
                 )
+                for row in reader
+            )
         return power_supplies
 
 
@@ -286,8 +283,7 @@ class Result:
 
         result_names = [result.source.name for result in results]
         i = result_names.index(name)
-        result = results[i]
-        return result
+        return results[i]
 
 
 class Reading(Result):
@@ -475,7 +471,7 @@ class PowerResult(Result):
         self.instrument = instrument
         if self.source.name == "V":
             self.instrument.write("output:state on")
-            self.instrument.write("source:current " + str(current_limit))
+            self.instrument.write(f"source:current {current_limit}")
         self.update()
 
     def update(self):
@@ -494,9 +490,9 @@ class PowerResult(Result):
 
         try:
             if self.source.name == "V":
-                self.instrument.write("source:voltage " + str(value))
+                self.instrument.write(f"source:voltage {str(value)}")
             elif self.source.name == "I":
-                self.instrument.write("source:current " + str(value))
+                self.instrument.write(f"source:current {str(value)}")
         except VisaIOError as exc:
             print(exc)
 
@@ -639,11 +635,11 @@ class Writer:
         # The ":" in ISO time strings is not supported by filenames
         file_time = self.time.isoformat(timespec="seconds").replace(":", "-")
 
-        path = path + "_" + file_time + ext
+        path = f"{path}_{file_time}{ext}"
 
         # Compose the fieldnames and first row of values
         sources = [
-            result.source.name + " (" + result.source.unit + ")" for result in results
+            f"{result.source.name} ({result.source.unit})" for result in results
         ]
         fieldnames = ["time"] + sources
         values = [self.time.isoformat()] + [result.value for result in results]
@@ -721,9 +717,7 @@ class Plotter:
         self.all_results: List[Result] = []
         self.all_curves: List[pyqtgraph.PlotCurveItem] = []
         self.all_histories: List[Deque] = []
-        self.time: List[int] = []
-        for i in range(0, HISTORY_LENGTH):
-            self.time.append(-i * DELAY)
+        self.time: List[int] = [-i * DELAY for i in range(0, HISTORY_LENGTH)]
         self.time.reverse()
         self.add(title, results, row, col)
 
@@ -741,7 +735,6 @@ class Plotter:
         col: int = 0
             The window column to place an additional plot.
         """
-        i = 0
         plot = self.window.addPlot(row, col)
         plot.addLegend()
         plot.setLabel("left", units=results[0].source.unit)
@@ -751,10 +744,9 @@ class Plotter:
         histories = [result.history for result in results]
         self.all_histories.extend(histories)
         names = [result.source.name for result in results]
-        for history, name in zip(histories, names):
+        for i, (history, name) in enumerate(zip(histories, names)):
             curve = plot.plot(self.time, history, pen=pyqtgraph.intColor(i), name=name)
             self.all_curves.append(curve)
-            i += 1
 
     def update(self):
         """Update plots."""
@@ -785,10 +777,7 @@ class Looper:
     ):
         self.writer = writer
         self.plotter = plotter
-        if controller is None:
-            self.controller = None
-        else:
-            self.controller = controller
+        self.controller = None if controller is None else controller
         self.plot_window_open = False
 
     def write_loop(self):
@@ -815,11 +804,9 @@ class Looper:
         self.plot_window_open = True
         if self.controller is None:
             write_thread = Thread(target=self.write_loop)
-            write_thread.start()
         else:
             write_thread = Thread(target=self.write_control_loop)
-            write_thread.start()
-
+        write_thread.start()
         plot_timer = pyqtgraph.QtCore.QTimer()
         plot_timer.timeout.connect(self.plot_loop)
         plot_timer.start()

@@ -638,9 +638,7 @@ class Writer:
         path = f"{path}_{file_time}{ext}"
 
         # Compose the fieldnames and first row of values
-        sources = [
-            f"{result.source.name} ({result.source.unit})" for result in results
-        ]
+        sources = [f"{result.source.name} ({result.source.unit})" for result in results]
         fieldnames = ["time"] + sources
         values = [self.time.isoformat()] + [result.value for result in results]
         to_write = dict(zip(fieldnames, values))
@@ -705,7 +703,7 @@ class Plotter:
     time: List[int]
     """
 
-    window = pyqtgraph.GraphicsWindow()
+    window = pyqtgraph.GraphicsLayoutWidget()
 
     def __init__(
         self,
@@ -810,5 +808,6 @@ class Looper:
         plot_timer = pyqtgraph.QtCore.QTimer()
         plot_timer.timeout.connect(self.plot_loop)
         plot_timer.start()
-        pyqtgraph.Qt.QtGui.QApplication.instance().exec_()
+        self.plotter.window.show()
+        pyqtgraph.mkQApp().exec_()
         self.plot_window_open = False

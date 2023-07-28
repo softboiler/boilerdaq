@@ -1,0 +1,14 @@
+# Changes here will be overwritten by Copier; NEVER EDIT MANUALLY
+_commit: d0b0e62
+_src_path: gh:blakeNaccarato/copier-python
+actions_runner: ubuntu-latest
+active: true
+github_repo_name: boilerdaq
+project_description: Data processing pipeline for a nucleate pool boiling apparatus.
+project_email: blake.naccarato@gmail.com
+project_name: boilerdaq
+project_owner_github_username: blakeNaccarato
+project_owner_name: Blake Naccarato
+project_version: 0.4.0
+python_version: '3.11'
+year_of_project_creation: 2023

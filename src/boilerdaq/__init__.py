@@ -1,5 +1,4 @@
-"""Data acquisition and control of a boiler."""
-
+"""Data processing pipeline for a nucleate pool boiling apparatus."""
 
 from __future__ import annotations
 

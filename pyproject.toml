@@ -1,0 +1,49 @@
+[build-system]
+requires = [ "flit_core >=3.3,<4",]
+build-backend = "flit_core.buildapi"
+
+[project]
+name = "boilerdaq"
+version = "0.4.0"
+description = "Data processing pipeline for a nucleate pool boiling apparatus."
+readme = "README.md"
+requires-python = ">=3.11"
+classifiers = [ "License :: OSI Approved :: MIT License",]
+dependencies = [ "mcculw>=1.0.0", "PyQt5>=5.15.9", "pyqtgraph>=0.13.3", "PyVISA>=1.13.0", "simple-pid>=2.0.0", "scipy>=1.11.1", "numpy>=1.25.1",]
+[[project.authors]]
+name = "Blake Naccarato"
+email = "blake.naccarato@gmail.com"
+
+[project.license]
+file = "LICENSE"
+
+[project.urls]
+Changes = "https://blakeNaccarato.github.io/boilerdaq/changelog.html"
+Docs = "https://blakeNaccarato.github.io/boilerdaq"
+Home = "https://github.com/blakeNaccarato/boilerdaq"
+Tracker = "https://github.com/blakeNaccarato/boilerdaq/issues"
+
+[tool.ruff]
+fix = true
+select = [ "ALL",]
+src = [ "src", "tests",]
+target-version = "py311"
+extend-exclude = [ "template", "typings", ".github", ".tools", ".venv",]
+ignore = [ "ANN", "ARG005", "C408", "COM", "D10", "D20", "D213", "D402", "DTZ", "E501", "EM", "ERA", "FBT", "F841", "G0", "INP001", "ISC", "PD013", "PD901", "PD011", "PGH003", "PIE804", "PLR0913", "PLR2004", "PLW2901", "RET", "S301", "TCH", "TD", "TRY003", "W2", "B018", "F821", "S101", "T201",]
+unfixable = [ "F601",]
+
+[tool.ruff.pydocstyle]
+convention = "google"
+
+[tool.ruff.isort]
+split-on-trailing-comma = false
+
+[tool.ruff.per-file-ignores]
+"docs/**" = [ "E402",]
+"tests/**" = [ "ARG001", "S101",]
+
+[tool.ruff.flake8-bugbear]
+extend-immutable-calls = [ "typer.Argument", "typer.Option",]
+
+[tool.ruff.pep8-naming]
+classmethod-decorators = [ "pydantic.validator",]

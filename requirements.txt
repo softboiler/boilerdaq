@@ -1,1 +1,8 @@
 # List project dependencies here. A workflow ports them to `pyproject.toml`.
+mcculw==1.0.0
+PyQt5==5.15.9
+pyqtgraph==0.13.3
+PyVISA==1.13.0
+simple-pid==2.0.0
+scipy==1.11.1
+numpy==1.25.1

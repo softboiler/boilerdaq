@@ -3,10 +3,10 @@
 from __future__ import annotations
 
 import os
-from collections import OrderedDict, deque
+from collections import UserDict, deque
 from csv import DictReader, DictWriter
 from datetime import datetime, timedelta
-from os.path import splitext
+from pathlib import Path
 from threading import Thread
 from time import sleep
 from typing import NamedTuple
@@ -14,6 +14,7 @@ from typing import NamedTuple
 import pyqtgraph
 from mcculw.ul import ULError, t_in, v_in
 from numpy import exp, random
+from PyQt5.QtCore import QTimer
 from pyvisa import VisaIOError
 from simple_pid import PID
 
@@ -57,7 +58,7 @@ class Sensor(NamedTuple):
         """Process a CSV file at ``path``, returning a ``List`` of ``Sensor``."""
 
         sensors = []
-        with open(path) as csv_file:
+        with Path(path).open() as csv_file:
             reader = DictReader(csv_file)
             sensors.extend(
                 cls(
@@ -100,7 +101,7 @@ class ScaledParam(NamedTuple):
         """Process a CSV file at ``path``, returning a ``List`` of ``ScaledParam``."""
 
         params = []
-        with open(path) as csv_file:
+        with Path(path).open() as csv_file:
             reader = DictReader(csv_file)
             params.extend(
                 cls(
@@ -146,7 +147,7 @@ class FluxParam(NamedTuple):
         """Process a CSV file at ``path``, returning a ``List`` of ``FluxParam``."""
 
         params = []
-        with open(path) as csv_file:
+        with Path(path).open() as csv_file:
             reader = DictReader(csv_file)
             params.extend(
                 cls(
@@ -193,7 +194,7 @@ class ExtrapParam(NamedTuple):
         """Process a CSV file at ``path``, returning a ``List`` of ``ExtrapParam``."""
 
         params = []
-        with open(path) as csv_file:
+        with Path(path).open() as csv_file:
             reader = DictReader(csv_file)
             params.extend(
                 cls(
@@ -228,7 +229,7 @@ class PowerParam(NamedTuple):
         """Process a CSV file at ``path``, returning a ``List`` of ``ExtrapParam``."""
 
         power_supplies = []
-        with open(path) as csv_file:
+        with Path(path).open() as csv_file:
             reader = DictReader(csv_file)
             power_supplies.extend(
                 cls(
@@ -256,8 +257,8 @@ class Result:
     """
 
     def __init__(self):
-        self.source = None
-        self.value = None
+        self.source: Sensor = None  # type: ignore
+        self.value: float = None  # type: ignore
         self.time = deque([], maxlen=HISTORY_LENGTH)
         self.history = deque([], maxlen=HISTORY_LENGTH)
         for _ in range(HISTORY_LENGTH):
@@ -279,6 +280,10 @@ class Result:
         return results[i]
 
 
+UNIT_TYPES = {"C": 0, "F": 1, "K": 2, "V": 5}
+RANDOM = random.default_rng()
+
+
 class Reading(Result):
     """A reading directly from a sensor.
 
@@ -295,12 +300,10 @@ class Reading(Result):
         A random offset to use when debugging.
     """
 
-    unit_types = {"C": 0, "F": 1, "K": 2, "V": 5}
-
     def __init__(self, sensor: Sensor):
         super().__init__()
         if DEBUG:
-            self.debug_offset = random.normal(scale=GAIN_DEBUG)
+            self.debug_offset = RANDOM.normal(scale=GAIN_DEBUG)
         self.source = sensor
         self.update()
 
@@ -311,13 +314,13 @@ class Reading(Result):
             self.value = (
                 self.debug_offset
                 + GAIN_DEBUG * (1 - exp(-self.time[-1] / TAU_DEBUG))
-                + random.normal(scale=NOISE_SCALE * GAIN_DEBUG)
+                + RANDOM.normal(scale=NOISE_SCALE * GAIN_DEBUG)
             )
         elif self.source.reading == "temperature":
             try:
-                unit_int = self.unit_types[self.source.unit]
+                unit_int = UNIT_TYPES[self.source.unit]
                 self.value = t_in(self.source.board, self.source.channel, unit_int)
-            except ULError:
+            except ULError:  # type: ignore
                 self.value = 0
         elif self.source.reading == "voltage":
             self.value = v_in(self.source.board, self.source.channel, 0)
@@ -346,14 +349,14 @@ class ScaledResult(Result):
         results: list[Result],
     ):
         super().__init__()
-        self.source = scaled_param
+        self.source: ScaledParam = scaled_param  # type: ignore
         self.unscaled_result = Result.get(scaled_param.unscaled_sensor, results)
         self.update()
 
     def update(self):
         """Update the result."""
 
-        self.value = self.unscaled_result.value * self.source.scale + self.source.offset
+        self.value = self.unscaled_result.value * self.source.scale + self.source.offset  # type: ignore
         super().update()
 
 
@@ -381,7 +384,7 @@ class Flux(Result):
         results: list[Result],
     ):
         super().__init__()
-        self.source = flux_param
+        self.source: FluxParam = flux_param  # type: ignore
         self.origin_result = Result.get(flux_param.origin_sensor, results)
         self.distant_result = Result.get(flux_param.distant_sensor, results)
         self.update()
@@ -392,7 +395,7 @@ class Flux(Result):
         self.value = (
             self.source.conductivity
             / self.source.length
-            * (self.origin_result.value - self.distant_result.value)
+            * (self.origin_result.value - self.distant_result.value)  # type: ignore
         )
         super().update()
 
@@ -421,7 +424,7 @@ class ExtrapResult(Result):
         results: list[Result],
     ):
         super().__init__()
-        self.source = extrap_param
+        self.source: ExtrapParam = extrap_param  # type: ignore
         self.origin_result = Result.get(extrap_param.origin_sensor, results)
         self.flux_result = Result.get(extrap_param.flux, results)
 
@@ -455,7 +458,7 @@ class PowerResult(Result):
         instrument,
         current_limit: float,
     ):
-        self.source = power_param
+        self.source: PowerParam = power_param  # type: ignore
         self.instrument = instrument
         if self.source.name == "V":
             self.instrument.write("output:state on")
@@ -485,7 +488,7 @@ class PowerResult(Result):
             print(exc)
 
 
-class ResultGroup(OrderedDict):
+class ResultGroup(UserDict[str, list[Result]]):
     """A group of results.
 
     Parameters
@@ -496,14 +499,15 @@ class ResultGroup(OrderedDict):
         List of results containing the results to be grouped.
     """
 
-    def __init__(self, group_dict: OrderedDict, results: list[Result]):
+    def __init__(self, group_dict: dict[str, str], results: list[Result]):
+        super().__init__()
         for key, val in group_dict.items():
             result_names = val.split()
             filtered_results = []
             for name in result_names:
                 result = Result.get(name, results)
                 filtered_results.append(result)
-            self[key] = filtered_results
+            self[key] = filtered_results  # type: ignore
 
 
 class Controller:
@@ -537,12 +541,12 @@ class Controller:
         control_result: PowerResult,
         feedback_result: Result,
         setpoint: float,
-        gains: list[float],
+        gains: tuple[float, float, float],
         output_limits: tuple[float, float],
         start_delay: float = 0,
     ):
-        self.control_result = control_result
-        self.feedback_result = feedback_result
+        self.control_result: PowerResult = control_result
+        self.feedback_result: Result = feedback_result
         self.pid = PID(*gains, setpoint, output_limits=output_limits)
         self.start_time = datetime.now()
         self.start_delay = timedelta(seconds=start_delay)
@@ -560,7 +564,7 @@ class Controller:
             feedback_value_change = abs(self.feedback_value - self.last_feedback_value)
             if feedback_value_change > 10 or self.feedback_value < 0:
                 self.control_result.write(0)
-                raise Exception(
+                raise ValueError(
                     "The PID feedback sensor value seems incorrect. Aborting."
                 )
             control_value = self.pid(self.feedback_value)
@@ -600,7 +604,7 @@ class Writer:
         self.paths: list[str] = []
         self.result_groups: list[list[Result]] = []
         self.fieldname_groups: list[list[str]] = []
-        self.time = datetime.now()
+        self.time: datetime = datetime.now()  # type: ignore
         self.add(path, results)
 
     def add(self, path: str, results: list[Result]):
@@ -616,21 +620,18 @@ class Writer:
             Additonal list of results to be written to a file.
         """
 
-        (path, ext) = splitext(path)
-
         # The ":" in ISO time strings is not supported by filenames
-        file_time = self.time.isoformat(timespec="seconds").replace(":", "-")
-
-        path = f"{path}_{file_time}{ext}"
-
+        file_time = self.time.isoformat(timespec="seconds").replace(":", "-")  # type: ignore
+        path = Path(path)  # type: ignore
+        path = str(path.with_name(f"{path.name}_{file_time}"))  # type: ignore
         # Compose the fieldnames and first row of values
         sources = [f"{result.source.name} ({result.source.unit})" for result in results]
         fieldnames = ["time", *sources]
-        values = [self.time.isoformat()] + [result.value for result in results]
-        to_write = dict(zip(fieldnames, values))
+        values = [self.time.isoformat()] + [result.value for result in results]  # type: ignore
+        to_write = dict(zip(fieldnames, values, strict=True))
 
         # Create the CSV, writing the header and the first row of values
-        with open(path, "w", newline="") as csv_file:
+        with Path(path).open("w", newline="") as csv_file:
             csv_writer = DictWriter(csv_file, fieldnames=fieldnames)
             csv_writer.writeheader()
             csv_writer.writerow(to_write)
@@ -647,7 +648,7 @@ class Writer:
             sleep(DELAY_DEBUG)
         else:
             sleep(DELAY)
-        self.time = datetime.now().isoformat()
+        self.time: str = datetime.now().isoformat()
         for results in self.result_groups:
             for result in results:
                 result.update()
@@ -657,12 +658,12 @@ class Writer:
         """Write data to CSV."""
 
         for path, results, fieldnames in zip(
-            self.paths, self.result_groups, self.fieldname_groups
+            self.paths, self.result_groups, self.fieldname_groups, strict=True
         ):
             values = [self.time] + [result.value for result in results]
-            to_write = dict(zip(fieldnames, values))
+            to_write = dict(zip(fieldnames, values, strict=True))
 
-            with open(path, "a", newline="") as csv_file:
+            with Path(path).open("a", newline="") as csv_file:
                 csv_writer = DictWriter(csv_file, fieldnames=fieldnames)
                 csv_writer.writerow(to_write)
 
@@ -700,8 +701,8 @@ class Plotter:
     ):
         self.all_results: list[Result] = []
         self.all_curves: list[pyqtgraph.PlotCurveItem] = []
-        self.all_histories: list[deque] = []
-        self.time: list[int] = [-i * DELAY for i in range(0, HISTORY_LENGTH)]
+        self.all_histories: list[deque[float]] = []
+        self.time: list[int] = [-i * DELAY for i in range(HISTORY_LENGTH)]
         self.time.reverse()
         self.add(title, results, row, col)
 
@@ -728,13 +729,13 @@ class Plotter:
         histories = [result.history for result in results]
         self.all_histories.extend(histories)
         names = [result.source.name for result in results]
-        for i, (history, name) in enumerate(zip(histories, names)):
+        for i, (history, name) in enumerate(zip(histories, names, strict=True)):
             curve = plot.plot(self.time, history, pen=pyqtgraph.intColor(i), name=name)
             self.all_curves.append(curve)
 
     def update(self):
         """Update plots."""
-        for curve, history in zip(self.all_curves, self.all_histories):
+        for curve, history in zip(self.all_curves, self.all_histories, strict=True):
             curve.setData(self.time, history)
 
 
@@ -762,7 +763,7 @@ class Looper:
         self.app = pyqtgraph.mkQApp()
         self.writer = writer
         self.plotter = plotter
-        self.controller = None if controller is None else controller
+        self.controller: Controller = None if controller is None else controller  # type: ignore
         self.plot_window_open = False
 
     def write_loop(self):
@@ -787,12 +788,12 @@ class Looper:
         """Start the write/control thread and plot on the main thread."""
 
         self.plot_window_open = True
-        if self.controller is None:
+        if self.controller is None:  # type: ignore
             write_thread = Thread(target=self.write_loop)
         else:
             write_thread = Thread(target=self.write_control_loop)
         write_thread.start()
-        plot_timer = pyqtgraph.QtCore.QTimer()
+        plot_timer = QTimer()
         plot_timer.timeout.connect(self.plot_loop)
         plot_timer.start()
         self.plotter.window.show()

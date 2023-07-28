@@ -2,11 +2,26 @@
 
 from __future__ import annotations
 
-from collections import OrderedDict
-
 import pyvisa
 
-import boilerdaq as bd
+from boilerdaq import (
+    Controller,
+    ExtrapParam,
+    ExtrapResult,
+    Flux,
+    FluxParam,
+    Looper,
+    Plotter,
+    PowerParam,
+    PowerResult,
+    Reading,
+    Result,
+    ResultGroup,
+    ScaledParam,
+    ScaledResult,
+    Sensor,
+    Writer,
+)
 
 POWER_SUPPLIES_PATH = "config/0_power_supplies.csv"
 SENSORS_PATH = "config/1_sensors.csv"
@@ -30,69 +45,69 @@ CURRENT_LIMIT = 4
 CONTROL_SENSOR_NAME = "V"
 FEEDBACK_SENSOR_NAME = "T0cal"
 SETPOINT = 80
-GAINS = [12, 0.08, 1]
+GAINS = (12, 0.08, 1)
 OUTPUT_LIMITS = (0, 300)
 START_DELAY = 5
 
 # Get power supply values
-all_power_supplies = bd.PowerParam.get(POWER_SUPPLIES_PATH)
+all_power_supplies = PowerParam.get(POWER_SUPPLIES_PATH)
 power_results = []
 for power_supply in all_power_supplies:
-    result = bd.PowerResult(power_supply, instrument, CURRENT_LIMIT)
+    result = PowerResult(power_supply, instrument, CURRENT_LIMIT)
     power_results.append(result)
 
 # Get all readings
-all_sensors = bd.Sensor.get(SENSORS_PATH)
+all_sensors = Sensor.get(SENSORS_PATH)
 readings = []
 for sensor in all_sensors:
-    reading = bd.Reading(sensor)
+    reading = Reading(sensor)
     readings.append(reading)
 
 # Get scaled parameters
-scaled_params = bd.ScaledParam.get(SCALED_PARAMS_PATH)
+scaled_params = ScaledParam.get(SCALED_PARAMS_PATH)
 # Get scaled results
 scaled_results = []
 for param in scaled_params:
-    result = bd.ScaledResult(param, readings)
+    result = ScaledResult(param, readings)
     scaled_results.append(result)
 
 # Get flux parameters
-flux_params = bd.FluxParam.get(FLUX_PARAMS_PATH)
+flux_params = FluxParam.get(FLUX_PARAMS_PATH)
 # Get fluxes
 fluxes = []
 for param in flux_params:
-    result = bd.Flux(param, scaled_results)
+    result = Flux(param, scaled_results)
     fluxes.append(result)
 
 # Get extrapolation parameters
-extrap_params = bd.ExtrapParam.get(EXTRAP_PARAMS_PATH)
+extrap_params = ExtrapParam.get(EXTRAP_PARAMS_PATH)
 # Get extrapolated results
 extrap_results = []
 for param in extrap_params:
-    result = bd.ExtrapResult(param, scaled_results + fluxes)
+    result = ExtrapResult(param, scaled_results + fluxes)
     extrap_results.append(result)
 
 # Combine calculated results into one list
-results = power_results + readings + scaled_results + fluxes + extrap_results
+results: list[Result] = (
+    power_results + readings + scaled_results + fluxes + extrap_results
+)
 
 # Start writing
-writer = bd.Writer(RESULTS_PATH, results)
+writer = Writer(RESULTS_PATH, results)
 
 # Build list of sensor groups, grouped by name
-group_dict = OrderedDict(
-    [
-        ("base", "T0cal"),
-        ("post", "T1cal T2cal T3cal T4cal"),
-        ("top", "T5cal T6ext"),
-        ("water", "Tw1cal Tw2cal Tw3cal"),
-        ("pressure", "Pcal"),
-        ("flux", "Q12 Q23 Q34 Q45"),
-    ]
+group_dict = dict(
+    base="T0cal",
+    post="T1cal T2cal T3cal T4cal",
+    top="T5cal T6ext",
+    water="Tw1cal Tw2cal Tw3cal",
+    pressure="Pcal",
+    flux="Q12 Q23 Q34 Q45",
 )
-group = bd.ResultGroup(group_dict, results)
+group = ResultGroup(group_dict, results)
 
 # Add groups of curves to different plot regions
-plotter = bd.Plotter("base", group["base"], 0, 0)
+plotter = Plotter("base", group["base"], 0, 0)
 plotter.add("post", group["post"], 0, 1)
 plotter.add("top", group["top"], 0, 2)
 plotter.add("water", group["water"], 1, 0)
@@ -100,9 +115,9 @@ plotter.add("pressure", group["pressure"], 1, 1)
 plotter.add("flux", group["flux"], 1, 2)
 
 # Create control loop
-controller = bd.Controller(
-    bd.Result.get(CONTROL_SENSOR_NAME, results),
-    bd.Result.get(FEEDBACK_SENSOR_NAME, results),
+controller = Controller(
+    Result.get(CONTROL_SENSOR_NAME, results),  # type: ignore
+    Result.get(FEEDBACK_SENSOR_NAME, results),
     SETPOINT,
     GAINS,
     OUTPUT_LIMITS,
@@ -110,7 +125,7 @@ controller = bd.Controller(
 )
 
 # Start the write and plot loops
-looper = bd.Looper(writer, plotter, controller)
+looper = Looper(writer, plotter, controller)
 
 if __name__ == "__main__":
     looper.start()

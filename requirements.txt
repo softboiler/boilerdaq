@@ -1,5 +1,6 @@
 # List project dependencies here. A workflow ports them to `pyproject.toml`.
 dulwich==0.21.5
+loguru==0.7.0
 mcculw==1.0.0
 PyQt5==5.15.9
 pandas==2.0.2

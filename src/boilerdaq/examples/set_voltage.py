@@ -1,5 +1,7 @@
 """Set a voltage on the power supply."""
 
+# Due to 'inst.write'
+# pyright: reportGeneralTypeIssues=none
 
 from time import sleep
 

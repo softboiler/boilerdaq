@@ -1,6 +1,5 @@
 """Simple test with one sensor."""
 
-from collections import OrderedDict
 
 from boilerdaq import Looper, Plotter, Reading, ResultGroup, Sensor, Writer
 
@@ -21,11 +20,7 @@ results = readings
 writer = Writer(results_path, results)
 
 # Build list of sensor groups, grouped by name
-group_dict = OrderedDict(
-    [
-        ("base", "T1"),
-    ]
-)
+group_dict = dict(base="T1")
 group = ResultGroup(group_dict, results)
 
 # Add groups of curves to different plot regions

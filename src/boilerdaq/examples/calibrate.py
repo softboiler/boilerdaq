@@ -1,7 +1,5 @@
 from __future__ import annotations
 
-from collections import OrderedDict
-
 import boilerdaq as bd
 
 sensors_path = "config/1_sensors.csv"
@@ -30,16 +28,11 @@ results = readings + scaled_results
 writer = bd.Writer(results_path, results)
 
 # Build list of sensor groups, grouped by name
-group_dict = OrderedDict(
-    [
-        ("uncalibrated", "T0 T1 T2 T3 T4 T5 Tw1 Tw2 Tw3 Tw4"),
-        (
-            "calibrated",
-            "T0cal T1cal T2cal T3cal T4cal T5cal Tw1cal Tw2cal Tw3cal Tw4cal",
-        ),
-        ("pressure_volts", "P"),
-        ("pressure", "Pcal"),
-    ]
+group_dict = dict(
+    uncalibrated="T0 T1 T2 T3 T4 T5 Tw1 Tw2 Tw3 Tw4",
+    calibrated="T0cal T1cal T2cal T3cal T4cal T5cal Tw1cal Tw2cal Tw3cal Tw4cal",
+    pressure_volts="P",
+    pressure="Pcal",
 )
 group = bd.ResultGroup(group_dict, results)
 

@@ -7,6 +7,7 @@ from collections.abc import Callable, Coroutine
 from concurrent.futures import ProcessPoolExecutor
 from contextlib import AbstractContextManager
 from functools import wraps
+from itertools import chain
 from os import chdir
 from pathlib import Path
 from shlex import quote, split
@@ -14,6 +15,7 @@ from subprocess import CalledProcessError
 from sys import stdout
 from typing import Any
 
+from dulwich.porcelain import status
 from dulwich.repo import Repo  # type: ignore  # pyright: 1.1.317
 from loguru import logger  # type: ignore  # pyright: 1.1.317
 from ploomber_engine import execute_notebook  # type: ignore  # pyright: 1.1.317
@@ -50,12 +52,12 @@ if not VERBOSE_LOG:
 
 
 async def main():
-    nbs = get_nbs(REPO, IPYNB, ALSO_COMMITTED, MODIFIED_ONLY)
+    nbs = get_nbs(REPO, IPYNB, MODIFIED_ONLY)
     if not nbs:
         return
     if CLEAN:
         await clean(nbs)
-        nbs = get_nbs(REPO, IPYNB, ALSO_COMMITTED, MODIFIED_ONLY)
+        nbs = get_nbs(REPO, IPYNB, MODIFIED_ONLY)
         if not nbs:
             return
     for process, cond in {execute: EXECUTE, export: EXPORT, report: REPORT}.items():
@@ -67,12 +69,10 @@ async def main():
 # * NOTEBOOK PROCESSING
 
 
-def get_nbs(
-    repo: Repo, docs: Path, also_committed: bool, modified_only: bool
-) -> dict[Path, str]:
+def get_nbs(repo: Repo, docs: Path, modified_only: bool) -> dict[Path, str]:
     """Get all notebooks or just the modified ones."""
     return (
-        fold_modified_nbs(repo, also_committed, docs)
+        fold_modified_nbs(repo, docs)
         if modified_only
         else fold_docs_nbs(list(docs.glob("**/*.ipynb")), docs)
     )
@@ -256,22 +256,18 @@ async def run_process(command: str, venv: bool = True):
     )
 
 
-def fold_modified_nbs(repo: Repo, also_committed: bool, docs: Path) -> dict[Path, str]:
+def fold_modified_nbs(repo: Repo, docs: Path) -> dict[Path, str]:
     """Fold the paths of modified documentation notebooks."""
-    modified = get_modified_files(repo, also_committed)
+    modified = get_modified_files(repo)
     return fold_docs_nbs(modified, docs) if docs in modified else {}
 
 
-def get_modified_files(repo: Repo, also_committed: bool) -> list[Path]:
+def get_modified_files(repo: Repo) -> list[Path]:
     """Get files considered modified by DVC."""
-    status = repo.data_status(granular=True)
-    modified: list[Path] = []
-    for key in ["modified", "added"]:
-        paths = status["uncommitted"].get(key) or []
-        if also_committed:
-            paths.extend(status["committed"].get(key) or [])
-        modified.extend([Path(path) for path in paths])
-    return modified
+    return [
+        Path(path.decode("utf-8"))
+        for path in (status(repo).unstaged + list(chain(*status(repo).staged.values())))  # type: ignore
+    ]
 
 
 def fold_docs_nbs(paths: list[Path], docs: Path) -> dict[Path, str]:

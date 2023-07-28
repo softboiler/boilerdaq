@@ -2,7 +2,6 @@
 
 from __future__ import annotations
 
-from collections import OrderedDict
 from csv import DictReader
 from pathlib import Path
 
@@ -10,7 +9,7 @@ import pyvisa
 
 import boilerdaq as bd
 
-CONTINUE_FROM_LAST = True
+CONTINUE_FROM_LAST = False
 
 POWER_SUPPLIES_PATH = "config/0_power_supplies.csv"
 SENSORS_PATH = "config/1_sensors.csv"
@@ -33,8 +32,8 @@ instrument = rm.open_resource(
 CURRENT_LIMIT = 4
 CONTROL_SENSOR_NAME = "V"
 FEEDBACK_SENSOR_NAME = "T0cal"
-SETPOINT = 0
-GAINS = [12, 0.08, 1]
+SETPOINT = 30
+GAINS = (12, 0.08, 1)
 OUTPUT_LIMITS = (0, 300)
 START_DELAY = 5
 
@@ -83,15 +82,13 @@ results = power_results + readings + scaled_results + fluxes + extrap_results
 writer = bd.Writer(RESULTS_PATH, results)
 
 # Build list of sensor groups, grouped by name
-group_dict = OrderedDict(
-    [
-        ("base", "T0cal"),
-        ("post", "T1cal T2cal T3cal T4cal"),
-        ("top", "T5cal T6ext"),
-        ("water", "Tw1cal Tw2cal Tw3cal"),
-        ("pressure", "Pcal"),
-        ("flux", "Q12 Q23 Q34 Q45"),
-    ]
+group_dict = dict(
+    base="T0cal",
+    post="T1cal T2cal T3cal T4cal",
+    top="T5cal T6ext",
+    water="Tw1cal Tw2cal Tw3cal",
+    pressure="Pcal",
+    flux="Q12 Q23 Q34 Q45",
 )
 group = bd.ResultGroup(group_dict, results)
 
@@ -106,7 +103,7 @@ plotter.add("flux", group["flux"], 1, 2)
 # Create control loop
 control_sensor = bd.Result.get(CONTROL_SENSOR_NAME, results)
 controller = bd.Controller(
-    control_sensor,
+    control_sensor,  # type: ignore
     bd.Result.get(FEEDBACK_SENSOR_NAME, results),
     SETPOINT,
     GAINS,
@@ -118,7 +115,7 @@ controller = bd.Controller(
 if CONTINUE_FROM_LAST:
     last = sorted(Path(RESULTS_PATH).parent.glob(f"*{Path(RESULTS_PATH).stem}*"))[-1]
     control_source = control_sensor.source
-    with open(last) as csv_file:
+    with last.open() as csv_file:
         reader = DictReader(csv_file)
         last_output = float(
             list(reader)[-1][f"{control_source.name} ({control_source.unit})"]

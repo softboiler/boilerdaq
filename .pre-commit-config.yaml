@@ -1,9 +1,11 @@
 ci:
   skip:
+    - "pre-repro"
+    - "update-warning-filters"
     - "compose-pyproject"
+    # - "pyright"
     - "pytest-fast-only"
-    - "pytest-slow-only"
-    - "pyright"
+    # - "pytest-slow-only"
   autoupdate_schedule: "quarterly"
 
 repos:
@@ -20,6 +22,16 @@ repos:
       # * -------------------------------------------------------------------------- * #
       # * Changes below may be lost in significant template updates.
 
+      - id: "update-warning-filters"
+        name: "update-warning-filters"
+        verbose: true
+        pass_filenames: false
+        language: "system"
+        entry: "pwsh -Command python warning_filters.py"
+        files: |
+          (?x)^(
+            warning_filters.py
+          )$
       - id: "compose-pyproject"
         name: "compose-pyproject"
         pass_filenames: false
@@ -31,22 +43,22 @@ repos:
             |requirements.txt
             |.tools/pyproject.toml
           )$
-      - id: "pyright"
-        name: "pyright"
-        pass_filenames: false
-        language: "system"
-        entry: "pwsh .tools/scripts/Invoke-Pyright.ps1"
-        files: |
-          (?x)^(
-            src/.*
-            |tests/.*
-            |pyproject.toml
-            |requirements.txt
-            |.tools/(
-              pyproject.toml
-              |requirements/.*
-            )
-          )$
+      # - id: "pyright"
+      #   name: "pyright"
+      #   pass_filenames: false
+      #   language: "system"
+      #   entry: "pwsh .tools/scripts/Invoke-Pyright.ps1"
+      #   files: |
+      #     (?x)^(
+      #       src/.*
+      #       |tests/.*
+      #       |pyproject.toml
+      #       |requirements.txt
+      #       |.tools/(
+      #         pyproject.toml
+      #         |requirements/.*
+      #       )
+      #     )$
       - id: "pytest-fast-only"
         name: "pytest-fast-only"
         verbose: true
@@ -57,24 +69,29 @@ repos:
         files: |
           (?x)^(
             pyproject.toml
+
+            # exclude these if running pytest-slow-only again below
+            src/.*
+            |tests/.*
+
             |requirements.txt
             |.tools/(
               pyproject.toml
               |requirements/.*
             )
           )$
-      - id: "pytest-slow-only"
-        name: "pytest-slow-only"
-        verbose: true
-        pass_filenames: false
-        language: "system"
-        entry: |
-          pwsh -Command "pytest -m 'slow' --suppress-no-test-exit-code"
-        files: |
-          (?x)^(
-            src/.*
-            |tests/.*
-          )$
+      # - id: "pytest-slow-only"
+      #   name: "pytest-slow-only"
+      #   verbose: true
+      #   pass_filenames: false
+      #   language: "system"
+      #   entry: |
+      #     pwsh -Command "pytest -m 'slow' --suppress-no-test-exit-code"
+      #   files: |
+      #     (?x)^(
+      #       src/.*
+      #       |tests/.*
+      #     )$
 
   # * ------------------------------------------------------------------------------ * #
   # * Changes below should persist in significant template updates.

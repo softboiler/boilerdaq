@@ -9,7 +9,7 @@ from datetime import datetime, timedelta
 from os.path import splitext
 from threading import Thread
 from time import sleep
-from typing import Deque, List, NamedTuple, Optional, Tuple
+from typing import NamedTuple
 
 import pyqtgraph
 from mcculw.ul import ULError, t_in, v_in
@@ -30,8 +30,7 @@ if DEBUG:
 
 
 class Sensor(NamedTuple):
-    """
-    Sensor parameters.
+    """Sensor parameters.
 
     Parameters
     ----------
@@ -54,7 +53,7 @@ class Sensor(NamedTuple):
     unit: str
 
     @classmethod
-    def get(cls, path: str) -> List[Sensor]:
+    def get(cls, path: str) -> list[Sensor]:
         """Process a CSV file at ``path``, returning a ``List`` of ``Sensor``."""
 
         sensors = []
@@ -74,8 +73,7 @@ class Sensor(NamedTuple):
 
 
 class ScaledParam(NamedTuple):
-    """
-    Parameters for scalar modification of a sensor.
+    """Parameters for scalar modification of a sensor.
 
     Parameters
     ----------
@@ -98,7 +96,7 @@ class ScaledParam(NamedTuple):
     unit: str
 
     @classmethod
-    def get(cls, path: str) -> List[ScaledParam]:
+    def get(cls, path: str) -> list[ScaledParam]:
         """Process a CSV file at ``path``, returning a ``List`` of ``ScaledParam``."""
 
         params = []
@@ -118,8 +116,7 @@ class ScaledParam(NamedTuple):
 
 
 class FluxParam(NamedTuple):
-    """
-    Parameters for the flux between two sensors.
+    """Parameters for the flux between two sensors.
 
     Parameters
     ----------
@@ -145,7 +142,7 @@ class FluxParam(NamedTuple):
     unit: str
 
     @classmethod
-    def get(cls, path: str) -> List[FluxParam]:
+    def get(cls, path: str) -> list[FluxParam]:
         """Process a CSV file at ``path``, returning a ``List`` of ``FluxParam``."""
 
         params = []
@@ -166,8 +163,7 @@ class FluxParam(NamedTuple):
 
 
 class ExtrapParam(NamedTuple):
-    """
-    Parameters for extrapolation from two sensors and a flux to a point of interest.
+    """Parameters for extrapolation from two sensors and a flux to a point of interest.
 
     Parameters
     ----------
@@ -193,7 +189,7 @@ class ExtrapParam(NamedTuple):
     unit: str
 
     @classmethod
-    def get(cls, path: str) -> List[ExtrapParam]:
+    def get(cls, path: str) -> list[ExtrapParam]:
         """Process a CSV file at ``path``, returning a ``List`` of ``ExtrapParam``."""
 
         params = []
@@ -214,8 +210,7 @@ class ExtrapParam(NamedTuple):
 
 
 class PowerParam(NamedTuple):
-    """
-    Parameters for power supplies.
+    """Parameters for power supplies.
 
     Parameters
     ----------
@@ -229,7 +224,7 @@ class PowerParam(NamedTuple):
     unit: str
 
     @classmethod
-    def get(cls, path: str) -> List[PowerParam]:
+    def get(cls, path: str) -> list[PowerParam]:
         """Process a CSV file at ``path``, returning a ``List`` of ``ExtrapParam``."""
 
         power_supplies = []
@@ -246,10 +241,9 @@ class PowerParam(NamedTuple):
 
 
 class Result:
-    """
-    A result.
+    """A result.
 
-    Attributes
+    Attributes:
     ----------
     source: str
         The source of the result.
@@ -277,7 +271,7 @@ class Result:
         self.time.append(self.time[-1] + DELAY)
 
     @staticmethod
-    def get(name: str, results: List[Result]) -> Result:
+    def get(name: str, results: list[Result]) -> Result:
         """Get a result or results by the source name."""
 
         result_names = [result.source.name for result in results]
@@ -286,15 +280,14 @@ class Result:
 
 
 class Reading(Result):
-    """
-    A reading directly from a sensor.
+    """A reading directly from a sensor.
 
     Parameters
     ----------
     sensor: Sensor
         The sensor parameters used to get a result.
 
-    Attributes
+    Attributes:
     ----------
     unit_types: Dict[str: int]
         Enumeration of unit types supported by the board on which the sensor resides.
@@ -332,8 +325,7 @@ class Reading(Result):
 
 
 class ScaledResult(Result):
-    """
-    A scaled result.
+    """A scaled result.
 
     Parameters
     ----------
@@ -342,7 +334,7 @@ class ScaledResult(Result):
     results: List[Result]
         A list of results containing the source to be scaled.
 
-    Attributes
+    Attributes:
     ----------
     unscaled_result: Result
         The unscaled result.
@@ -351,7 +343,7 @@ class ScaledResult(Result):
     def __init__(
         self,
         scaled_param: ScaledParam,
-        results: List[Result],
+        results: list[Result],
     ):
         super().__init__()
         self.source = scaled_param
@@ -366,8 +358,7 @@ class ScaledResult(Result):
 
 
 class Flux(Result):
-    """
-    A flux result.
+    """A flux result.
 
     Parameters
     ----------
@@ -376,7 +367,7 @@ class Flux(Result):
     results: List[Result]
         A list of results containing the source to be scaled.
 
-    Attributes
+    Attributes:
     ----------
     origin_result: Result
         The result of the source at the origin.
@@ -387,7 +378,7 @@ class Flux(Result):
     def __init__(
         self,
         flux_param: FluxParam,
-        results: List[Result],
+        results: list[Result],
     ):
         super().__init__()
         self.source = flux_param
@@ -407,8 +398,7 @@ class Flux(Result):
 
 
 class ExtrapResult(Result):
-    """
-    An extrapolated result.
+    """An extrapolated result.
 
     Parameters
     ----------
@@ -417,7 +407,7 @@ class ExtrapResult(Result):
     results: List[Result]
         A list of results containing the source to be scaled.
 
-    Attributes
+    Attributes:
     ----------
     origin_result: Result
         The result of the source at the origin.
@@ -428,7 +418,7 @@ class ExtrapResult(Result):
     def __init__(
         self,
         extrap_param: ExtrapParam,
-        results: List[Result],
+        results: list[Result],
     ):
         super().__init__()
         self.source = extrap_param
@@ -447,8 +437,7 @@ class ExtrapResult(Result):
 
 
 class PowerResult(Result):
-    """
-    A result from a power supply.
+    """A result from a power supply.
 
     Parameters
     ----------
@@ -489,16 +478,15 @@ class PowerResult(Result):
 
         try:
             if self.source.name == "V":
-                self.instrument.write(f"source:voltage {str(value)}")
+                self.instrument.write(f"source:voltage {value!s}")
             elif self.source.name == "I":
-                self.instrument.write(f"source:current {str(value)}")
+                self.instrument.write(f"source:current {value!s}")
         except VisaIOError as exc:
             print(exc)
 
 
 class ResultGroup(OrderedDict):
-    """
-    A group of results.
+    """A group of results.
 
     Parameters
     ----------
@@ -508,7 +496,7 @@ class ResultGroup(OrderedDict):
         List of results containing the results to be grouped.
     """
 
-    def __init__(self, group_dict: OrderedDict, results: List[Result]):
+    def __init__(self, group_dict: OrderedDict, results: list[Result]):
         for key, val in group_dict.items():
             result_names = val.split()
             filtered_results = []
@@ -519,8 +507,7 @@ class ResultGroup(OrderedDict):
 
 
 class Controller:
-    """
-    A PID controller.
+    """A PID controller.
 
     Parameters
     ----------
@@ -537,7 +524,7 @@ class Controller:
     start_delay: float
         Time to wait before activating PID.
 
-    Attributes
+    Attributes:
     ----------
     pid: PID
         The PID controller.
@@ -550,8 +537,8 @@ class Controller:
         control_result: PowerResult,
         feedback_result: Result,
         setpoint: float,
-        gains: List[float],
-        output_limits: Tuple[float, float],
+        gains: list[float],
+        output_limits: tuple[float, float],
         start_delay: float = 0,
     ):
         self.control_result = control_result
@@ -593,7 +580,7 @@ class Writer:
     results: List[Result]
         The first list of results to be written to a file.
 
-    Attributes
+    Attributes:
     ----------
     paths: List[str]
         Base names of multiple results CSVs to be written to.
@@ -608,15 +595,15 @@ class Writer:
     def __init__(
         self,
         path: str,
-        results: List[Result],
+        results: list[Result],
     ):
-        self.paths: List[str] = []
-        self.result_groups: List[List[Result]] = []
-        self.fieldname_groups: List[List[str]] = []
+        self.paths: list[str] = []
+        self.result_groups: list[list[Result]] = []
+        self.fieldname_groups: list[list[str]] = []
         self.time = datetime.now()
         self.add(path, results)
 
-    def add(self, path: str, results: List[Result]):
+    def add(self, path: str, results: list[Result]):
         """Add a CSV file to be written to and a set of results to write to it.
 
         Parameters
@@ -638,7 +625,7 @@ class Writer:
 
         # Compose the fieldnames and first row of values
         sources = [f"{result.source.name} ({result.source.unit})" for result in results]
-        fieldnames = ["time"] + sources
+        fieldnames = ["time", *sources]
         values = [self.time.isoformat()] + [result.value for result in results]
         to_write = dict(zip(fieldnames, values))
 
@@ -694,7 +681,7 @@ class Plotter:
     col: int = 0
         The window column to place the first plot.
 
-    Attributes
+    Attributes:
     ----------
     all_results: List[Result]
     all_curves: List[pyqtgraph.PlotCurveItem]
@@ -707,18 +694,18 @@ class Plotter:
     def __init__(
         self,
         title: str,
-        results: List[Result],
+        results: list[Result],
         row: int = 0,
         col: int = 0,
     ):
-        self.all_results: List[Result] = []
-        self.all_curves: List[pyqtgraph.PlotCurveItem] = []
-        self.all_histories: List[Deque] = []
-        self.time: List[int] = [-i * DELAY for i in range(0, HISTORY_LENGTH)]
+        self.all_results: list[Result] = []
+        self.all_curves: list[pyqtgraph.PlotCurveItem] = []
+        self.all_histories: list[deque] = []
+        self.time: list[int] = [-i * DELAY for i in range(0, HISTORY_LENGTH)]
         self.time.reverse()
         self.add(title, results, row, col)
 
-    def add(self, title: str, results: List[Result], row: int, col: int):
+    def add(self, title: str, results: list[Result], row: int, col: int):
         """Plot results to a new pane in the plot window.
 
         Parameters
@@ -763,14 +750,14 @@ class Looper:
     controller: Optional[Controller]
         The controller.
 
-    Attributes
+    Attributes:
     ----------
     plot_window_open: bool
         Whether the plot window is currently open.
     """
 
     def __init__(
-        self, writer: Writer, plotter: Plotter, controller: Optional[Controller] = None
+        self, writer: Writer, plotter: Plotter, controller: Controller | None = None
     ):
         self.writer = writer
         self.plotter = plotter

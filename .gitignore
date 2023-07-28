@@ -1,10 +1,10 @@
 # * -------------------------------------------------------------------------------- * #
 # * Changes below should persist in significant template updates.
 
-results/
-config/
-examples/
-notes/
+/results
+/config
+/examples
+/notes
 
 # * -------------------------------------------------------------------------------- * #
 # * Changes below may be lost in significant template updates.

@@ -759,6 +759,7 @@ class Looper:
     def __init__(
         self, writer: Writer, plotter: Plotter, controller: Controller | None = None
     ):
+        self.app = pyqtgraph.mkQApp()
         self.writer = writer
         self.plotter = plotter
         self.controller = None if controller is None else controller
@@ -795,5 +796,5 @@ class Looper:
         plot_timer.timeout.connect(self.plot_loop)
         plot_timer.start()
         self.plotter.window.show()
-        pyqtgraph.mkQApp().exec_()
+        self.app.exec_()
         self.plot_window_open = False

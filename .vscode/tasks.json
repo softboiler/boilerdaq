@@ -46,7 +46,7 @@
     {
       "label": "setup: Setup project",
       "type": "shell",
-      "options": { "shell": { "executable": "pwsh", "args": ["-Command"] } },
+      "options": { "shell": { "executable": "pwsh" } },
       "command": "setup.ps1",
       "icon": { "id": "file-symlink-directory" },
       "problemMatcher": []
@@ -54,7 +54,7 @@
     {
       "label": "setup: Update project",
       "type": "shell",
-      "options": { "shell": { "executable": "pwsh", "args": ["-Command"] } },
+      "options": { "shell": { "executable": "pwsh" } },
       "command": "update.ps1",
       "icon": { "id": "file-symlink-directory" },
       // "runOptions": {
@@ -65,7 +65,7 @@
     {
       "label": "setup: Perform first-time setup",
       "type": "shell",
-      "options": { "shell": { "executable": "pwsh", "args": ["-Command"] } },
+      "options": { "shell": { "executable": "pwsh" } },
       "command": "first_time_setup.ps1",
       "icon": { "id": "file-symlink-directory" },
       "problemMatcher": []
@@ -221,7 +221,7 @@
     {
       "label": "task: Invoke pyright",
       "type": "shell",
-      "options": { "shell": { "executable": "pwsh", "args": ["-Command"] } },
+      "options": { "shell": { "executable": "pwsh" } },
       "command": ".tools/scripts/Invoke-Pyright.ps1",
       "icon": { "id": "type-hierarchy-sub" },
       "problemMatcher": []

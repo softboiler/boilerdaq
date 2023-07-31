@@ -9,7 +9,7 @@ description = "Data processing pipeline for a nucleate pool boiling apparatus."
 readme = "README.md"
 requires-python = ">=3.11"
 classifiers = [ "License :: OSI Approved :: MIT License",]
-dependencies = [ "dulwich>=0.21.5", "loguru>=0.7.0", "mcculw>=1.0.0", "PyQt5>=5.15.9", "pandas>=2.0.2", "pandas-stubs~=2.0.2", "ploomber-engine>=0.0.30", "pyqtgraph>=0.13.3", "PyVISA>=1.13.0", "seaborn>=0.12.2", "simple-pid>=2.0.0", "scipy>=1.11.1", "numpy>=1.25.1",]
+dependencies = [ "dulwich>=0.21.5", "loguru>=0.7.0", "mcculw>=1.0.0", "PyQt5>=5.15.9", "pandas>=2.0.3", "pandas-stubs~=2.0.2", "ploomber-engine>=0.0.30", "pyqtgraph>=0.13.3", "PyVISA>=1.13.0", "seaborn>=0.12.2", "simple-pid>=2.0.0", "scipy>=1.11.1", "numpy>=1.25.2",]
 [[project.authors]]
 name = "Blake Naccarato"
 email = "blake.naccarato@gmail.com"

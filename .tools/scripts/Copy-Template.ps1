@@ -20,4 +20,3 @@ else {
     git submodule deinit template
     copier update $(if ($Defaults) { '--defaults' })
 }
-python '.tools/scripts/compose_pyproject.py'

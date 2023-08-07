@@ -76,6 +76,7 @@ ignore = [
     "INP001",  # False positives. Checks for packages missing `__init__.py`
     "ISC",     # False positives. Implicit string concatenation is fine.
     "PD013",   # Allow `stack` instead of `melt`. They're not a direct swap.
+    "PD101",   # Allow use of nunique(). False positives
     "PD901",   # Allow `df` variable name. We are all consenting adults here.
     "PD011",   # Allow use of `.values`. False positives.
     "PGH003",  # Until black stops wrapping special ignores, let's allow bare

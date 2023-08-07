@@ -18,9 +18,12 @@ requires-python = ">=3.11"
 classifiers = ["License :: OSI Approved :: MIT License"]
 dependencies = [
     "dulwich>=0.21.5",
-    "dvc[gs]==3.10.1",
+    "dvc[gs]>=3.10.1",
+    "ipykernel>=6.25.0",
     "loguru>=0.7.0",
+    "matplotlib>=3.7.2",
     "mcculw>=1.0.0",
+    "nbformat>=5.9.2",
     "PyQt5>=5.15.9",
     "pandas[hdf5,performance]>=2.0.2",
     "pandas-stubs~=2.0.2",
@@ -29,7 +32,6 @@ dependencies = [
     "PyVISA>=1.13.0",
     "seaborn>=0.12.2",
     "simple-pid>=2.0.0",
-    "scipy>=1.11.1",
     # Numba only supports numpy<1.25 https://github.com/numba/numba/issues/8698
     # ! Unpin numba once it supports numpy>=1.25
     "numba>=0.57.1",
@@ -43,6 +45,29 @@ Changes = "https://blakeNaccarato.github.io/boilerdaq/changelog.html"
 Docs = "https://blakeNaccarato.github.io/boilerdaq"
 Home = "https://github.com/blakeNaccarato/boilerdaq"
 Tracker = "https://github.com/blakeNaccarato/boilerdaq/issues"
+
+[tool.fawltydeps]
+# ignore_undeclared = ["pytest"]
+ignore_unused = [
+    "dvc", # Test
+    # "ploomber-engine", # Test
+    # "pyjanitor",       # Test
+    # "nbconvert",    # boilercv.pre_repro.export_notebook
+    "numba",        # Pin numba until it supports numpy>=1.25
+    "pandas-stubs", # Provides stubs for pandas
+    # "pyarrow",      # boilercv.init: pd.set_option("mode.string_storage", "pyarrow")
+    #     "nbconvert",    # boilercv.pre_repro.export_notebook
+    #     "numba",        # Pin numba until it supports numpy>=1.25
+    #     "pandas-stubs", # Provides stubs for pandas
+    #     "pyarrow",      # boilercv.init: pd.set_option("mode.string_storage", "pyarrow")
+]
+ignore_undeclared = [
+    "graphviz",  # .tools/requirements/requirements_docs.txt
+    "originpro", # .tools/requirements/requirements_dev.txt
+    "pytest",
+]
+[tool.fawltydeps.custom_mapping]
+ipykernel = ["IPython"]
 
 [tool.ruff]
 fix = true

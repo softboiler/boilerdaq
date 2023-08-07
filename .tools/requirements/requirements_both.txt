@@ -4,9 +4,8 @@
 # * -------------------------------------------------------------------------------- * #
 # * Changes below may be lost in significant template updates.
 
-# Bump
+# Template
 copier==8.1.0
-toml==0.10.2
 
 # Build
 flit==3.9.0

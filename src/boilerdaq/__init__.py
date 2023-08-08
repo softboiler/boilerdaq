@@ -15,8 +15,32 @@ import pyqtgraph
 from mcculw.ul import ULError, t_in, v_in
 from numpy import exp, random
 from PyQt5.QtCore import QTimer
-from pyvisa import VisaIOError
+from pyvisa import ResourceManager, VisaIOError
 from simple_pid import PID
+
+CONTINUE_FROM_LAST = False
+POWER_SUPPLIES_PATH = "config/0_power_supplies.csv"
+SENSORS_PATH = "config/1_sensors.csv"
+SCALED_PARAMS_PATH = "config/2_scaled_params.csv"
+FLUX_PARAMS_PATH = "config/3_flux_params.csv"
+EXTRAP_PARAMS_PATH = "config/4_extrap_params.csv"
+RESULTS_PATH = "results/results.csv"
+BOILING_CURVE_PATH = "notes/curve.csv"
+VISA_ADDRESS = "USB0::0x0957::0x0807::US25N3188G::0::INSTR"
+TERM = "\n"
+RESOURCE_MANAGER = ResourceManager()
+INSTRUMENT = RESOURCE_MANAGER.open_resource(
+    VISA_ADDRESS,
+    read_termination=TERM,
+    write_termination=TERM,
+)
+CURRENT_LIMIT = 4
+CONTROL_SENSOR_NAME = "V"
+SETPOINT = 30
+OUTPUT_LIMITS = (0, 300)
+START_DELAY = 5
+
+# * -------------------------------------------------------------------------------- * #
 
 pyqtgraph.setConfigOptions(antialias=True)
 DELAY = 2  # read/write/plot timestep

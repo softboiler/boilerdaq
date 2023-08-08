@@ -5,78 +5,29 @@ from __future__ import annotations
 from csv import DictReader
 from pathlib import Path
 
-import pyvisa
-
 import boilerdaq as bd
-
-CONTINUE_FROM_LAST = False
-
-POWER_SUPPLIES_PATH = "config/0_power_supplies.csv"
-SENSORS_PATH = "config/1_sensors.csv"
-SCALED_PARAMS_PATH = "config/2_scaled_params.csv"
-FLUX_PARAMS_PATH = "config/3_flux_params.csv"
-EXTRAP_PARAMS_PATH = "config/4_extrap_params.csv"
-RESULTS_PATH = "results/results.csv"
-
-BOILING_CURVE_PATH = "notes/curve.csv"
-
-rm = pyvisa.ResourceManager()
-VISA_ADDRESS = "USB0::0x0957::0x0807::US25N3188G::0::INSTR"
-TERM = "\n"
-instrument = rm.open_resource(
-    VISA_ADDRESS,
-    read_termination=TERM,
-    write_termination=TERM,
+from boilerdaq import (
+    CONTINUE_FROM_LAST,
+    CONTROL_SENSOR_NAME,
+    CURRENT_LIMIT,
+    INSTRUMENT,
+    OUTPUT_LIMITS,
+    POWER_SUPPLIES_PATH,
+    RESULTS_PATH,
+    SETPOINT,
+    START_DELAY,
 )
+from boilerdaq.examples import BASE_RESULTS
 
-CURRENT_LIMIT = 4
-CONTROL_SENSOR_NAME = "V"
 FEEDBACK_SENSOR_NAME = "T0cal"
-SETPOINT = 30
 GAINS = (12, 0.08, 1)
-OUTPUT_LIMITS = (0, 300)
-START_DELAY = 5
-
 # Get power supply values
 all_power_supplies = bd.PowerParam.get(POWER_SUPPLIES_PATH)
 power_results = []
 for power_supply in all_power_supplies:
-    result = bd.PowerResult(power_supply, instrument, CURRENT_LIMIT)
+    result = bd.PowerResult(power_supply, INSTRUMENT, CURRENT_LIMIT)
     power_results.append(result)
-
-# Get all readings
-all_sensors = bd.Sensor.get(SENSORS_PATH)
-readings = []
-for sensor in all_sensors:
-    reading = bd.Reading(sensor)
-    readings.append(reading)
-
-# Get scaled parameters
-scaled_params = bd.ScaledParam.get(SCALED_PARAMS_PATH)
-# Get scaled results
-scaled_results = []
-for param in scaled_params:
-    result = bd.ScaledResult(param, readings)
-    scaled_results.append(result)
-
-# Get flux parameters
-flux_params = bd.FluxParam.get(FLUX_PARAMS_PATH)
-# Get fluxes
-fluxes = []
-for param in flux_params:
-    result = bd.Flux(param, scaled_results)
-    fluxes.append(result)
-
-# Get extrapolation parameters
-extrap_params = bd.ExtrapParam.get(EXTRAP_PARAMS_PATH)
-# Get extrapolated results
-extrap_results = []
-for param in extrap_params:
-    result = bd.ExtrapResult(param, scaled_results + fluxes)
-    extrap_results.append(result)
-
-# Combine calculated results into one list
-results = power_results + readings + scaled_results + fluxes + extrap_results
+results = power_results + BASE_RESULTS
 
 # Start writing
 writer = bd.Writer(RESULTS_PATH, results)

@@ -11,38 +11,22 @@ from threading import Thread
 from time import sleep
 from typing import NamedTuple
 
-import pyqtgraph
 from mcculw.ul import ULError, t_in, v_in
 from numpy import exp, random
 from PyQt5.QtCore import QTimer
-from pyvisa import ResourceManager, VisaIOError
-from simple_pid import PID
-
-CONTINUE_FROM_LAST = False
-POWER_SUPPLIES_PATH = "config/0_power_supplies.csv"
-SENSORS_PATH = "config/1_sensors.csv"
-SCALED_PARAMS_PATH = "config/2_scaled_params.csv"
-FLUX_PARAMS_PATH = "config/3_flux_params.csv"
-EXTRAP_PARAMS_PATH = "config/4_extrap_params.csv"
-RESULTS_PATH = "results/results.csv"
-BOILING_CURVE_PATH = "notes/curve.csv"
-VISA_ADDRESS = "USB0::0x0957::0x0807::US25N3188G::0::INSTR"
-TERM = "\n"
-RESOURCE_MANAGER = ResourceManager()
-INSTRUMENT = RESOURCE_MANAGER.open_resource(
-    VISA_ADDRESS,
-    read_termination=TERM,
-    write_termination=TERM,
+from pyqtgraph import (
+    GraphicsLayoutWidget,
+    PlotCurveItem,
+    intColor,
+    mkQApp,
+    setConfigOptions,
 )
-CURRENT_LIMIT = 4
-CONTROL_SENSOR_NAME = "V"
-SETPOINT = 30
-OUTPUT_LIMITS = (0, 300)
-START_DELAY = 5
+from pyvisa import VisaIOError
+from simple_pid import PID
 
 # * -------------------------------------------------------------------------------- * #
 
-pyqtgraph.setConfigOptions(antialias=True)
+setConfigOptions(antialias=True)
 DELAY = 2  # read/write/plot timestep
 HISTORY_LENGTH = 300  # points to keep for plotting and fitting
 
@@ -709,12 +693,10 @@ class Plotter:
     Attributes:
     ----------
     all_results: List[Result]
-    all_curves: List[pyqtgraph.PlotCurveItem]
+    all_curves: List[PlotCurveItem]
     all_histories: List[Deque]
     time: List[int]
     """
-
-    window = pyqtgraph.GraphicsLayoutWidget()
 
     def __init__(
         self,
@@ -723,8 +705,9 @@ class Plotter:
         row: int = 0,
         col: int = 0,
     ):
+        self.window = GraphicsLayoutWidget()
         self.all_results: list[Result] = []
-        self.all_curves: list[pyqtgraph.PlotCurveItem] = []
+        self.all_curves: list[PlotCurveItem] = []
         self.all_histories: list[deque[float]] = []
         self.time: list[int] = [-i * DELAY for i in range(HISTORY_LENGTH)]
         self.time.reverse()
@@ -754,7 +737,7 @@ class Plotter:
         self.all_histories.extend(histories)
         names = [result.source.name for result in results]
         for i, (history, name) in enumerate(zip(histories, names, strict=True)):
-            curve = plot.plot(self.time, history, pen=pyqtgraph.intColor(i), name=name)
+            curve = plot.plot(self.time, history, pen=intColor(i), name=name)
             self.all_curves.append(curve)
 
     def update(self):
@@ -784,7 +767,7 @@ class Looper:
     def __init__(
         self, writer: Writer, plotter: Plotter, controller: Controller | None = None
     ):
-        self.app = pyqtgraph.mkQApp()
+        self.app = mkQApp()
         self.writer = writer
         self.plotter = plotter
         self.controller: Controller = None if controller is None else controller  # type: ignore

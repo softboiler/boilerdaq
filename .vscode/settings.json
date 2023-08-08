@@ -194,10 +194,6 @@
   "[ipynb]": {
     "editor.defaultFormatter": "ms-python.black-formatter"
   },
-  //* TXT
-  "[plaintext]": {
-    "editor.wordWrap": "bounded"
-  },
   //* TOML
   "evenBetterToml.formatter.columnWidth": 88,
   "[toml]": {

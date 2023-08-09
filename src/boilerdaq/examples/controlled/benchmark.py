@@ -3,9 +3,9 @@
 import boilerdaq as bd
 from boilerdaq.examples.controlled import CONTROLLED_RESULTS, CONTROLLER, PLOTTER
 
-RESULTS_PATH = "results/benchmark.csv"
-WRITER = bd.Writer(RESULTS_PATH, CONTROLLED_RESULTS)
-LOOPER = bd.Looper(WRITER, PLOTTER, CONTROLLER)
+results_path = "results/benchmark.csv"
+writer = bd.Writer(results_path, CONTROLLED_RESULTS)
+looper = bd.Looper(writer, PLOTTER, CONTROLLER)
 
 if __name__ == "__main__":
-    LOOPER.start()
+    looper.start()

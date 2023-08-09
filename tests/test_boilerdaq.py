@@ -5,6 +5,9 @@ from pathlib import Path
 
 import pytest
 from PyQt5.QtCore import QTimer
+from PyQt5.QtWidgets import QApplication
+
+from boilerdaq import Looper
 
 SRC = Path("src")
 EXAMPLES_DIR = SRC / "boilerdaq" / "examples"
@@ -22,18 +25,19 @@ for directory in [EXAMPLES_DIR] + [
     )
 
 
+@pytest.mark.xdist_group(name="hardware")
 @pytest.mark.parametrize(
     "example",
     (
         example
         for example in EXAMPLES
-        if "boilerdaq.examples.set_voltage" not in example
+        if "boilerdaq.examples.controlled.set_voltage" not in example
     ),
 )
 def test_boilerdaq(example: str):
     """Test examples."""
     module = import_module(example)
-    if example == "set_voltage":
-        return
-    QTimer.singleShot(1000, module.LOOPER.app.exit)
-    module.LOOPER.start()
+    looper: Looper = module.looper if hasattr(module, "looper") else module.LOOPER
+    app: QApplication = looper.app
+    QTimer.singleShot(1000, app.closeAllWindows)
+    looper.start()

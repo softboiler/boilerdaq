@@ -49,17 +49,10 @@ Tracker = "https://github.com/blakeNaccarato/boilerdaq/issues"
 [tool.fawltydeps]
 # ignore_undeclared = ["pytest"]
 ignore_unused = [
-    "dvc", # Test
-    # "ploomber-engine", # Test
-    # "pyjanitor",       # Test
-    # "nbconvert",    # boilercv.pre_repro.export_notebook
+    "dvc",          # Test
     "numba",        # Pin numba until it supports numpy>=1.25
+    "numpy",        # Pin numpy until numba supports numpy>=1.25
     "pandas-stubs", # Provides stubs for pandas
-    # "pyarrow",      # boilercv.init: pd.set_option("mode.string_storage", "pyarrow")
-    #     "nbconvert",    # boilercv.pre_repro.export_notebook
-    #     "numba",        # Pin numba until it supports numpy>=1.25
-    #     "pandas-stubs", # Provides stubs for pandas
-    #     "pyarrow",      # boilercv.init: pd.set_option("mode.string_storage", "pyarrow")
 ]
 ignore_undeclared = [
     "graphviz",  # .tools/requirements/requirements_docs.txt

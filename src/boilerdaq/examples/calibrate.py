@@ -19,7 +19,7 @@ plotter.add("calibrated", group["calibrated"], 0, 1)
 plotter.add("pressure_volts", group["pressure_volts"], 1, 0)
 plotter.add("pressure", group["pressure"], 1, 1)
 # Start the write and plot loops
-LOOPER = bd.Looper(writer, plotter)
+looper = bd.Looper(writer, plotter)
 
 if __name__ == "__main__":
-    LOOPER.start()
+    looper.start()

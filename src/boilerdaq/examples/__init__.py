@@ -1,26 +1,19 @@
 """Prepare the data acquisition loop."""
 
-from pyvisa import ResourceManager
-
 import boilerdaq as bd
+
+_SENSORS_PATH = "config/1_sensors.csv"
+_SCALED_PARAMS_PATH = "config/2_scaled_params.csv"
+_FLUX_PARAMS_PATH = "config/3_flux_params.csv"
+_EXTRAP_PARAMS_PATH = "config/4_extrap_params.csv"
 
 POWER_SUPPLIES_PATH = "config/0_power_supplies.csv"
 RESULTS_PATH = "results/results.csv"
+
+INSTRUMENT = "USB0::0x0957::0x0807::US25N3188G::0::INSTR"
 CURRENT_LIMIT = 4
 CONTROL_SENSOR_NAME = "V"
-SETPOINT = 30
 OUTPUT_LIMITS = (0, 300)
-START_DELAY = 5
-INSTRUMENT = ResourceManager().open_resource(
-    "USB0::0x0957::0x0807::US25N3188G::0::INSTR",
-    read_termination="\n",
-    write_termination="\n",
-)
-
-sensors_path = "config/1_sensors.csv"
-scaled_params_path = "config/2_scaled_params.csv"
-flux_params_path = "config/3_flux_params.csv"
-extrap_params_path = "config/4_extrap_params.csv"
 
 # Build list of sensor groups, grouped by name
 GROUP_DICT = dict(
@@ -33,14 +26,14 @@ GROUP_DICT = dict(
 )
 
 # Get all readings
-all_sensors = bd.Sensor.get(sensors_path)
+all_sensors = bd.Sensor.get(_SENSORS_PATH)
 READINGS = []
 for sensor in all_sensors:
     reading = bd.Reading(sensor)
     READINGS.append(reading)
 
 # Get scaled parameters
-scaled_params = bd.ScaledParam.get(scaled_params_path)
+scaled_params = bd.ScaledParam.get(_SCALED_PARAMS_PATH)
 # Get scaled results
 SCALED_RESULTS = []
 for param in scaled_params:
@@ -48,7 +41,7 @@ for param in scaled_params:
     SCALED_RESULTS.append(result)
 
 # Get flux parameters
-flux_params = bd.FluxParam.get(flux_params_path)
+flux_params = bd.FluxParam.get(_FLUX_PARAMS_PATH)
 # Get fluxes
 fluxes = []
 for param in flux_params:
@@ -56,7 +49,7 @@ for param in flux_params:
     fluxes.append(result)
 
 # Get extrapolation parameters
-extrap_params = bd.ExtrapParam.get(extrap_params_path)
+extrap_params = bd.ExtrapParam.get(_EXTRAP_PARAMS_PATH)
 # Get extrapolated results
 extrap_results = []
 for param in extrap_params:

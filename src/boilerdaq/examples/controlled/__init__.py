@@ -1,5 +1,6 @@
 """Prepare the feedback-controlled data acquisition loop."""
 
+
 import boilerdaq as bd
 from boilerdaq.examples import (
     BASE_RESULTS,
@@ -10,12 +11,11 @@ from boilerdaq.examples import (
     OUTPUT_LIMITS,
     POWER_SUPPLIES_PATH,
     RESULTS_PATH,
-    SETPOINT,
-    START_DELAY,
 )
 
-FEEDBACK_SENSOR_NAME = "T0cal"
+SETPOINT = 30
 GAINS = (12, 0.08, 1)
+_FEEDBACK_SENSOR_NAME = "T0cal"
 
 # Get power supply values
 all_power_supplies = bd.PowerParam.get(POWER_SUPPLIES_PATH)
@@ -38,14 +38,13 @@ PLOTTER.add("pressure", group["pressure"], 1, 1)
 PLOTTER.add("flux", group["flux"], 1, 2)
 
 # Create the control loop
-CONTROL_SENSOR = bd.Result.get(CONTROL_SENSOR_NAME, CONTROLLED_RESULTS)
+CONTROL_SENSOR = bd.get_result(CONTROL_SENSOR_NAME, CONTROLLED_RESULTS)
 CONTROLLER = bd.Controller(
     CONTROL_SENSOR,  # type: ignore
-    bd.Result.get(FEEDBACK_SENSOR_NAME, CONTROLLED_RESULTS),
+    bd.get_result(_FEEDBACK_SENSOR_NAME, CONTROLLED_RESULTS),
     SETPOINT,
     GAINS,
     OUTPUT_LIMITS,
-    START_DELAY,
 )
 
 # Create the looper

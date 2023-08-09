@@ -1,18 +1,14 @@
 """Data processing pipeline for a nucleate pool boiling apparatus."""
 
-from __future__ import annotations
+# from __future__ import annotations
 
-import os
 from collections import UserDict, deque
 from csv import DictReader, DictWriter
-from datetime import datetime, timedelta
+from datetime import datetime
 from pathlib import Path
-from threading import Thread
-from time import sleep
-from typing import NamedTuple
+from typing import NamedTuple, Self
 
 from mcculw.ul import ULError, t_in, v_in
-from numpy import exp, random
 from PyQt5.QtCore import QTimer
 from pyqtgraph import (
     GraphicsLayoutWidget,
@@ -21,21 +17,14 @@ from pyqtgraph import (
     mkQApp,
     setConfigOptions,
 )
-from pyvisa import VisaIOError
+from pyvisa import ResourceManager, VisaIOError
+from pyvisa.resources import MessageBasedResource
 from simple_pid import PID
 
 # * -------------------------------------------------------------------------------- * #
 
 setConfigOptions(antialias=True)
-DELAY = 2  # read/write/plot timestep
 HISTORY_LENGTH = 300  # points to keep for plotting and fitting
-
-DEBUG = os.environ.get("BOILERDAQ_DEBUG") == "True"
-if DEBUG:
-    DELAY_DEBUG = 0.2
-    GAIN_DEBUG = 100
-    TAU_DEBUG = DELAY * HISTORY_LENGTH
-    NOISE_SCALE = 1e-2
 
 
 class Sensor(NamedTuple):
@@ -62,9 +51,8 @@ class Sensor(NamedTuple):
     unit: str
 
     @classmethod
-    def get(cls, path: str) -> list[Sensor]:
+    def get(cls, path: str) -> list[Self]:
         """Process a CSV file at ``path``, returning a ``List`` of ``Sensor``."""
-
         sensors = []
         with Path(path).open() as csv_file:
             reader = DictReader(csv_file)
@@ -105,9 +93,8 @@ class ScaledParam(NamedTuple):
     unit: str
 
     @classmethod
-    def get(cls, path: str) -> list[ScaledParam]:
+    def get(cls, path: str) -> list[Self]:
         """Process a CSV file at ``path``, returning a ``List`` of ``ScaledParam``."""
-
         params = []
         with Path(path).open() as csv_file:
             reader = DictReader(csv_file)
@@ -151,9 +138,8 @@ class FluxParam(NamedTuple):
     unit: str
 
     @classmethod
-    def get(cls, path: str) -> list[FluxParam]:
+    def get(cls, path: str) -> list[Self]:
         """Process a CSV file at ``path``, returning a ``List`` of ``FluxParam``."""
-
         params = []
         with Path(path).open() as csv_file:
             reader = DictReader(csv_file)
@@ -198,9 +184,8 @@ class ExtrapParam(NamedTuple):
     unit: str
 
     @classmethod
-    def get(cls, path: str) -> list[ExtrapParam]:
+    def get(cls, path: str) -> list[Self]:
         """Process a CSV file at ``path``, returning a ``List`` of ``ExtrapParam``."""
-
         params = []
         with Path(path).open() as csv_file:
             reader = DictReader(csv_file)
@@ -233,9 +218,8 @@ class PowerParam(NamedTuple):
     unit: str
 
     @classmethod
-    def get(cls, path: str) -> list[PowerParam]:
+    def get(cls, path: str) -> list[Self]:
         """Process a CSV file at ``path``, returning a ``List`` of ``ExtrapParam``."""
-
         power_supplies = []
         with Path(path).open() as csv_file:
             reader = DictReader(csv_file)
@@ -267,29 +251,23 @@ class Result:
     def __init__(self):
         self.source: Sensor = None  # type: ignore
         self.value: float = None  # type: ignore
-        self.time = deque([], maxlen=HISTORY_LENGTH)
-        self.history = deque([], maxlen=HISTORY_LENGTH)
-        for _ in range(HISTORY_LENGTH):
-            self.time.append(0)
-            self.history.append(0)
+        self.history: deque[float] = deque(
+            [0.0] * HISTORY_LENGTH, maxlen=HISTORY_LENGTH
+        )
 
     def update(self):
         """Update the result."""
-
         self.history.append(self.value)
-        self.time.append(self.time[-1] + DELAY)
 
-    @staticmethod
-    def get(name: str, results: list[Result]) -> Result:
-        """Get a result or results by the source name."""
 
-        result_names = [result.source.name for result in results]
-        i = result_names.index(name)
-        return results[i]
+def get_result(name: str, results: list[Result]) -> Result:
+    """Get a result or results by the source name."""
+    result_names = [result.source.name for result in results]
+    i = result_names.index(name)
+    return results[i]
 
 
 UNIT_TYPES = {"C": 0, "F": 1, "K": 2, "V": 5}
-RANDOM = random.default_rng()
 
 
 class Reading(Result):
@@ -304,27 +282,15 @@ class Reading(Result):
     ----------
     unit_types: Dict[str: int]
         Enumeration of unit types supported by the board on which the sensor resides.
-    debug_offset: float
-        A random offset to use when debugging.
     """
 
     def __init__(self, sensor: Sensor):
         super().__init__()
-        if DEBUG:
-            self.debug_offset = RANDOM.normal(scale=GAIN_DEBUG)
         self.source = sensor
-        self.update()
 
     def update(self):
         """Update the result."""
-
-        if DEBUG:
-            self.value = (
-                self.debug_offset
-                + GAIN_DEBUG * (1 - exp(-self.time[-1] / TAU_DEBUG))
-                + RANDOM.normal(scale=NOISE_SCALE * GAIN_DEBUG)
-            )
-        elif self.source.reading == "temperature":
+        if self.source.reading == "temperature":
             try:
                 unit_int = UNIT_TYPES[self.source.unit]
                 self.value = t_in(self.source.board, self.source.channel, unit_int)
@@ -358,12 +324,10 @@ class ScaledResult(Result):
     ):
         super().__init__()
         self.source: ScaledParam = scaled_param  # type: ignore
-        self.unscaled_result = Result.get(scaled_param.unscaled_sensor, results)
-        self.update()
+        self.unscaled_result = get_result(scaled_param.unscaled_sensor, results)
 
     def update(self):
         """Update the result."""
-
         self.value = self.unscaled_result.value * self.source.scale + self.source.offset  # type: ignore
         super().update()
 
@@ -393,13 +357,11 @@ class Flux(Result):
     ):
         super().__init__()
         self.source: FluxParam = flux_param  # type: ignore
-        self.origin_result = Result.get(flux_param.origin_sensor, results)
-        self.distant_result = Result.get(flux_param.distant_sensor, results)
-        self.update()
+        self.origin_result = get_result(flux_param.origin_sensor, results)
+        self.distant_result = get_result(flux_param.distant_sensor, results)
 
     def update(self):
         """Update the result."""
-
         self.value = (
             self.source.conductivity
             / self.source.length
@@ -433,14 +395,11 @@ class ExtrapResult(Result):
     ):
         super().__init__()
         self.source: ExtrapParam = extrap_param  # type: ignore
-        self.origin_result = Result.get(extrap_param.origin_sensor, results)
-        self.flux_result = Result.get(extrap_param.flux, results)
-
-        self.update()
+        self.origin_result = get_result(extrap_param.origin_sensor, results)
+        self.flux_result = get_result(extrap_param.flux, results)
 
     def update(self):
         """Update the result."""
-
         self.value = self.origin_result.value - (
             self.flux_result.value * self.source.length / self.source.conductivity
         )
@@ -463,35 +422,55 @@ class PowerResult(Result):
     def __init__(
         self,
         power_param: PowerParam,
-        instrument,
+        instrument: str,
         current_limit: float,
     ):
         self.source: PowerParam = power_param  # type: ignore
-        self.instrument = instrument
-        if self.source.name == "V":
-            self.instrument.write("output:state on")
-            self.instrument.write(f"source:current {current_limit}")
-        self.update()
+        self.resource_manager = ResourceManager()
+        self.instrument_name: str = instrument
+        self.instrument: MessageBasedResource | None = None  # type: ignore
+        self.current_limit = current_limit
+
+    def open(self):  # noqa: A003
+        """Open the instrument."""
+        self.instrument = self.resource_manager.open_resource(  # type: ignore
+            self.instrument_name,
+            read_termination="\n",
+            write_termination="\n",
+        )
+        self.instrument.write("output:state on")  # type: ignore
+        self.instrument.write(f"source:current {self.current_limit}")  # type: ignore
+
+    def close(self):
+        """Close the instrument."""
+        if not self.instrument:
+            return
+        self.instrument.write("output:state off")  # type: ignore
+        self.instrument.close()  # type: ignore
+        self.instrument = None
+
+    def one_shot(self):
+        """Take a single measurement."""
+        self.open()
+        self.close()
 
     def update(self):
         """Update the result."""
-
         try:
             if self.source.name == "V":
-                self.value = float(self.instrument.query("measure:voltage?"))
+                self.value = float(self.instrument.query("measure:voltage?"))  # type: ignore
             elif self.source.name == "I":
-                self.value = float(self.instrument.query("measure:current?"))
+                self.value = float(self.instrument.query("measure:current?"))  # type: ignore
         except VisaIOError as exc:
             print(exc)
 
     def write(self, value):
         """Write a value back to the instrument."""
-
         try:
             if self.source.name == "V":
-                self.instrument.write(f"source:voltage {value!s}")
+                self.instrument.write(f"source:voltage {value!s}")  # type: ignore
             elif self.source.name == "I":
-                self.instrument.write(f"source:current {value!s}")
+                self.instrument.write(f"source:current {value!s}")  # type: ignore
         except VisaIOError as exc:
             print(exc)
 
@@ -513,7 +492,7 @@ class ResultGroup(UserDict[str, list[Result]]):
             result_names = val.split()
             filtered_results = []
             for name in result_names:
-                result = Result.get(name, results)
+                result = get_result(name, results)
                 filtered_results.append(result)
             self[key] = filtered_results  # type: ignore
 
@@ -540,8 +519,6 @@ class Controller:
     ----------
     pid: PID
         The PID controller.
-    start_time
-        The time that the controller was created.
     """
 
     def __init__(
@@ -551,33 +528,31 @@ class Controller:
         setpoint: float,
         gains: tuple[float, float, float],
         output_limits: tuple[float, float],
-        start_delay: float = 0,
     ):
         self.control_result: PowerResult = control_result
         self.feedback_result: Result = feedback_result
-        self.pid = PID(*gains, setpoint, output_limits=output_limits)
-        self.start_time = datetime.now()
-        self.start_delay = timedelta(seconds=start_delay)
+        self.pid = PID(
+            *gains,
+            setpoint,
+            output_limits=output_limits,
+            starting_output=self.control_result.value,
+        )
         self.feedback_value = self.feedback_result.value
-        self.last_feedback_value = self.feedback_value
-        self.count_of_suspicious_readings = 0
+
+    def open(self):  # noqa: A003
+        """Open the instrument to be controlled."""
+        self.control_result.open()
+
+    def close(self):
+        """Close the instrument to be controlled."""
+        self.control_result.close()
 
     def update(self):
         """Update the PID controller."""
-
-        time_elapsed = datetime.now() - self.start_time
-        if time_elapsed > self.start_delay:
-            self.last_feedback_value = self.feedback_value
-            self.feedback_value = self.feedback_result.value
-            feedback_value_change = abs(self.feedback_value - self.last_feedback_value)
-            if feedback_value_change > 10 or self.feedback_value < 0:
-                self.control_result.write(0)
-                raise ValueError(
-                    "The PID feedback sensor value seems incorrect. Aborting."
-                )
-            control_value = self.pid(self.feedback_value)
-            print(f"{self.feedback_value} {control_value}")
-            self.control_result.write(control_value)
+        self.feedback_value = self.feedback_result.value
+        control_value = self.pid(self.feedback_value)
+        print(f"{self.feedback_value} {control_value}")
+        self.control_result.write(control_value)
 
 
 class Writer:
@@ -635,6 +610,10 @@ class Writer:
         # Compose the fieldnames and first row of values
         sources = [f"{result.source.name} ({result.source.unit})" for result in results]
         fieldnames = ["time", *sources]
+        for result in results:
+            if isinstance(result, PowerResult):
+                result.open()
+            result.update()
         values = [self.time.isoformat()] + [result.value for result in results]  # type: ignore
         to_write = dict(zip(fieldnames, values, strict=True))
 
@@ -651,11 +630,6 @@ class Writer:
 
     def update(self):
         """Update results and write the new data to CSV."""
-
-        if DEBUG:
-            sleep(DELAY_DEBUG)
-        else:
-            sleep(DELAY)
         self.time: str = datetime.now().isoformat()
         for results in self.result_groups:
             for result in results:
@@ -664,7 +638,6 @@ class Writer:
 
     def write(self):
         """Write data to CSV."""
-
         for path, results, fieldnames in zip(
             self.paths, self.result_groups, self.fieldname_groups, strict=True
         ):
@@ -709,7 +682,7 @@ class Plotter:
         self.all_results: list[Result] = []
         self.all_curves: list[PlotCurveItem] = []
         self.all_histories: list[deque[float]] = []
-        self.time: list[int] = [-i * DELAY for i in range(HISTORY_LENGTH)]
+        self.time: list[int] = [-i for i in range(HISTORY_LENGTH)]
         self.time.reverse()
         self.add(title, results, row, col)
 
@@ -770,39 +743,28 @@ class Looper:
         self.app = mkQApp()
         self.writer = writer
         self.plotter = plotter
-        self.controller: Controller = None if controller is None else controller  # type: ignore
-        self.plot_window_open = False
-
-    def write_loop(self):
-        """The CSV writer function to be looped in the write/control thread."""
-
-        while self.plot_window_open:
-            self.writer.update()
-
-    def plot_loop(self):
-        """The function to be looped in the plot thread."""
-
-        self.plotter.update()
-
-    def write_control_loop(self):
-        """The control function to be looped in the write/control thread."""
-
-        while self.plot_window_open:
-            self.writer.update()
-            self.controller.update()
+        self.controller = controller or None
 
     def start(self):
         """Start the write/control thread and plot on the main thread."""
-
-        self.plot_window_open = True
-        if self.controller is None:  # type: ignore
-            write_thread = Thread(target=self.write_loop)
-        else:
-            write_thread = Thread(target=self.write_control_loop)
-        write_thread.start()
-        plot_timer = QTimer()
-        plot_timer.timeout.connect(self.plot_loop)
-        plot_timer.start()
+        if self.controller:
+            self.controller.open()
+        timer = QTimer()
+        timer.timeout.connect(self.plot_control if self.controller else self.plot)
+        timer.start(100)
         self.plotter.window.show()
         self.app.exec_()
-        self.plot_window_open = False
+        self.app.quit()
+        if self.controller:
+            self.controller.close()
+
+    def plot(self):
+        """The function to be looped in the plot thread."""
+        self.plotter.update()
+        self.writer.update()
+
+    def plot_control(self):
+        """The CSV writer function to be looped in the write/control thread."""
+        self.plotter.update()
+        self.writer.update()
+        self.controller.update()  # type: ignore

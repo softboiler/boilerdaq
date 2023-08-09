@@ -13,7 +13,7 @@ group = ResultGroup(group_dict, READINGS)
 # Add groups of curves to different plot regions
 plotter = Plotter("base", group["base"], 0, 0)
 # Start the write and plot loops
-LOOPER = Looper(writer, plotter)
+looper = Looper(writer, plotter)
 
 if __name__ == "__main__":
-    LOOPER.start()
+    looper.start()

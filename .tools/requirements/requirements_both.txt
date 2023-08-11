@@ -11,7 +11,7 @@ copier==8.1.0
 flit==3.9.0
 
 # Type checking
-pyright
+pyright==1.1.321
 
 # Pre-commit common requirements
 black==23.7.0

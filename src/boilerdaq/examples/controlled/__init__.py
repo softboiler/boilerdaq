@@ -1,6 +1,5 @@
 """Prepare the feedback-controlled data acquisition loop."""
 
-
 import boilerdaq as bd
 from boilerdaq.examples import (
     BASE_RESULTS,

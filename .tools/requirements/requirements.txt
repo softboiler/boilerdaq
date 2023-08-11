@@ -1,3 +1,4 @@
+-e ../boilerdata
 dulwich==0.21.5
 dvc[gs]==3.10.1
 ipykernel==6.25.0

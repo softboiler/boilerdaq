@@ -1,3 +1,5 @@
+"""Set the power supply go a given voltage."""
+
 from pyvisa.resources import MessageBasedResource
 
 from boilerdaq import get_result

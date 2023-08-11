@@ -1,7 +1,5 @@
 """Data processing pipeline for a nucleate pool boiling apparatus."""
 
-# from __future__ import annotations
-
 from collections import UserDict, deque
 from csv import DictReader, DictWriter
 from datetime import datetime

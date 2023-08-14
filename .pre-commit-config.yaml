@@ -81,9 +81,12 @@ repos:
       #     )$
       - id: "fawltydeps"
         name: "fawltydeps"
+        verbose: true
         pass_filenames: false
         language: "system"
         entry: "pwsh -Command fawltydeps"
+        files: |
+          .*
 
   # * ------------------------------------------------------------------------------ * #
   # * Changes below should persist in significant template updates.
@@ -104,6 +107,7 @@ repos:
     rev: "23.7.0"
     hooks:
       - id: "black"
+      - id: "black-jupyter"
   - repo: "https://github.com/charliermarsh/ruff-pre-commit"
     rev: "v0.0.282"
     hooks:
@@ -144,7 +148,5 @@ repos:
   - repo: "https://github.com/nbQA-dev/nbQA"
     rev: "1.7.0"
     hooks:
-      - id: "nbqa-black"
-        additional_dependencies: ["black==23.7.0"]
       - id: "nbqa-ruff"
         additional_dependencies: ["ruff==0.0.282"]

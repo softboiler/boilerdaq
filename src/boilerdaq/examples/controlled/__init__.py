@@ -3,18 +3,12 @@
 import boilerdaq as bd
 from boilerdaq.examples import (
     BASE_RESULTS,
-    CONTROL_SENSOR_NAME,
     CURRENT_LIMIT,
     GROUP_DICT,
     INSTRUMENT,
-    OUTPUT_LIMITS,
     POWER_SUPPLIES_PATH,
     RESULTS_PATH,
 )
-
-SETPOINT = 30
-GAINS = (12, 0.08, 1)
-_FEEDBACK_SENSOR_NAME = "T0cal"
 
 # Get power supply values
 all_power_supplies = bd.PowerParam.get(POWER_SUPPLIES_PATH)
@@ -35,16 +29,3 @@ PLOTTER.add("top", group["top"], 0, 2)
 PLOTTER.add("water", group["water"], 1, 0)
 PLOTTER.add("pressure", group["pressure"], 1, 1)
 PLOTTER.add("flux", group["flux"], 1, 2)
-
-# Create the control loop
-CONTROL_SENSOR = bd.get_result(CONTROL_SENSOR_NAME, CONTROLLED_RESULTS)
-CONTROLLER = bd.Controller(
-    CONTROL_SENSOR,  # type: ignore
-    bd.get_result(_FEEDBACK_SENSOR_NAME, CONTROLLED_RESULTS),
-    SETPOINT,
-    GAINS,
-    OUTPUT_LIMITS,
-)
-
-# Create the looper
-LOOPER = bd.Looper(WRITER, PLOTTER, CONTROLLER)

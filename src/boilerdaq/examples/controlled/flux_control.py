@@ -1,6 +1,6 @@
 """Use heat flux as a control parameter."""
 
-import boilerdata  # noqa: F401
+import boilercore  # noqa: F401
 
 import boilerdaq as bd
 from boilerdaq.examples import CONTROL_SENSOR_NAME, OUTPUT_LIMITS

@@ -1,7 +1,7 @@
 # * -------------------------------------------------------------------------------- * #
 # * Changes below should persist in significant template updates.
 
-boilerdata==0.0.1
+boilercore@git+https://github.com/blakeNaccarato/boilercore@8229c65f8e31aa22fe3316cd07a394c036d2dcc9
 
 # * -------------------------------------------------------------------------------- * #
 # * Changes below may be lost in significant template updates.

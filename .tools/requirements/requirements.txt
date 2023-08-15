@@ -17,3 +17,5 @@ simple-pid==2.0.0
 # ! Unpin numba once it supports numpy>=1.25
 numba==0.57.1
 numpy==1.24.4
+# ! boilercore specified differently in dev and CI to allow editable package in dev
+# boilercore==...

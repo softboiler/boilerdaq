@@ -1,7 +1,7 @@
 # * -------------------------------------------------------------------------------- * #
 # * Changes below should persist in significant template updates.
 
--e ../boilerdata
+-e ../boilercore
 
 # * -------------------------------------------------------------------------------- * #
 # * Changes below may be lost in significant template updates.

@@ -2,6 +2,8 @@
   // * ---------------------------------------------------------------------------- * //
   // * Changes below should persist in significant template updates.
 
+  "git.ignoredRepositories": ["boilercore", "template", "typings"],
+
   // * ---------------------------------------------------------------------------- * //
   // * Changes below may be lost in significant template updates.
 
@@ -142,7 +144,6 @@
   "git.autofetch": true,
   "git.commandsToLog": ["commit", "push"],
   "git.confirmSync": false,
-  "git.ignoredRepositories": ["template", "typings"],
   //* Markdown editor moves jarringly when this is "true"
   "markdown.preview.scrollEditorWithPreview": false,
   //* Exclude

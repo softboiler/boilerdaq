@@ -30,10 +30,10 @@ jobs:
           python-version: "3.11"
           install-project: false
       - run: "copier update --defaults --vcs-ref $(git rev-parse HEAD:template)"
-        shell: "pwsh"
+      - run: "python .tools/scripts/update_submodule_requirements.py"
       - uses: "stefanzweifel/git-auto-commit-action@v4.16.0"
         with:
-          commit_message: "Update project from template."
+          commit_message: "Update project from template. Update dependencies."
 
   # * ------------------------------------------------------------------------------ * #
   # * Changes below should persist in significant template updates.

@@ -6,6 +6,7 @@
 
 # Template
 copier==8.1.0
+dulwich==0.21.5
 
 # Build
 flit==3.9.0

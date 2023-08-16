@@ -40,10 +40,10 @@ def main():
         for sub in submodules:
             content = compile_specific(
                 rf"""
-                {sub.name}@                      # name@
+                {sub.name}@                            # name@
                 (?P<domain>git\+https://github\.com/)  # git+https://github.com/
                 (?P<org>\w+/)                          # org/
-                {sub.name}@                      # name@
+                {sub.name}@                            # name@
                 (?P<commit>\w+)                        # <commit-hash>
                 $"""
             ).sub(

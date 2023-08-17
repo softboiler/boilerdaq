@@ -30,7 +30,7 @@
     {
       "label": "setup: Copy template",
       "type": "shell",
-      "options": { "shell": { "executable": "pwsh", "args": ["-Command"] } },
+      "options": { "shell": { "executable": "pwsh" } },
       "command": ".tools/scripts/Copy-Template.ps1 ${input:templateOptions}",
       "icon": { "id": "file-symlink-directory" },
       "problemMatcher": []
@@ -93,72 +93,10 @@
     // * -------------------------------------------------------------------------- * //
     // * GIT * //
     {
-      "label": "git: Push with tags",
-      "type": "shell",
-      "options": { "shell": { "executable": "pwsh", "args": ["-Command"] } },
-      "command": "git push; git push --tags",
-      "icon": { "id": "git-branch" },
-      "problemMatcher": []
-    },
-    {
-      "label": "git: Prepare to release new version",
-      "dependsOrder": "sequence",
-      "dependsOn": ["setup: Compose pyproject.toml", "git: Stage all files"],
-      "type": "shell",
-      "options": { "shell": { "executable": "pwsh", "args": ["-Command"] } },
-      "command": "git commit -m 'Release ${input:version}'; git tag ${input:version}",
-      "icon": { "id": "git-branch" },
-      "problemMatcher": []
-    },
-    {
-      "label": "git: Push with tags",
-      "type": "shell",
-      "options": { "shell": { "executable": "pwsh", "args": ["-Command"] } },
-      "command": "git push; git push --tags",
-      "icon": { "id": "git-branch" },
-      "problemMatcher": []
-    },
-    {
-      "label": "git: Prepare to release new version",
-      "dependsOrder": "sequence",
-      "dependsOn": ["setup: Compose pyproject.toml", "git: Stage all files"],
-      "type": "shell",
-      "options": { "shell": { "executable": "pwsh", "args": ["-Command"] } },
-      "command": "git commit -m 'Release ${input:version}'; git tag ${input:version}",
-      "icon": { "id": "git-branch" },
-      "problemMatcher": []
-    },
-    {
-      "label": "git: Push with tags",
-      "type": "shell",
-      "options": { "shell": { "executable": "pwsh", "args": ["-Command"] } },
-      "command": "git push; git push --tags",
-      "icon": { "id": "git-branch" },
-      "problemMatcher": []
-    },
-    {
-      "label": "git: Prepare to release new version",
-      "dependsOrder": "sequence",
-      "dependsOn": ["setup: Compose pyproject.toml", "git: Stage all files"],
-      "type": "shell",
-      "options": { "shell": { "executable": "pwsh", "args": ["-Command"] } },
-      "command": "git commit -m 'Release ${input:version}'; git tag ${input:version}",
-      "icon": { "id": "git-branch" },
-      "problemMatcher": []
-    },
-    {
       "label": "git: Rebase back to fork",
       "type": "shell",
       "options": { "shell": { "executable": "pwsh", "args": ["-Command"] } },
       "command": "git rebase -i --fork-point main",
-      "icon": { "id": "git-branch" },
-      "problemMatcher": []
-    },
-    {
-      "label": "git: Stage all files",
-      "type": "shell",
-      "options": { "shell": { "executable": "pwsh", "args": ["-Command"] } },
-      "command": "git add --all",
       "icon": { "id": "git-branch" },
       "problemMatcher": []
     },
@@ -185,20 +123,12 @@
     // * -------------------------------------------------------------------------- * //
     // * OTHER TASKS * //
     {
-      "label": "task: format notebook, clear outputs",
+      "label": "task: format and clear notebook",
       "dependsOrder": "sequence",
       "dependsOn": ["task: format notebook"],
       "type": "shell",
       "options": { "shell": { "executable": "pwsh", "args": ["-Command"] } },
-      "command": "nb-clean clean --remove-empty-cells --preserve-cell-metadata special tags -- ${file}",
-      "icon": { "id": "notebook" },
-      "problemMatcher": []
-    },
-    {
-      "label": "task: format notebook",
-      "type": "shell",
-      "options": { "shell": { "executable": "pwsh", "args": ["-Command"] } },
-      "command": "nbqa black ${file}; nbqa ruff --fix-only ${file}; nb-clean clean --remove-empty-cells --preserve-cell-outputs --preserve-cell-metadata tags special -- ${file}",
+      "command": "nbqa ruff --fix-only ${file}; nb-clean clean --remove-empty-cells --preserve-cell-metadata special tags -- ${file}; black ${file}",
       "icon": { "id": "notebook" },
       "problemMatcher": []
     },
@@ -222,7 +152,7 @@
       "label": "task: sphinx-autobuild docs (preview)",
       "type": "shell",
       "options": { "shell": { "executable": "pwsh", "args": ["-Command"] } },
-      "command": "sphinx-autobuild -n docs _site --watch README.md --watch CHANGELOG.md",
+      "command": "sphinx-build -Ean docs _site; sphinx-autobuild -n docs _site --watch **/*.md",
       "icon": { "id": "book" },
       "problemMatcher": []
     },

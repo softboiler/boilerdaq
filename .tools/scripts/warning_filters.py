@@ -231,6 +231,11 @@ FILTERS = (
                 ),
                 RuntimeWarning,
             ),
+            (
+                "invalid escape sequence",
+                DeprecationWarning,
+                "sparklines.sparklines",
+            ),
         )
     ),
 )

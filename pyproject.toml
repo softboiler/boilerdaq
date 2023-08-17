@@ -5,7 +5,7 @@
 # * Changes below may be lost in significant template updates.
 
 [build-system]
-requires = ["flit_core >=3.3,<4"]
+requires = ["flit_core==3.9.0"]
 build-backend = "flit_core.buildapi"
 
 [project]
@@ -41,6 +41,7 @@ dependencies = [
 [[project.authors]]
 name = "Blake Naccarato"
 email = "blake.naccarato@gmail.com"
+
 [project.urls]
 Changes = "https://blakeNaccarato.github.io/boilerdaq/changelog.html"
 Docs = "https://blakeNaccarato.github.io/boilerdaq"
@@ -70,7 +71,7 @@ fix = true
 select = ["ALL"]
 src = ["src", "tests"]
 target-version = "py311"
-extend-exclude = ["template", "typings", ".github", ".tools", ".venv"]
+extend-exclude = ["template", "typings", ".github"]
 ignore = [
     # * ---------------------------------------------------------------------------- * #
     # * Changes below should persist in significant template updates.
@@ -93,6 +94,7 @@ ignore = [
     "FBT",     # Allow boolean "traps"
     "FIX002",  # Allow TODOs
     "F841",    # Don't check for or fix unused variables
+    "FLY002",  # Allow different string representations
     "G0",      # Allow f-strings, etc. in Loguru logging
     "INP001",  # False positives. Checks for packages missing `__init__.py`
     "ISC",     # False positives. Implicit string concatenation is fine.

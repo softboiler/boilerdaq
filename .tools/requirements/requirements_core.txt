@@ -1,11 +1,13 @@
-# Requirements for dev environments.
+# Core requirements for template updates, bootstrapping, etc.
 
 # * -------------------------------------------------------------------------------- * #
 # * Changes below should persist in significant template updates.
 
-boilercore@git+https://github.com/blakeNaccarato/boilercore@2782223fb5ac0e296e075b3a9ef35c7c76b1eddc
-
 # * -------------------------------------------------------------------------------- * #
 # * Changes below may be lost in significant template updates.
 
--r requirements_both.txt
+copier==8.1.0
+dulwich==0.21.5
+flit_core==3.9.0
+pip==23.2.1
+wheel==0.41.1

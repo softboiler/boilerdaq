@@ -16,8 +16,6 @@ jobs:
         with:
           python-version: "3.11"
           latest-pins: false
-      - run: "pytest --cov"
-      - uses: "codecov/codecov-action@v3.1.4"
 
   # * ------------------------------------------------------------------------------ * #
   # * Changes below should persist in significant template updates.

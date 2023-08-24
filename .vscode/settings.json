@@ -2,6 +2,11 @@
   // * ---------------------------------------------------------------------------- * //
   // * Changes below should persist in significant template updates.
 
+  //! Schema
+  "yaml.schemas": {
+    "params_schema.json": "params.yaml"
+  },
+
   "git.ignoredRepositories": ["boilercore", "template", "typings"],
 
   // * ---------------------------------------------------------------------------- * //
@@ -90,6 +95,7 @@
   //* File associations
   "files.associations": {
     ".coveragerc": "ini",
+    ".dvcignore": "ignore",
     "*.env": "dotenv",
     ".pylintrc": "ini",
     "pyrightconfig.json": "jsonc",
@@ -186,6 +192,11 @@
   "[ipynb]": {
     "editor.defaultFormatter": "ms-python.black-formatter"
   },
+  // ? So our Markdown table previews don't wrap
+  // //* TXT
+  // "[plaintext]": {
+  //   "editor.wordWrap": "bounded"
+  // },
   //* TOML
   "evenBetterToml.formatter.columnWidth": 88,
   "[toml]": {

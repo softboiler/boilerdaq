@@ -1,21 +1,12 @@
 # * -------------------------------------------------------------------------------- * #
-# * Changes below should persist in significant template updates.
+# * Project-specific .dvcignore
 
-# Ignore schema, which has absolute paths that will vary by system
-params_schema.json
-# Don't commit local DVC plots
-dvc_plots
-# Don't commit configs
-/results
-/config
-/examples
-/notes
+*.tmp
+~$*
 
 # * -------------------------------------------------------------------------------- * #
-# * Changes below may be lost in significant template updates.
+# * Project-specific ignores common to .gitignore
 
-# To allow for local variation in type checking without overriding CI
-pyrightconfig.json
 # To avoid committing profiler results
 *.prof
 # To avoid committing rejected changes upon bumping template
@@ -25,7 +16,6 @@ first_time_setup.ps1
 # Don't commit code workspace files, which might be symlinked here
 *.code-workspace
 # Avoid committing local docs builds for previewing
-_build
 _site
 # If using Google Cloud Platform Workload Identity Federation, avoid committing keys
 # Ignore generated credentials from google-github-actions/auth

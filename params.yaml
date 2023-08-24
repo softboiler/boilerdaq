@@ -1,0 +1,10 @@
+project:
+  project: .
+dvc:
+  data: data/dvc
+git:
+  data: data/git
+imported:
+  data: data/imported
+local:
+  data: data/local

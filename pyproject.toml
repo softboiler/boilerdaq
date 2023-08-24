@@ -49,19 +49,19 @@ Home = "https://github.com/blakeNaccarato/boilerdaq"
 Tracker = "https://github.com/blakeNaccarato/boilerdaq/issues"
 
 [tool.fawltydeps]
-# ignore_undeclared = ["pytest"]
+ignore_undeclared = [
+    "copier_python", # Used by the project template
+    "boilercore",    # Not picked up by fawltydeps
+    "graphviz",      # .tools/requirements/requirements_docs.txt
+    "originpro",     # .tools/requirements/requirements_dev.txt
+    "pytest",
+]
 ignore_unused = [
     "boilercore",   # Not picked up by fawltydeps
     "dvc",          # For experiment orchestration
     "numba",        # Pin numba until it supports numpy>=1.25
     "numpy",        # Pin numpy until numba supports numpy>=1.25
     "pandas-stubs", # Provides stubs for pandas
-]
-ignore_undeclared = [
-    "boilercore", # Not picked up by fawltydeps
-    "graphviz",   # .tools/requirements/requirements_docs.txt
-    "originpro",  # .tools/requirements/requirements_dev.txt
-    "pytest",
 ]
 [tool.fawltydeps.custom_mapping]
 ipykernel = ["IPython"]

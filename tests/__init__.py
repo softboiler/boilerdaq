@@ -20,4 +20,3 @@ for module in walk_modules(BOILERDAQ / "examples", BOILERDAQ):
     else:
         marks = []
     EXAMPLES.append(pytest.param(module, marks=marks))
-EXPERIMENTS = list(walk_modules(BOILERDAQ / "experiments", BOILERDAQ))

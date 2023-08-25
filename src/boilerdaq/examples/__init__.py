@@ -1,6 +1,19 @@
 """Prepare the data acquisition loop."""
 
-import boilerdaq as bd
+from boilerdaq import (
+    ExtrapParam,
+    ExtrapResult,
+    Flux,
+    FluxParam,
+    Looper,
+    Plotter,
+    Reading,
+    ResultGroup,
+    ScaledParam,
+    ScaledResult,
+    Sensor,
+    Writer,
+)
 
 _SENSORS_PATH = "config/1_sensors.csv"
 _SCALED_PARAMS_PATH = "config/2_scaled_params.csv"
@@ -26,40 +39,40 @@ GROUP_DICT = dict(
 )
 
 # Get all readings
-all_sensors = bd.Sensor.get(_SENSORS_PATH)
+all_sensors = Sensor.get(_SENSORS_PATH)
 READINGS = []
 for sensor in all_sensors:
-    reading = bd.Reading(sensor)
+    reading = Reading(sensor)
     READINGS.append(reading)
 
 # Get scaled parameters
-scaled_params = bd.ScaledParam.get(_SCALED_PARAMS_PATH)
+scaled_params = ScaledParam.get(_SCALED_PARAMS_PATH)
 # Get scaled results
 SCALED_RESULTS = []
 for param in scaled_params:
-    result = bd.ScaledResult(param, READINGS)
+    result = ScaledResult(param, READINGS)
     SCALED_RESULTS.append(result)
 
 # Get flux parameters
-flux_params = bd.FluxParam.get(_FLUX_PARAMS_PATH)
+flux_params = FluxParam.get(_FLUX_PARAMS_PATH)
 # Get fluxes
 fluxes = []
 for param in flux_params:
-    result = bd.Flux(param, SCALED_RESULTS)
+    result = Flux(param, SCALED_RESULTS)
     fluxes.append(result)
 
 # Get extrapolation parameters
-extrap_params = bd.ExtrapParam.get(_EXTRAP_PARAMS_PATH)
+extrap_params = ExtrapParam.get(_EXTRAP_PARAMS_PATH)
 # Get extrapolated results
 extrap_results = []
 for param in extrap_params:
-    result = bd.ExtrapResult(param, SCALED_RESULTS + fluxes)
+    result = ExtrapResult(param, SCALED_RESULTS + fluxes)
     extrap_results.append(result)
 
 BASE_RESULTS = READINGS + SCALED_RESULTS + fluxes + extrap_results
 
 # Create the writer
-WRITER = bd.Writer(RESULTS_PATH, BASE_RESULTS)
+WRITER = Writer(RESULTS_PATH, BASE_RESULTS)
 
 # Build list of sensor groups, grouped by name
 group_dict = dict(
@@ -70,10 +83,10 @@ group_dict = dict(
     pressure="Pcal",
     flux="Q12 Q23 Q34 Q45",
 )
-group = bd.ResultGroup(group_dict, BASE_RESULTS)
+group = ResultGroup(group_dict, BASE_RESULTS)
 
 # Create the plotter and add groups of curves to different plot regions
-plotter = bd.Plotter("base", group["base"], 0, 0)
+plotter = Plotter("base", group["base"], 0, 0)
 plotter.add("post", group["post"], 0, 1)
 plotter.add("top", group["top"], 0, 2)
 plotter.add("water", group["water"], 1, 0)
@@ -81,4 +94,4 @@ plotter.add("pressure", group["pressure"], 1, 1)
 plotter.add("flux", group["flux"], 1, 2)
 
 # Create the looper
-LOOPER = bd.Looper(WRITER, plotter)
+LOOPER = Looper(WRITER, plotter)

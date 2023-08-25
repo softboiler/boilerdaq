@@ -5,9 +5,7 @@ from shutil import copytree
 
 import pytest
 
-PARAMS = Path("params.yaml")
-DATA = Path("data")
-TEST_DATA = Path("tests") / DATA
+from tests import DATA, TEST_DATA
 
 
 @pytest.fixture()

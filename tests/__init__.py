@@ -7,7 +7,9 @@ import pytest
 from boilercore.testing import get_module_rel, walk_modules
 
 BOILERDAQ = Path("src") / "boilerdaq"
-
+PARAMS = Path("params.yaml")
+DATA = Path("data")
+TEST_DATA = Path("tests") / DATA
 EXAMPLES: list[Any] = []
 for module in walk_modules(BOILERDAQ / "examples", BOILERDAQ):
     rel_to_controlled = get_module_rel(module, "controlled")
@@ -18,5 +20,4 @@ for module in walk_modules(BOILERDAQ / "examples", BOILERDAQ):
     else:
         marks = []
     EXAMPLES.append(pytest.param(module, marks=marks))
-
 EXPERIMENTS = list(walk_modules(BOILERDAQ / "experiments", BOILERDAQ))

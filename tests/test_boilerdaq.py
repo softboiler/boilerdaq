@@ -23,9 +23,10 @@ def test_examples(example: str):
     looper.start()
 
 
+@pytest.mark.usefixtures("_tmp_project")
 @pytest.mark.parametrize("stage", EXPERIMENTS)
-def test_experiments(stage: str, monkeypatch: pytest.MonkeyPatch, tmp_project: Path):
+def test_experiments(stage: str, monkeypatch: pytest.MonkeyPatch, tmp_path: Path):
     """Test experimental procedures."""
     with monkeypatch.context() as m:
-        m.chdir(tmp_project)
+        m.chdir(tmp_path)
         import_module(stage).main()

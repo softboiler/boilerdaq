@@ -19,12 +19,13 @@ from pyvisa import ResourceManager, VisaIOError
 from pyvisa.resources import MessageBasedResource
 from simple_pid import PID
 
-PROJECT_DIR = Path()
-"""Project directory."""
-# Monkeypatch these when testing.
-PARAMS_FILE = Path("params.yaml")
+PACKAGE_DIR = Path(__file__).parent
+"""Package directory."""
+PROJECT_DIR = Path.cwd()
+"""Package directory."""
+PARAMS_FILE = PROJECT_DIR / "params.yaml"
 """Location of the parameters file."""
-DATA_DIR = Path("data")
+DATA_DIR = PROJECT_DIR / "data"
 """Data directory."""
 
 # * -------------------------------------------------------------------------------- * #

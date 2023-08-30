@@ -14,14 +14,14 @@ from boilerdaq import (
     Sensor,
     Writer,
 )
+from boilerdaq.models.params import PARAMS
 
-_SENSORS_PATH = "config/1_sensors.csv"
-_SCALED_PARAMS_PATH = "config/2_scaled_params.csv"
-_FLUX_PARAMS_PATH = "config/3_flux_params.csv"
-_EXTRAP_PARAMS_PATH = "config/4_extrap_params.csv"
-
-POWER_SUPPLIES_PATH = "config/0_power_supplies.csv"
-RESULTS_PATH = "results/results.csv"
+_SENSORS_PATH = PARAMS.paths.config / "1_sensors.csv"
+_SCALED_PARAMS_PATH = PARAMS.paths.config / "2_scaled_params.csv"
+_FLUX_PARAMS_PATH = PARAMS.paths.config / "3_flux_params.csv"
+_EXTRAP_PARAMS_PATH = PARAMS.paths.config / "4_extrap_params.csv"
+POWER_SUPPLIES_PATH = PARAMS.paths.config / "0_power_supplies.csv"
+RESULTS_PATH = PARAMS.paths.results / "results.csv"
 
 INSTRUMENT = "USB0::0x0957::0x0807::US25N3188G::0::INSTR"
 CURRENT_LIMIT = 4

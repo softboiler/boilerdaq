@@ -49,10 +49,10 @@ class Sensor(NamedTuple):
     unit: str
 
     @classmethod
-    def get(cls, path: str) -> list[Self]:
+    def get(cls, path: Path) -> list[Self]:
         """Process a CSV file at ``path``, returning a ``List`` of ``Sensor``."""
         sensors = []
-        with Path(path).open(encoding="utf-8") as csv_file:
+        with path.open(encoding="utf-8") as csv_file:
             reader = DictReader(csv_file)
             sensors.extend(
                 cls(
@@ -91,10 +91,10 @@ class ScaledParam(NamedTuple):
     unit: str
 
     @classmethod
-    def get(cls, path: str) -> list[Self]:
+    def get(cls, path: Path) -> list[Self]:
         """Process a CSV file at ``path``, returning a ``List`` of ``ScaledParam``."""
         params = []
-        with Path(path).open(encoding="utf-8") as csv_file:
+        with path.open(encoding="utf-8") as csv_file:
             reader = DictReader(csv_file)
             params.extend(
                 cls(
@@ -136,10 +136,10 @@ class FluxParam(NamedTuple):
     unit: str
 
     @classmethod
-    def get(cls, path: str) -> list[Self]:
+    def get(cls, path: Path) -> list[Self]:
         """Process a CSV file at ``path``, returning a ``List`` of ``FluxParam``."""
         params = []
-        with Path(path).open(encoding="utf-8") as csv_file:
+        with path.open(encoding="utf-8") as csv_file:
             reader = DictReader(csv_file)
             params.extend(
                 cls(
@@ -182,10 +182,10 @@ class ExtrapParam(NamedTuple):
     unit: str
 
     @classmethod
-    def get(cls, path: str) -> list[Self]:
+    def get(cls, path: Path) -> list[Self]:
         """Process a CSV file at ``path``, returning a ``List`` of ``ExtrapParam``."""
         params = []
-        with Path(path).open(encoding="utf-8") as csv_file:
+        with path.open(encoding="utf-8") as csv_file:
             reader = DictReader(csv_file)
             params.extend(
                 cls(
@@ -216,10 +216,10 @@ class PowerParam(NamedTuple):
     unit: str
 
     @classmethod
-    def get(cls, path: str) -> list[Self]:
+    def get(cls, path: Path) -> list[Self]:
         """Process a CSV file at ``path``, returning a ``List`` of ``ExtrapParam``."""
         power_supplies = []
-        with Path(path).open(encoding="utf-8") as csv_file:
+        with path.open(encoding="utf-8") as csv_file:
             reader = DictReader(csv_file)
             power_supplies.extend(
                 cls(
@@ -558,7 +558,7 @@ class Writer:
 
     Parameters
     ----------
-    path: str
+    path: Path
         Base name of the first results CSV to be written (e.g. `results.csv`). The ISO
         time of creation of the file will be appended to the provided path (e.g.
         `results_yyyy_mm_ddThh-mm-ss.csv`).
@@ -579,21 +579,21 @@ class Writer:
 
     def __init__(
         self,
-        path: str,
+        path: Path,
         results: list[Result],
     ):
-        self.paths: list[str] = []
+        self.paths: list[Path] = []
         self.result_groups: list[list[Result]] = []
         self.fieldname_groups: list[list[str]] = []
         self.time: datetime = datetime.now()  # type: ignore
         self.add(path, results)
 
-    def add(self, path: str, results: list[Result]):
+    def add(self, path: Path, results: list[Result]):
         """Add a CSV file to be written to and a set of results to write to it.
 
         Parameters
         ----------
-        path: str
+        path: Path
             Base name of additional results CSVs to be written (e.g. `results.csv`). The
             ISO time of creation of the file will be appended to the provided path (e.g.
             `results_yyyy_mm_ddThh-mm-ss.csv`).
@@ -603,8 +603,7 @@ class Writer:
 
         # The ":" in ISO time strings is not supported by filenames
         file_time = self.time.isoformat(timespec="seconds").replace(":", "-")  # type: ignore
-        path = Path(path)  # type: ignore
-        path = str(path.with_name(f"{path.name}_{file_time}"))  # type: ignore
+        path = path.with_name(f"{path.name}_{file_time}")
         # Compose the fieldnames and first row of values
         sources = [f"{result.source.name} ({result.source.unit})" for result in results]
         fieldnames = ["time", *sources]
@@ -616,7 +615,7 @@ class Writer:
         to_write = dict(zip(fieldnames, values, strict=True))
 
         # Create the CSV, writing the header and the first row of values
-        with Path(path).open("w", newline="", encoding="utf-8") as csv_file:
+        with path.open("w", newline="", encoding="utf-8") as csv_file:
             csv_writer = DictWriter(csv_file, fieldnames=fieldnames)
             csv_writer.writeheader()
             csv_writer.writerow(to_write)
@@ -642,7 +641,7 @@ class Writer:
             values = [self.time] + [result.value for result in results]
             to_write = dict(zip(fieldnames, values, strict=True))
 
-            with Path(path).open("a", newline="", encoding="utf-8") as csv_file:
+            with path.open("a", newline="", encoding="utf-8") as csv_file:
                 csv_writer = DictWriter(csv_file, fieldnames=fieldnames)
                 csv_writer.writerow(to_write)
 

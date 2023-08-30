@@ -5,11 +5,6 @@
 params_schema.json
 # Don't commit local DVC plots
 dvc_plots
-# Don't commit configs
-/results
-/config
-/examples
-/notes
 
 # * -------------------------------------------------------------------------------- * #
 # * Changes below may be lost in significant template updates.

@@ -2,3 +2,7 @@ paths:
   project: .
   package: src/boilerdaq
   data: data
+  results: data/results
+  config: data/config
+  examples: data/examples
+  notes: data/notes

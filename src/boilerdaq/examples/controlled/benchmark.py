@@ -3,8 +3,9 @@
 from boilerdaq import Controller, Looper, Writer, get_result
 from boilerdaq.examples import CONTROL_SENSOR_NAME, OUTPUT_LIMITS
 from boilerdaq.examples.controlled import CONTROLLED_RESULTS, PLOTTER
+from boilerdaq.models.params import PARAMS
 
-RESULTS_PATH = "results/benchmark.csv"
+RESULTS_PATH = PARAMS.paths.benchmarks / "benchmark.csv"
 TEMP_SETPOINT = 30
 TEMP_FEEDBACK_GAINS = (12, 0.08, 1)
 TEMP_FEEDBACK_SENSOR_NAME = "T0cal"

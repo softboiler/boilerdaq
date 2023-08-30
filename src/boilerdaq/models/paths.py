@@ -21,4 +21,9 @@ class Paths(CreatePathsModel):
     # * Git-Tracked Inputs
     # * DVC-Tracked Inputs
     # * Local Inputs
+    config: DirectoryPath = data / "config"
+    # * Local Results
+    benchmarks: DirectoryPath = data / "benchmarks"
+    results: DirectoryPath = data / "results"
+    notes: DirectoryPath = data / "notes"
     # * DVC-Tracked Results

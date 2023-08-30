@@ -1,14 +1,22 @@
 """Test fixtures."""
 
 from pathlib import Path
-from shutil import copytree
 
 import pytest
+from boilercore import catch_certain_warnings
 
-from tests import DATA, TEST_DATA
+with catch_certain_warnings():
+    from boilercore.testing import tmp_workdir
+
+
+@pytest.fixture(autouse=True)
+def _catch_certain_warnings():
+    """Filter certain warnings."""
+    with catch_certain_warnings():
+        yield
 
 
 @pytest.fixture()
-def _tmp_project(tmp_path: Path):
+def _tmp_project(tmp_path: Path, monkeypatch: pytest.MonkeyPatch):
     """Produce a temporary project directory."""
-    copytree(TEST_DATA, tmp_path / DATA, dirs_exist_ok=True)
+    tmp_workdir(tmp_path, monkeypatch)

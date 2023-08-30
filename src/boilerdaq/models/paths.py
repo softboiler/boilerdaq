@@ -1,17 +1,24 @@
 """Paths for this project."""
 
 from boilercore.models import CreatePathsModel
+from boilercore.paths import get_package_dir
 from pydantic import DirectoryPath
 
-from boilerdaq import DATA_DIR, PACKAGE_DIR, PROJECT_DIR
+import boilerdaq
+from boilerdaq.models import CWD
 
 
 class Paths(CreatePathsModel):
     """Paths associated with this project."""
 
-    project: DirectoryPath = PROJECT_DIR
-    """Project directory."""
-    package: DirectoryPath = PACKAGE_DIR
-    """Package directory."""
-    data: DirectoryPath = DATA_DIR
-    """Project data."""
+    # * Roots
+    # ! Project
+    project: DirectoryPath = CWD
+    # ! Package
+    package: DirectoryPath = get_package_dir(boilerdaq)
+    # ! Data
+    data: DirectoryPath = project / "data"
+    # * Git-Tracked Inputs
+    # * DVC-Tracked Inputs
+    # * Local Inputs
+    # * DVC-Tracked Results

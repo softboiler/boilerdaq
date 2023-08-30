@@ -19,15 +19,6 @@ from pyvisa import ResourceManager, VisaIOError
 from pyvisa.resources import MessageBasedResource
 from simple_pid import PID
 
-PACKAGE_DIR = Path(__file__).parent
-"""Package directory."""
-PROJECT_DIR = Path.cwd()
-"""Package directory."""
-PARAMS_FILE = PROJECT_DIR / "params.yaml"
-"""Location of the parameters file."""
-DATA_DIR = PROJECT_DIR / "data"
-"""Data directory."""
-
 # * -------------------------------------------------------------------------------- * #
 
 setConfigOptions(antialias=True)
@@ -61,7 +52,7 @@ class Sensor(NamedTuple):
     def get(cls, path: str) -> list[Self]:
         """Process a CSV file at ``path``, returning a ``List`` of ``Sensor``."""
         sensors = []
-        with Path(path).open() as csv_file:
+        with Path(path).open(encoding="utf-8") as csv_file:
             reader = DictReader(csv_file)
             sensors.extend(
                 cls(
@@ -103,7 +94,7 @@ class ScaledParam(NamedTuple):
     def get(cls, path: str) -> list[Self]:
         """Process a CSV file at ``path``, returning a ``List`` of ``ScaledParam``."""
         params = []
-        with Path(path).open() as csv_file:
+        with Path(path).open(encoding="utf-8") as csv_file:
             reader = DictReader(csv_file)
             params.extend(
                 cls(
@@ -148,7 +139,7 @@ class FluxParam(NamedTuple):
     def get(cls, path: str) -> list[Self]:
         """Process a CSV file at ``path``, returning a ``List`` of ``FluxParam``."""
         params = []
-        with Path(path).open() as csv_file:
+        with Path(path).open(encoding="utf-8") as csv_file:
             reader = DictReader(csv_file)
             params.extend(
                 cls(
@@ -194,7 +185,7 @@ class ExtrapParam(NamedTuple):
     def get(cls, path: str) -> list[Self]:
         """Process a CSV file at ``path``, returning a ``List`` of ``ExtrapParam``."""
         params = []
-        with Path(path).open() as csv_file:
+        with Path(path).open(encoding="utf-8") as csv_file:
             reader = DictReader(csv_file)
             params.extend(
                 cls(
@@ -228,7 +219,7 @@ class PowerParam(NamedTuple):
     def get(cls, path: str) -> list[Self]:
         """Process a CSV file at ``path``, returning a ``List`` of ``ExtrapParam``."""
         power_supplies = []
-        with Path(path).open() as csv_file:
+        with Path(path).open(encoding="utf-8") as csv_file:
             reader = DictReader(csv_file)
             power_supplies.extend(
                 cls(
@@ -625,7 +616,7 @@ class Writer:
         to_write = dict(zip(fieldnames, values, strict=True))
 
         # Create the CSV, writing the header and the first row of values
-        with Path(path).open("w", newline="") as csv_file:
+        with Path(path).open("w", newline="", encoding="utf-8") as csv_file:
             csv_writer = DictWriter(csv_file, fieldnames=fieldnames)
             csv_writer.writeheader()
             csv_writer.writerow(to_write)
@@ -651,7 +642,7 @@ class Writer:
             values = [self.time] + [result.value for result in results]
             to_write = dict(zip(fieldnames, values, strict=True))
 
-            with Path(path).open("a", newline="") as csv_file:
+            with Path(path).open("a", newline="", encoding="utf-8") as csv_file:
                 csv_writer = DictWriter(csv_file, fieldnames=fieldnames)
                 csv_writer.writerow(to_write)
 

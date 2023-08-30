@@ -1,4 +1,6 @@
 *
-!.gitignore
+!*.gitignore
 !*.dvcignore
 !*.dvc
+!plotting
+!scripts

@@ -4,7 +4,7 @@ from pathlib import Path
 from typing import Any
 
 import pytest
-from boilercore.testing import get_module_rel, walk_modules
+from boilercore.paths import get_module_rel, walk_modules
 
 BOILERDAQ = Path("src") / "boilerdaq"
 PARAMS = Path("params.yaml")

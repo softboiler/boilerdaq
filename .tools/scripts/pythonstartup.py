@@ -10,9 +10,11 @@ from warnings import catch_warnings, filterwarnings
 
 
 def init():
+    filterwarnings("error")
+    filter_certain_warnings(ALL_WARNINGS)
+
     from rich import inspect, traceback  # noqa: F401
 
-    filter_certain_warnings(ALL_WARNINGS)
     traceback.install()
 
     if not is_notebook_or_ipython():

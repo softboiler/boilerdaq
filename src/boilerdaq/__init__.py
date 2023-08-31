@@ -19,6 +19,13 @@ from pyvisa import ResourceManager, VisaIOError
 from pyvisa.resources import MessageBasedResource
 from simple_pid import PID
 
+PROJECT_PATH = Path()
+
+
+def get_params_file():
+    return PROJECT_PATH / "params.yaml"
+
+
 # * -------------------------------------------------------------------------------- * #
 
 setConfigOptions(antialias=True)

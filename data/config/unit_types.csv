@@ -1,0 +1,5 @@
+raw_unit,description,unit_int
+C,Celsius,0
+F,Fahrenheit,1
+K,Kelvin,2
+V,"Volts, no CJC",5

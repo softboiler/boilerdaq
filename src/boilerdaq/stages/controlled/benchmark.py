@@ -1,9 +1,10 @@
 """Run a benchmark prior to experimentation."""
 
+
 from boilerdaq import Controller, Looper, Writer, get_result
-from boilerdaq.examples import CONTROL_SENSOR_NAME, OUTPUT_LIMITS
-from boilerdaq.examples.controlled import CONTROLLED_RESULTS, PLOTTER
 from boilerdaq.models.params import PARAMS
+from boilerdaq.stages import CONTROL_SENSOR_NAME, OUTPUT_LIMITS
+from boilerdaq.stages.controlled import CONTROLLED_RESULTS, PLOTTER
 
 RESULTS_PATH = PARAMS.paths.benchmarks / "benchmark.csv"
 TEMP_SETPOINT = 30

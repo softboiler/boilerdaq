@@ -7,8 +7,8 @@ import pytest
 from boilercore.paths import get_module_rel, walk_modules
 
 BOILERDAQ = Path("src") / "boilerdaq"
-EXAMPLES: list[Any] = []
-for module in walk_modules(BOILERDAQ / "examples", BOILERDAQ):
+STAGES: list[Any] = []
+for module in walk_modules(BOILERDAQ / "stages", BOILERDAQ):
     rel_to_controlled = get_module_rel(module, "controlled")
     if rel_to_controlled in {"set_voltage"}:
         marks = [pytest.mark.skip]
@@ -16,6 +16,6 @@ for module in walk_modules(BOILERDAQ / "examples", BOILERDAQ):
         marks = [pytest.mark.xfail]
     else:
         marks = []
-    EXAMPLES.append(
-        pytest.param(module, id=get_module_rel(module, "examples"), marks=marks)
+    STAGES.append(
+        pytest.param(module, id=get_module_rel(module, "stages"), marks=marks)
     )

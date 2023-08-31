@@ -1,17 +1,17 @@
 """Prepare the feedback-controlled data acquisition loop."""
 
 from boilerdaq import Plotter, PowerParam, PowerResult, ResultGroup, Writer
-from boilerdaq.examples import (
+from boilerdaq.models.params import PARAMS
+from boilerdaq.stages import (
     BASE_RESULTS,
     CURRENT_LIMIT,
     GROUP_DICT,
     INSTRUMENT,
-    POWER_SUPPLIES_PATH,
     RESULTS_PATH,
 )
 
 # Get power supply values
-all_power_supplies = PowerParam.get(POWER_SUPPLIES_PATH)
+all_power_supplies = PowerParam.get(PARAMS.paths.power_supplies_path)
 power_results = []
 for power_supply in all_power_supplies:
     result = PowerResult(power_supply, INSTRUMENT, CURRENT_LIMIT)
@@ -19,7 +19,7 @@ for power_supply in all_power_supplies:
 CONTROLLED_RESULTS = power_results + BASE_RESULTS
 
 # Create the writer
-WRITER = Writer(RESULTS_PATH, CONTROLLED_RESULTS)
+writer = Writer(RESULTS_PATH, CONTROLLED_RESULTS)
 group = ResultGroup(GROUP_DICT, CONTROLLED_RESULTS)
 
 # Create the plotter and add groups of curves to different plot regions

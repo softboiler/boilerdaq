@@ -2,5 +2,6 @@
 !*.gitignore
 !*.dvcignore
 !*.dvc
+!config
 !plotting
 !scripts

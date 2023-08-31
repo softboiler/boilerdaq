@@ -1,8 +1,8 @@
 """Run the data acquisition and control loop."""
 
-from boilerdaq import Controller, Looper, get_result
-from boilerdaq.examples import CONTROL_SENSOR_NAME, OUTPUT_LIMITS
-from boilerdaq.examples.controlled import CONTROLLED_RESULTS, PLOTTER, WRITER
+from boilerdaq import Controller, Looper, Writer, get_result
+from boilerdaq.stages import CONTROL_SENSOR_NAME, OUTPUT_LIMITS, RESULTS_PATH
+from boilerdaq.stages.controlled import CONTROLLED_RESULTS, PLOTTER
 
 TEMP_SETPOINT = 30
 TEMP_FEEDBACK_GAINS = (12, 0.08, 1)
@@ -18,7 +18,7 @@ def main() -> Looper:
         TEMP_FEEDBACK_GAINS,
         OUTPUT_LIMITS,
     )
-    return Looper(WRITER, PLOTTER, controller)
+    return Looper(Writer(RESULTS_PATH, CONTROLLED_RESULTS), PLOTTER, controller)
 
 
 if __name__ == "__main__":

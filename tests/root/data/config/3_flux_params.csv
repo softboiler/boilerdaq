@@ -1,0 +1,6 @@
+name,origin_sensor,distant_sensor,conductivity,length,unit
+Q01,T0cal,T1cal,0.8107319670,0.126365,W
+Q12,T1cal,T2cal,0.0285022957,0.01207262,W
+Q23,T2cal,T3cal,0.0285022957,0.01204976,W
+Q34,T3cal,T4cal,0.0285022957,0.01206500,W
+Q45,T4cal,T5cal,0.0285022957,0.04382008,W

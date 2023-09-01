@@ -6,6 +6,7 @@ from typing import Any
 import pytest
 from boilercore.paths import get_module_rel, walk_modules
 
+INSTRUMENT_NAME = "USB0::0x0957::0x0807::US25N3188G::0::INSTR"
 BOILERDAQ = Path("src") / "boilerdaq"
 STAGES: list[Any] = []
 for module in walk_modules(BOILERDAQ / "stages", BOILERDAQ):

@@ -1,26 +1,40 @@
 """Test fixtures."""
 
 from importlib import import_module
-from pathlib import Path
-from shutil import copytree
 
 import pytest
 from boilercore import filter_certain_warnings
+from boilercore.testing import get_session_path
 from PyQt5.QtCore import QTimer
 from PyQt5.QtWidgets import QApplication
+from pyvisa import ResourceManager
+from pyvisa.resources import MessageBasedResource
 
 import boilerdaq
 from boilerdaq import Looper
-from tests import STAGES
+from tests import INSTRUMENT_NAME, STAGES
 
 
 @pytest.fixture(scope="session", autouse=True)
 def _project_session_path(tmp_path_factory: pytest.TempPathFactory):
     """Set the project directory."""
-    project_test_data = Path("tests") / "root"
-    project_session_path = tmp_path_factory.getbasetemp() / "root"
-    boilerdaq.PROJECT_PATH = project_session_path
-    copytree(project_test_data, project_session_path, dirs_exist_ok=True)
+    get_session_path(tmp_path_factory, boilerdaq)
+
+
+@pytest.fixture(scope="session", autouse=True)
+def _disable_power_supply():
+    """Disable the power supply after testing."""
+    try:
+        yield
+    finally:
+        instrument: MessageBasedResource = ResourceManager().open_resource(  # type: ignore
+            INSTRUMENT_NAME,
+            read_termination="\n",
+            write_termination="\n",
+        )
+        for instruction in ["output:state off", "source:current 0", "source:voltage 0"]:
+            instrument.write(instruction)
+        instrument.close()
 
 
 # Can't be session scope

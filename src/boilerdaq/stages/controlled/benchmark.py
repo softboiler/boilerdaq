@@ -1,7 +1,7 @@
 """Run a benchmark prior to experimentation."""
 
 
-from boilerdaq import Controller, Looper, Writer, get_result
+from boilerdaq.daq import Controller, Looper, Writer, get_result
 from boilerdaq.models.params import PARAMS
 from boilerdaq.stages import CONTROL_SENSOR_NAME, OUTPUT_LIMITS
 from boilerdaq.stages.controlled import CONTROLLED_RESULTS, PLOTTER

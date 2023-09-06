@@ -52,6 +52,7 @@ Tracker = "https://github.com/blakeNaccarato/boilerdaq/issues"
 [tool.fawltydeps]
 ignore_undeclared = [
     "copier_python", # Used by the project template
+    "debugpy",       # Used in testing
     "boilercore",    # Not picked up by fawltydeps
     "graphviz",      # .tools/requirements/requirements_docs.txt
     "originpro",     # .tools/requirements/requirements_dev.txt

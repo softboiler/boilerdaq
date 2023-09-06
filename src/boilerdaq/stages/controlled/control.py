@@ -1,6 +1,6 @@
 """Run the data acquisition and control loop."""
 
-from boilerdaq import Controller, Looper, Writer, get_result
+from boilerdaq.daq import Controller, Looper, Writer, get_result
 from boilerdaq.stages import CONTROL_SENSOR_NAME, OUTPUT_LIMITS, RESULTS_PATH
 from boilerdaq.stages.controlled import CONTROLLED_RESULTS, PLOTTER
 

@@ -1,6 +1,6 @@
 """Run the data acquisition loop."""
 
-from boilerdaq import Looper, Writer
+from boilerdaq.daq import Looper, Writer
 from boilerdaq.stages import BASE_RESULTS, PLOTTER, RESULTS_PATH
 
 

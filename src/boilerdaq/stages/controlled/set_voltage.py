@@ -2,7 +2,7 @@
 
 from pyvisa.resources import MessageBasedResource
 
-from boilerdaq import get_result
+from boilerdaq.daq import get_result
 from boilerdaq.stages.controlled import CONTROLLED_RESULTS
 
 CURRENT_LIMIT = 4

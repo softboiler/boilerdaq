@@ -1,6 +1,6 @@
 """Calibrate thermocouples."""
 
-from boilerdaq import Looper, Plotter, ResultGroup, Writer
+from boilerdaq.daq import Looper, Plotter, ResultGroup, Writer
 from boilerdaq.stages import READINGS, RESULTS_PATH, SCALED_RESULTS
 
 # Build list of sensor groups, grouped by name

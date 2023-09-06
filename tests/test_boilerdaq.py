@@ -1,6 +1,6 @@
 """Test hardware and experimental procedures."""
 
-from boilerdaq import Looper
+from boilerdaq.daq import Looper
 
 
 def test_stages(looper: Looper):

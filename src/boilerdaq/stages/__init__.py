@@ -1,6 +1,6 @@
 """Prepare the data acquisition loop."""
 
-from boilerdaq import (
+from boilerdaq.daq import (
     ExtrapParam,
     ExtrapResult,
     Flux,

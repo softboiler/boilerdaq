@@ -1,6 +1,6 @@
 """Simple test with one sensor."""
 
-from boilerdaq import Looper, Plotter, ResultGroup, Writer
+from boilerdaq.daq import Looper, Plotter, ResultGroup, Writer
 from boilerdaq.stages import READINGS, RESULTS_PATH
 
 GROUP_DICT = dict(base="T1")

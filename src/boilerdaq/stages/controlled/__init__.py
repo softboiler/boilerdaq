@@ -1,6 +1,6 @@
 """Prepare the feedback-controlled data acquisition loop."""
 
-from boilerdaq import Plotter, PowerParam, PowerResult, ResultGroup, Writer
+from boilerdaq.daq import Plotter, PowerParam, PowerResult, ResultGroup, Writer
 from boilerdaq.models.params import PARAMS
 from boilerdaq.stages import (
     BASE_RESULTS,

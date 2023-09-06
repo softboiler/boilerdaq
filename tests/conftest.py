@@ -1,18 +1,39 @@
 """Test fixtures."""
 
 from importlib import import_module
+from pathlib import Path
+from typing import Any
 
 import pytest
 from boilercore import filter_certain_warnings
+from boilercore.paths import get_module_rel, walk_modules
 from boilercore.testing import get_session_path
+from debugpy import is_client_connected
 from PyQt5.QtCore import QTimer
 from PyQt5.QtWidgets import QApplication
 from pyvisa import ResourceManager
 from pyvisa.resources import MessageBasedResource
 
 import boilerdaq
-from boilerdaq import Looper
-from tests import INSTRUMENT_NAME, STAGES
+from boilerdaq.daq import Looper
+
+DEBUG = is_client_connected()
+
+INSTRUMENT_NAME = "USB0::0x0957::0x0807::US25N3188G::0::INSTR"
+
+BOILERDAQ = Path("src") / "boilerdaq"
+STAGES: list[Any] = []
+for module in walk_modules(BOILERDAQ / "stages", BOILERDAQ):
+    rel_to_controlled = get_module_rel(module, "controlled")
+    if rel_to_controlled in {"set_voltage"}:
+        marks = [pytest.mark.skip]
+    elif rel_to_controlled in {"flux_control"}:
+        marks = [pytest.mark.xfail]
+    else:
+        marks = []
+    STAGES.append(
+        pytest.param(module, id=get_module_rel(module, "stages"), marks=marks)
+    )
 
 
 @pytest.fixture(scope="session", autouse=True)
@@ -49,5 +70,6 @@ def looper(request: pytest.FixtureRequest):
     """Test example procedures."""
     looper: Looper = import_module(request.param).main()
     app: QApplication = looper.app
-    QTimer.singleShot(1000, app.closeAllWindows)
+    if not DEBUG:
+        QTimer.singleShot(2000, app.closeAllWindows)
     return looper

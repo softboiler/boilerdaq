@@ -10,9 +10,8 @@ TEMP_FEEDBACK_SENSOR_NAME = "T0cal"
 
 
 def main() -> Looper:
-    control_sensor = get_result(CONTROL_SENSOR_NAME, CONTROLLED_RESULTS)
     controller = Controller(
-        control_sensor,  # type: ignore
+        get_result(CONTROL_SENSOR_NAME, CONTROLLED_RESULTS),  # type: ignore
         get_result(TEMP_FEEDBACK_SENSOR_NAME, CONTROLLED_RESULTS),
         TEMP_SETPOINT,
         TEMP_FEEDBACK_GAINS,

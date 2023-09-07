@@ -7,8 +7,11 @@ from datetime import datetime
 from pathlib import Path
 from typing import NamedTuple, Self
 
+from boilercore.fits import fit_to_model
+from boilercore.modelfun import get_model
 from mcculw.enums import TInOptions
 from mcculw.ul import ULError, t_in, v_in
+from numpy import inf
 from PyQt5.QtCore import QTimer
 from pyqtgraph import (
     GraphicsLayoutWidget,
@@ -23,11 +26,11 @@ from simple_pid import PID
 
 setConfigOptions(antialias=True)
 
-HISTORY_LENGTH = 3000
-"""Number of samples to plot."""
-
-POLLING_INTERVAL = 10
+POLLING_INTERVAL = 100
 """Minimum time between sampling cycles in milliseconds."""
+
+HISTORY_LENGTH = 30000 // POLLING_INTERVAL
+"""Number of samples to plot."""
 
 
 class Sensor(NamedTuple):
@@ -70,6 +73,21 @@ class Sensor(NamedTuple):
                 for row in reader
             )
         return sensors
+
+
+class Param(NamedTuple):
+    """A generic parameter.
+
+    Parameters
+    ----------
+    name: str
+        The name of the parameter.
+    unit:
+        The unit of the parameter.
+    """
+
+    name: str
+    unit: str
 
 
 class ScaledParam(NamedTuple):
@@ -412,6 +430,63 @@ class ExtrapResult(Result):
         super().update()
 
 
+class FitResult(Result):
+    """A result from a model fit."""
+
+    def __init__(self, name: str, unit: str, results_to_fit: list[Result]):
+        super().__init__()
+        self.source = Param(name, unit)  # type: ignore
+        self.results_to_fit = results_to_fit
+        self.param_to_fit = "q_s"
+        self.model_bounds = {
+            "T_s": (-inf, inf),
+            "q_s": (-inf, inf),
+            "k": (350.0, 450.0),
+            "h_a": (-inf, inf),
+            "h_w": (-inf, inf),
+        }
+        self.initial_values = {
+            "T_s": 95.0,
+            "q_s": 0.0,
+            "k": 400.0,
+            "h_a": 2.220446049250313e-16,
+            "h_w": 2.220446049250313e-16,
+        }
+        self.free_params = ["T_s", "q_s", "h_a"]
+        self.fit_method = "trf"
+        self.model, _ = get_model(
+            Path("C:/Users/Blake/Code/mine/boilerdata/data/modelfun/model.dillpickle")
+        )
+        self.confidence_interval_95 = 2.2621571627409915
+        self.x = [
+            0.10899134114467578,
+            0.09692634765977226,
+            0.08486135417486876,
+            0.07279636068996523,
+            0.02898138435005245,
+        ]
+        self.y_errors = [2.2] * len(self.results_to_fit)
+        self.fixed_values = {"k": 400.0, "h_w": 2.220446049250313e-16}
+
+    def update(self):
+        """Update the result."""
+        fitted_params, _errors = fit_to_model(
+            self.model_bounds,
+            self.initial_values,
+            self.free_params,
+            self.fit_method,  # type: ignore
+            self.model,
+            self.confidence_interval_95,
+            self.x,
+            [result.value for result in self.results_to_fit],
+            self.y_errors,
+            self.fixed_values,
+        )
+        fit = dict(zip(self.free_params, fitted_params, strict=True))
+        self.value = fit[self.param_to_fit]
+        super().update()
+
+
 class PowerResult(Result):
     """A result from a power supply.
 
@@ -529,13 +604,13 @@ class Controller:
 
     def __init__(
         self,
-        control_result: PowerResult,
+        control_result: Result,
         feedback_result: Result,
         setpoint: float,
         gains: tuple[float, float, float],
         output_limits: tuple[float, float],
     ):
-        self.control_result: PowerResult = control_result
+        self.control_result: PowerResult = control_result  # type: ignore
         self.feedback_result: Result = feedback_result
         self.pid = PID(
             *gains,

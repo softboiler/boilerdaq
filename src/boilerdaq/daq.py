@@ -9,9 +9,9 @@ from typing import NamedTuple, Self
 
 from boilercore.fits import fit_to_model
 from boilercore.modelfun import get_model
+from boilercore.models.params import FitParams
 from mcculw.enums import TInOptions
 from mcculw.ul import ULError, t_in, v_in
-from numpy import inf
 from PyQt5.QtCore import QTimer
 from pyqtgraph import (
     GraphicsLayoutWidget,
@@ -433,27 +433,14 @@ class ExtrapResult(Result):
 class FitResult(Result):
     """A result from a model fit."""
 
-    def __init__(self, name: str, unit: str, results_to_fit: list[Result]):
+    def __init__(
+        self, params: FitParams, name: str, unit: str, results_to_fit: list[Result]
+    ):
         super().__init__()
+        self.fit = params
         self.source = Param(name, unit)  # type: ignore
         self.results_to_fit = results_to_fit
         self.param_to_fit = "q_s"
-        self.model_bounds = {
-            "T_s": (-inf, inf),
-            "q_s": (-inf, inf),
-            "k": (350.0, 450.0),
-            "h_a": (-inf, inf),
-            "h_w": (-inf, inf),
-        }
-        self.initial_values = {
-            "T_s": 95.0,
-            "q_s": 0.0,
-            "k": 400.0,
-            "h_a": 2.220446049250313e-16,
-            "h_w": 2.220446049250313e-16,
-        }
-        self.free_params = ["T_s", "q_s", "h_a"]
-        self.fit_method = "trf"
         self.model, _ = get_model(
             Path("C:/Users/Blake/Code/mine/boilerdata/data/modelfun/model.dillpickle")
         )
@@ -471,18 +458,18 @@ class FitResult(Result):
     def update(self):
         """Update the result."""
         fitted_params, _errors = fit_to_model(
-            self.model_bounds,
-            self.initial_values,
-            self.free_params,
-            self.fit_method,  # type: ignore
-            self.model,
-            self.confidence_interval_95,
-            self.x,
-            [result.value for result in self.results_to_fit],
-            self.y_errors,
-            self.fixed_values,
+            model_bounds=self.fit.model_bounds,
+            initial_values=self.fit.initial_values,
+            free_params=self.fit.free_params,
+            fit_method=self.fit.fit_method,  # type: ignore
+            model=self.model,
+            confidence_interval_95=self.confidence_interval_95,
+            x=self.x,
+            y=[result.value for result in self.results_to_fit],
+            y_errors=self.y_errors,
+            fixed_values=self.fit.fixed_values,
         )
-        fit = dict(zip(self.free_params, fitted_params, strict=True))
+        fit = dict(zip(self.fit.free_params, fitted_params, strict=True))
         self.value = fit[self.param_to_fit]
         super().update()
 

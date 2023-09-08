@@ -12,16 +12,18 @@ from boilerdaq.daq import (
     Writer,
     get_result,
 )
+from boilerdaq.models.params import PARAMS
 from boilerdaq.stages import CONTROL_SENSOR_NAME, OUTPUT_LIMITS, RESULTS_PATH
 from boilerdaq.stages.controlled import CONTROLLED_RESULTS
 
-FLUX_SETPOINT = 5
+FLUX_SETPOINT = 0
 FLUX_FEEDBACK_GAINS = (12, 0.08, 1)
 FLUX_FEEDBACK_RESULT_NAME = "flux"
 
 
 def main() -> Looper:
     fit_result = FitResult(
+        PARAMS.fit,
         FLUX_FEEDBACK_RESULT_NAME,
         "W/cm^2",
         [

@@ -3,6 +3,7 @@
 from pathlib import Path
 
 from boilercore.models import SynchronizedPathsYamlModel
+from boilercore.models.params import FitParams
 from pydantic import Field
 
 from boilerdaq import get_params_file
@@ -13,6 +14,10 @@ PARAMS_FILE = get_params_file()
 
 class Params(SynchronizedPathsYamlModel):
     """Project parameters."""
+
+    fit: FitParams = Field(
+        default_factory=FitParams, description="Parameters for model fit."
+    )
 
     paths: Paths = Field(default_factory=Paths)
     """Project paths."""

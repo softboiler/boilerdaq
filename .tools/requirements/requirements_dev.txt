@@ -3,7 +3,13 @@
 # * -------------------------------------------------------------------------------- * #
 # * Changes below should persist in significant template updates.
 
+# ? For using the latest version of this core package during development
 -e ../boilercore
+# ? Install tests package so modules can be run in debugging
+-e tests/.
+-e ../boilercv/tests/.
+-e ../boilerdaq/tests/.
+-e ../boilerdata/tests/.
 
 # * -------------------------------------------------------------------------------- * #
 # * Changes below may be lost in significant template updates.

@@ -7,9 +7,9 @@ from datetime import datetime
 from pathlib import Path
 from typing import NamedTuple, Self
 
-from boilercore.fits import fit_to_model
+from boilercore.fits import fit_from_params
 from boilercore.modelfun import get_model
-from boilercore.models.params import FitParams
+from boilercore.models.params import Fit
 from mcculw.enums import TInOptions
 from mcculw.ul import ULError, t_in, v_in
 from PyQt5.QtCore import QTimer
@@ -433,9 +433,7 @@ class ExtrapResult(Result):
 class FitResult(Result):
     """A result from a model fit."""
 
-    def __init__(
-        self, params: FitParams, name: str, unit: str, results_to_fit: list[Result]
-    ):
+    def __init__(self, params: Fit, name: str, unit: str, results_to_fit: list[Result]):
         super().__init__()
         self.fit = params
         self.source = Param(name, unit)  # type: ignore
@@ -457,19 +455,14 @@ class FitResult(Result):
 
     def update(self):
         """Update the result."""
-        fitted_params, _errors = fit_to_model(
-            model_bounds=self.fit.model_bounds,
-            initial_values=self.fit.initial_values,
-            free_params=self.fit.free_params,
-            fit_method=self.fit.fit_method,  # type: ignore
+        fit, _errors = fit_from_params(
             model=self.model,
-            confidence_interval_95=self.confidence_interval_95,
+            params=self.fit,
             x=self.x,
             y=[result.value for result in self.results_to_fit],
             y_errors=self.y_errors,
-            fixed_values=self.fit.fixed_values,
+            confidence_interval=self.confidence_interval_95,
         )
-        fit = dict(zip(self.fit.free_params, fitted_params, strict=True))
         self.value = fit[self.param_to_fit]
         super().update()
 

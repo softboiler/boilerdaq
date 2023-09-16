@@ -3,7 +3,7 @@
 from pathlib import Path
 
 from boilercore.models import SynchronizedPathsYamlModel
-from boilercore.models.params import Fit
+from boilercore.models.fit import Fit
 from pydantic import Field
 
 from boilerdaq import get_params_file

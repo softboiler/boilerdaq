@@ -1,6 +1,5 @@
 # Latest working requirements of your package, should be ahead of pyproject.toml.
 dulwich==0.21.5
-dvc[gs]==3.21.1
 ipykernel==6.25.1
 loguru==0.7.2
 matplotlib==3.8.0

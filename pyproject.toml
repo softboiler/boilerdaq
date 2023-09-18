@@ -19,7 +19,6 @@ classifiers = ["License :: OSI Approved :: MIT License"]
 dependencies = [
     "boilercore>=0.0.0",
     "dulwich>=0.21.5",
-    "dvc[gs]>=3.10.1",
     "ipykernel>=6.25.0",
     "loguru>=0.7.0",
     "matplotlib>=3.7.2",
@@ -60,7 +59,6 @@ ignore_undeclared = [
 ]
 ignore_unused = [
     "boilercore",   # Not picked up by fawltydeps
-    "dvc",          # For experiment orchestration
     "numba",        # Pin numba until it supports numpy>=1.25
     "numpy",        # Pin numpy until numba supports numpy>=1.25
     "pandas-stubs", # Provides stubs for pandas

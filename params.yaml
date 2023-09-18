@@ -1,8 +1,29 @@
 paths:
   project: .
-  package: C:/Users/Tiana/Code/mine/boilercore/src/boilercore
-  data: data
+  package: src/boilerdaq
   stages:
-    modelfun: C:/Users/Tiana/Code/mine/boilercore/src/boilercore/stages/modelfun.ipynb
-  fit: C:/Users/Tiana/Code/mine/boilercore/src/boilercore/models/fit.py
+    calibrate: src/boilerdaq/stages/calibrate.py
+    run: src/boilerdaq/stages/run.py
+    test: src/boilerdaq/stages/test.py
+    controlled_benchmark: src/boilerdaq/stages/controlled/benchmark.py
+    controlled_control: src/boilerdaq/stages/controlled/control.py
+    controlled_flux_control: src/boilerdaq/stages/controlled/flux_control.py
+    controlled_set_voltage: src/boilerdaq/stages/controlled/set_voltage.py
+  data: data
+  plot_config: data/plotting
+  mpl_base: data/plotting/base.mplstyle
+  mpl_hide_title: data/plotting/hide_title.mplstyle
+  scripts: data/scripts
+  zotero: data/scripts/zotero.lua
+  csl: data/scripts/international-journal-of-heat-and-mass-transfer.csl
+  template: data/scripts/template.dotx
   model: data/model.dillpickle
+  config: data/config
+  benchmarks: data/benchmarks
+  results: data/results
+  notes: data/notes
+  sensors_path: data/config/1_sensors.csv
+  scaled_params_path: data/config/2_scaled_params.csv
+  flux_params_path: data/config/3_flux_params.csv
+  extrap_params_path: data/config/4_extrap_params.csv
+  power_supplies_path: data/config/0_power_supplies.csv

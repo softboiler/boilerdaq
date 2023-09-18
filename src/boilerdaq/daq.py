@@ -9,7 +9,9 @@ from typing import NamedTuple, Self
 
 from boilercore.fits import fit_from_params
 from boilercore.modelfun import get_model
-from boilercore.models.params import Fit
+from boilercore.models.fit import Fit
+from boilercore.models.geometry import GEOMETRY
+from boilercore.types import Rod
 from mcculw.enums import TInOptions
 from mcculw.ul import ULError, t_in, v_in
 from PyQt5.QtCore import QTimer
@@ -240,17 +242,11 @@ class PowerParam(NamedTuple):
 
     @classmethod
     def get(cls, path: Path) -> list[Self]:
-        """Process a CSV file at ``path``, returning a ``List`` of ``ExtrapParam``."""
+        """Process a CSV file at ``path``, returning a ``List`` of ``PowerParam``."""
         power_supplies = []
         with path.open(encoding="utf-8") as csv_file:
             reader = DictReader(csv_file)
-            power_supplies.extend(
-                cls(
-                    row["name"],
-                    row["unit"],
-                )
-                for row in reader
-            )
+            power_supplies.extend(cls(row["name"], row["unit"]) for row in reader)
         return power_supplies
 
 
@@ -433,37 +429,33 @@ class ExtrapResult(Result):
 class FitResult(Result):
     """A result from a model fit."""
 
-    def __init__(self, params: Fit, name: str, unit: str, results_to_fit: list[Result]):
+    def __init__(
+        self,
+        name: str,
+        unit: str,
+        fit: Fit,
+        model: Path,
+        results_to_fit: list[Result],
+        rod: Rod = "R",
+    ):
         super().__init__()
-        self.fit = params
+        self.name = name
+        self.unit = unit
+        self.fit = fit
         self.source = Param(name, unit)  # type: ignore
         self.results_to_fit = results_to_fit
-        self.param_to_fit = "q_s"
-        self.model, _ = get_model(
-            Path("C:/Users/Blake/Code/mine/boilerdata/data/modelfun/model.dillpickle")
-        )
-        self.confidence_interval_95 = 2.2621571627409915
-        self.x = [
-            0.10899134114467578,
-            0.09692634765977226,
-            0.08486135417486876,
-            0.07279636068996523,
-            0.02898138435005245,
-        ]
-        self.y_errors = [2.2] * len(self.results_to_fit)
-        self.fixed_values = {"k": 400.0, "h_w": 2.220446049250313e-16}
+        self.model, _ = get_model(model)
+        self.x = GEOMETRY.rods[rod]
 
     def update(self):
         """Update the result."""
-        fit, _errors = fit_from_params(
+        fits, _errors = fit_from_params(
             model=self.model,
             params=self.fit,
             x=self.x,
             y=[result.value for result in self.results_to_fit],
-            y_errors=self.y_errors,
-            confidence_interval=self.confidence_interval_95,
         )
-        self.value = fit[self.param_to_fit]
+        self.value = fits[self.name]
         super().update()
 
 
@@ -563,7 +555,7 @@ class Controller:
 
     Parameters
     ----------
-    control_result: PowerResult
+    control_result: Result
         The result to control based on feedback.
     feedback_result: Result
         The result to get feedback from.

@@ -1,7 +1,5 @@
 """Use heat flux as a control parameter."""
 
-import boilercore  # noqa: F401
-
 from boilerdaq.daq import (
     Controller,
     FitResult,
@@ -16,28 +14,30 @@ from boilerdaq.models.params import PARAMS
 from boilerdaq.stages import CONTROL_SENSOR_NAME, OUTPUT_LIMITS, RESULTS_PATH
 from boilerdaq.stages.controlled import CONTROLLED_RESULTS
 
-FLUX_SETPOINT = 0
+FLUX_SETPOINT = 2
 FLUX_FEEDBACK_GAINS = (12, 0.08, 1)
-FLUX_FEEDBACK_RESULT_NAME = "flux"
+FLUX_FEEDBACK_RESULT_NAME = "q_s"
+FLUX_FEEDBACK_RESULT_UNIT = "W/cm^2"
 
 
 def main() -> Looper:
     fit_result = FitResult(
-        PARAMS.fit,
-        FLUX_FEEDBACK_RESULT_NAME,
-        "W/cm^2",
-        [
-            get_result(result, CONTROLLED_RESULTS)
+        name=FLUX_FEEDBACK_RESULT_NAME,
+        unit="W/cm^2",
+        fit=PARAMS.fit,
+        model=PARAMS.paths.model,
+        results_to_fit=[
+            get_result(name=result, results=CONTROLLED_RESULTS)
             for result in "T1cal T2cal T3cal T4cal T5cal".split()
         ],
     )
     results: list[Result] = [*CONTROLLED_RESULTS, fit_result]
     controller = Controller(
-        get_result(CONTROL_SENSOR_NAME, results),
-        fit_result,
-        FLUX_SETPOINT,
-        FLUX_FEEDBACK_GAINS,
-        OUTPUT_LIMITS,
+        control_result=get_result(name=CONTROL_SENSOR_NAME, results=results),
+        feedback_result=fit_result,
+        setpoint=FLUX_SETPOINT,
+        gains=FLUX_FEEDBACK_GAINS,
+        output_limits=OUTPUT_LIMITS,
     )
     group_dict = dict(
         feedback=FLUX_FEEDBACK_RESULT_NAME,

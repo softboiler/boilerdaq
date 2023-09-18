@@ -12,7 +12,6 @@ from boilercore.modelfun import get_model
 from boilercore.models.fit import Fit
 from boilercore.models.geometry import GEOMETRY
 from boilercore.types import Rod
-from mcculw.enums import TInOptions
 from mcculw.ul import ULError, t_in, v_in
 from PyQt5.QtCore import QTimer
 from pyqtgraph import (
@@ -28,11 +27,14 @@ from simple_pid import PID
 
 setConfigOptions(antialias=True)
 
+PLOT_HISTORY_DURATION = 5  # (min)
+"""Duration of plot history."""
+
 POLLING_INTERVAL = 100
 """Minimum time between sampling cycles in milliseconds."""
 
-HISTORY_LENGTH = 30000 // POLLING_INTERVAL
-"""Number of samples to plot."""
+PLOT_HISTORY_LENGTH = PLOT_HISTORY_DURATION * 60 * 1000 // POLLING_INTERVAL
+"""Length of plot history in number of samples."""
 
 
 class Sensor(NamedTuple):
@@ -268,7 +270,7 @@ class Result:
     def __init__(self):
         self.source: Sensor = None  # type: ignore
         self.value: float = None  # type: ignore
-        self.history: deque[float] = deque(maxlen=HISTORY_LENGTH)
+        self.history: deque[float] = deque(maxlen=PLOT_HISTORY_LENGTH)
 
     def update(self):
         """Update the result."""
@@ -308,12 +310,7 @@ class Reading(Result):
         if self.source.reading == "temperature":
             try:
                 unit_int = UNIT_TYPES[self.source.unit]
-                self.value = t_in(
-                    self.source.board,
-                    self.source.channel,
-                    unit_int,
-                    options=TInOptions.WAITFORNEWDATA,
-                )
+                self.value = t_in(self.source.board, self.source.channel, unit_int)
             except ULError:  # type: ignore
                 self.value = 0
         elif self.source.reading == "voltage":
@@ -667,7 +664,7 @@ class Writer:
                 result.open()
             result.update()
             with suppress(AttributeError):
-                result.history.extend([result.value] * (HISTORY_LENGTH - 1))
+                result.history.extend([result.value] * (PLOT_HISTORY_LENGTH - 1))
         values = [self.time.isoformat()] + [result.value for result in results]  # type: ignore
         to_write = dict(zip(fieldnames, values, strict=True))
 
@@ -736,7 +733,7 @@ class Plotter:
         self.all_results: list[Result] = []
         self.all_curves: list[PlotCurveItem] = []
         self.all_histories: list[deque[float]] = []
-        self.time: list[int] = [-i for i in range(HISTORY_LENGTH)]
+        self.time: list[int] = [-i for i in range(PLOT_HISTORY_LENGTH)]
         self.time.reverse()
         self.add(title, results, row, col)
 

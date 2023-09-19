@@ -13,7 +13,6 @@ from boilercore.models.fit import Fit
 from boilercore.models.geometry import GEOMETRY
 from boilercore.types import Rod
 from mcculw.ul import ULError, t_in, v_in
-from PyQt5.QtCore import QTimer
 from pyqtgraph import (
     GraphicsLayoutWidget,
     PlotCurveItem,
@@ -21,6 +20,7 @@ from pyqtgraph import (
     mkQApp,
     setConfigOptions,
 )
+from PySide6.QtCore import QTimer
 from pyvisa import ResourceManager, VisaIOError
 from pyvisa.resources import MessageBasedResource
 from simple_pid import PID
@@ -804,7 +804,7 @@ class Looper:
         timer.timeout.connect(self.plot_control if self.controller else self.plot)
         timer.start(POLLING_INTERVAL)
         self.plotter.window.show()
-        self.app.exec_()
+        self.app.exec()
         self.app.quit()
         if self.controller:
             self.controller.close()

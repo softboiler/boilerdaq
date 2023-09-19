@@ -9,8 +9,8 @@ from boilercore import filter_certain_warnings
 from boilercore.paths import get_module_rel, walk_modules
 from boilercore.testing import get_session_path
 from debugpy import is_client_connected
-from PyQt5.QtCore import QTimer
-from PyQt5.QtWidgets import QApplication
+from PySide6.QtCore import QTimer
+from PySide6.QtWidgets import QApplication
 from pyvisa import ResourceManager
 from pyvisa.resources import MessageBasedResource
 

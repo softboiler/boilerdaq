@@ -3,7 +3,7 @@
 from collections import UserDict, deque
 from contextlib import suppress
 from csv import DictReader, DictWriter
-from datetime import datetime
+from datetime import datetime, timedelta
 from pathlib import Path
 from typing import NamedTuple, Self
 
@@ -14,6 +14,7 @@ from boilercore.models.geometry import GEOMETRY
 from boilercore.types import Rod
 from mcculw.ul import ULError, t_in, v_in
 from pyqtgraph import (
+    DateAxisItem,
     GraphicsLayoutWidget,
     PlotCurveItem,
     intColor,
@@ -475,6 +476,7 @@ class PowerResult(Result):
         instrument: str,
         current_limit: float,
     ):
+        super().__init__()
         self.source: PowerParam = power_param  # type: ignore
         self.resource_manager = ResourceManager()
         self.instrument_name: str = instrument
@@ -513,6 +515,7 @@ class PowerResult(Result):
                 self.value = float(self.instrument.query("measure:current?"))  # type: ignore
         except VisaIOError as exc:
             print(exc)
+        super().update()
 
     def write(self, value):
         """Write a value back to the instrument."""
@@ -601,7 +604,6 @@ class Controller:
         """Update the PID controller."""
         self.feedback_value = self.feedback_result.value
         control_value = self.pid(self.feedback_value)
-        print(f"{self.feedback_value} {control_value}")
         self.control_result.write(control_value)
 
 
@@ -733,8 +735,12 @@ class Plotter:
         self.all_results: list[Result] = []
         self.all_curves: list[PlotCurveItem] = []
         self.all_histories: list[deque[float]] = []
-        self.time: list[int] = [-i for i in range(PLOT_HISTORY_LENGTH)]
-        self.time.reverse()
+        self.time: deque[float] = deque(maxlen=PLOT_HISTORY_LENGTH)
+        current_time = datetime.now()
+        self.time.extendleft(
+            (current_time - i * timedelta(milliseconds=POLLING_INTERVAL)).timestamp()
+            for i in range(PLOT_HISTORY_LENGTH)
+        )
         self.add(title, results, row, col)
 
     def add(self, title: str, results: list[Result], row: int, col: int):
@@ -753,8 +759,8 @@ class Plotter:
         """
         plot = self.window.addPlot(row, col)
         plot.addLegend()
+        plot.setAxisItems({"bottom": DateAxisItem()})
         plot.setLabel("left", units=results[0].source.unit)
-        plot.setLabel("bottom", units="samples")
         plot.setTitle(title)
         self.all_results.extend(results)
         histories = [result.history for result in results]
@@ -766,6 +772,7 @@ class Plotter:
 
     def update(self):
         """Update plots."""
+        self.time.append(datetime.now().timestamp())
         for curve, history in zip(self.all_curves, self.all_histories, strict=True):
             curve.setData(self.time, history)
 
@@ -794,7 +801,7 @@ class Looper:
         self.app = mkQApp()
         self.writer = writer
         self.plotter = plotter
-        self.controller = controller or None
+        self.controller: Controller = controller or None  # type: ignore
 
     def start(self):
         """Start the write/control thread and plot on the main thread."""
@@ -818,4 +825,4 @@ class Looper:
         """The CSV writer function to be looped in the write/control thread."""
         self.plotter.update()
         self.writer.update()
-        self.controller.update()  # type: ignore
+        self.controller.update()

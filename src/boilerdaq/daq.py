@@ -31,7 +31,7 @@ setConfigOptions(antialias=True)
 PLOT_HISTORY_DURATION = 5  # (min)
 """Duration of plot history."""
 
-POLLING_INTERVAL = 100
+POLLING_INTERVAL = 2000
 """Minimum time between sampling cycles in milliseconds."""
 
 PLOT_HISTORY_LENGTH = PLOT_HISTORY_DURATION * 60 * 1000 // POLLING_INTERVAL
@@ -497,6 +497,7 @@ class PowerResult(Result):
         """Close the instrument."""
         if not self.instrument:
             return
+        self.instrument.write("source:voltage 0")  # type: ignore
         self.instrument.write("output:state off")  # type: ignore
         self.instrument.close()  # type: ignore
         self.instrument = None

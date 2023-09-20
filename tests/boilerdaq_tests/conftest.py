@@ -63,7 +63,8 @@ def _filter_certain_warnings():
 @pytest.fixture(params=STAGES)
 def looper(request: pytest.FixtureRequest):
     """Test example procedures."""
-    looper: Looper = import_module(request.param).main()
+    module = import_module(request.param)
+    looper: Looper = getattr(module, "looper", lambda: None)() or module.main()
     app: QApplication = looper.app
     if not DEBUG:
         QTimer.singleShot(2000, app.closeAllWindows)

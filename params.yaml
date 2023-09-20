@@ -7,8 +7,8 @@ paths:
     test: src/boilerdaq/stages/test.py
     controlled_benchmark: src/boilerdaq/stages/controlled/benchmark.py
     controlled_control: src/boilerdaq/stages/controlled/control.py
-    controlled_flux_control: src/boilerdaq/stages/controlled/flux_control.py
     controlled_set_voltage: src/boilerdaq/stages/controlled/set_voltage.py
+    controlled_surface_control: src/boilerdaq/stages/controlled/surface_control.py
   data: data
   plot_config: data/plotting
   mpl_base: data/plotting/base.mplstyle

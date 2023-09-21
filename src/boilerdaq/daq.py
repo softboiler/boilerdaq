@@ -5,7 +5,7 @@ from contextlib import suppress
 from csv import DictReader, DictWriter
 from datetime import datetime, timedelta
 from pathlib import Path
-from typing import NamedTuple, Self
+from typing import Any, NamedTuple, Self
 
 from boilercore.fits import fit_from_params
 from boilercore.modelfun import get_model
@@ -497,7 +497,8 @@ class PowerResult(Result):
         """Close the instrument."""
         if not self.instrument:
             return
-        self.instrument.write("source:voltage 0")  # type: ignore
+        # We don't actually write zero here because the PID will get `starting_output`
+        # by querying voltage next time the supply is turned on.
         self.instrument.write("output:state off")  # type: ignore
         self.instrument.close()  # type: ignore
         self.instrument = None
@@ -505,6 +506,7 @@ class PowerResult(Result):
     def one_shot(self):
         """Take a single measurement."""
         self.open()
+        self.update()
         self.close()
 
     def update(self):
@@ -587,14 +589,15 @@ class Controller:
         self.feedback_result: Result = feedback_result
         self.pid = PID(
             *gains,
-            setpoint,
+            setpoint=setpoint,
+            sample_time=None,  # Controlled by POLLING_INTERVAL
             output_limits=output_limits,
             starting_output=self.control_result.value,
         )
         self.feedback_value = self.feedback_result.value
 
-    def open(self):  # noqa: A003
-        """Open the instrument to be controlled."""
+    def start(self):
+        """Start the controller."""
         self.control_result.open()
 
     def close(self):
@@ -638,6 +641,7 @@ class Writer:
         results: list[Result],
     ):
         self.paths: list[Path] = []
+        self.results: list[Any] = []
         self.result_groups: list[list[Result]] = []
         self.fieldname_groups: list[list[str]] = []
         self.time: datetime = datetime.now()  # type: ignore
@@ -664,8 +668,9 @@ class Writer:
         fieldnames = ["time", *sources]
         for result in results:
             if isinstance(result, PowerResult):
-                result.open()
-            result.update()
+                result.one_shot()
+            else:
+                result.update()
             with suppress(AttributeError):
                 result.history.extend([result.value] * (PLOT_HISTORY_LENGTH - 1))
         values = [self.time.isoformat()] + [result.value for result in results]  # type: ignore
@@ -679,8 +684,15 @@ class Writer:
 
         # Record the file and results for writing additional rows later.
         self.paths.append(path)
+        self.results.extend(results)
         self.result_groups.append(results)
         self.fieldname_groups.append(fieldnames)
+
+    def start(self):
+        """Start the writer."""
+        for result in self.results:
+            if isinstance(result, PowerResult):
+                result.open()
 
     def update(self):
         """Update results and write the new data to CSV."""
@@ -806,8 +818,9 @@ class Looper:
 
     def start(self):
         """Start the write/control thread and plot on the main thread."""
+        self.writer.start()
         if self.controller:
-            self.controller.open()
+            self.controller.start()
         timer = QTimer()
         timer.timeout.connect(self.plot_control if self.controller else self.plot)
         timer.start(POLLING_INTERVAL)

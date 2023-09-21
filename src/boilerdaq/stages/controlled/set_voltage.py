@@ -6,11 +6,13 @@ from boilerdaq.daq import get_result
 from boilerdaq.stages.controlled import CONTROLLED_RESULTS
 
 CURRENT_LIMIT = 4
-VOLTAGE = 0
+VOLTAGE = 30
 
 
 def main():
-    instrument: MessageBasedResource = get_result("V", CONTROLLED_RESULTS).instrument  # type: ignore
+    result = get_result("V", CONTROLLED_RESULTS)
+    result.open()  # type: ignore
+    instrument: MessageBasedResource = result.instrument  # type: ignore
     instrument.write(f"source:current {CURRENT_LIMIT}")
     instrument.write(f"source:voltage {VOLTAGE}")
     instrument.write("output:state on")

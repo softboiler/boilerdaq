@@ -115,7 +115,7 @@ repos:
             |tests/.*
           )$
       - id: "nb-clean"
-        name: "nb-clean (keep docs outputs)"
+        name: "nb-clean (keep root notebook folder outputs)"
         args:
           - "--remove-empty-cells"
           - "--preserve-cell-outputs"
@@ -125,5 +125,5 @@ repos:
           - "--"
         files: |
           (?x)^(
-            docs/.*
+            notebooks/.*
           )$

@@ -57,7 +57,7 @@ def _disable_power_supply():
 @pytest.fixture(autouse=True)
 def _filter_certain_warnings():
     """Filter certain warnings."""
-    filter_certain_warnings()
+    filter_certain_warnings(boilerdaq.__name__)
 
 
 @pytest.fixture(params=STAGES)

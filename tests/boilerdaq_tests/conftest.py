@@ -15,7 +15,6 @@ from pyvisa import ResourceManager
 from pyvisa.resources import MessageBasedResource
 
 import boilerdaq
-from boilerdaq.daq import Looper
 
 DEBUG = is_client_connected()
 
@@ -57,12 +56,14 @@ def _disable_power_supply():
 @pytest.fixture(autouse=True)
 def _filter_certain_warnings():
     """Filter certain warnings."""
-    filter_certain_warnings(boilerdaq.__name__)
+    filter_certain_warnings()
 
 
 @pytest.fixture(params=STAGES)
 def looper(request: pytest.FixtureRequest):
     """Test example procedures."""
+    from boilerdaq.daq import Looper
+
     module = import_module(request.param)
     looper: Looper = getattr(module, "looper", lambda: None)() or module.main()
     app: QApplication = looper.app

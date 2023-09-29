@@ -3,7 +3,7 @@
 # * -------------------------------------------------------------------------------- * #
 # * Changes below should persist in significant template updates.
 
-boilercore@git+https://github.com/blakeNaccarato/boilercore@e51490628c0adac46134acbaed3910c7b5270f40
+boilercore@git+https://github.com/blakeNaccarato/boilercore@9d32dc9e928507cf9b7947c4b66c3d25652198d7
 
 # * -------------------------------------------------------------------------------- * #
 # * Changes below may be lost in significant template updates.

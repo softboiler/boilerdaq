@@ -45,16 +45,19 @@
     {
       "description": "Ignore changerelease.yml workflow deps managed by the template",
       "matchManagers": ["github-actions"],
+      "matchFileNames": [".github/workflows/*"],
       "ignoreDeps": ["dropseed/changerelease"]
     },
     {
       "description": "Ignore codeql.yml workflow deps managed by the template",
       "matchManagers": ["github-actions"],
+      "matchFileNames": [".github/workflows/*"],
       "ignoreDeps": ["actions/checkout", "github/codeql-action"]
     },
     {
       "description": "Ignore main.yml workflow deps managed by the template",
       "matchManagers": ["github-actions"],
+      "matchFileNames": [".github/workflows/*"],
       "ignoreDeps": [
         "blakeNaccarato/copier-python-workflow-setup",
         "codecov/codecov-action",
@@ -64,11 +67,13 @@
     {
       "description": "Ignore publish.yml workflow deps managed by the template",
       "matchManagers": ["github-actions"],
+      "matchFileNames": [".github/workflows/*"],
       "ignoreDeps": ["actions/upload-pages-artifact", "actions/deploy-pages"]
     },
     {
       "description": "Ignore sphinx.yml workflow deps managed by the template",
       "matchManagers": ["github-actions"],
+      "matchFileNames": [".github/workflows/*"],
       "ignoreDeps": [
         "dropseed/changerelease",
         "actions/checkout",
@@ -83,6 +88,7 @@
     {
       "description": "Ignore pre-commit dependencies managed by the template",
       "matchManagers": ["pre-commit"],
+      "matchFileNames": [".pre-commit-config.yaml"],
       "ignoreDeps": [
         "pre-commit/pre-commit-hooks",
         "psf/black",
@@ -96,7 +102,7 @@
     {
       "description": "Ignore requirements_both.txt deps managed by this template",
       "matchManagers": ["pip_requirements"],
-      "matchPaths": [".tools/requirements/*"],
+      "matchFileNames": [".tools/requirements/*"],
       "ignoreDeps": [
         "ruff",
         "pytest",
@@ -109,13 +115,13 @@
     {
       "description": "Ignore requirements_core.txt deps managed by this template",
       "matchManagers": ["pip_requirements"],
-      "matchPaths": [".tools/requirements/*"],
+      "matchFileNames": [".tools/requirements/*"],
       "ignoreDeps": ["copier", "dulwich", "flit_core", "pip", "wheel"]
     },
     {
       "description": "Ignore requirements_dev.txt deps managed by this template",
       "matchManagers": ["pip_requirements"],
-      "matchPaths": [".tools/requirements/*"],
+      "matchFileNames": [".tools/requirements/*"],
       "ignoreDeps": [
         "fawltydeps",
         "ipykernel",
@@ -131,7 +137,7 @@
     {
       "description": "Ignore requirements_docs.txt deps managed by this template",
       "matchManagers": ["pip_requirements"],
-      "matchPaths": [".tools/requirements/*"],
+      "matchFileNames": [".tools/requirements/*"],
       "ignoreDeps": [
         "myst-parser",
         "sphinx-autobuild",

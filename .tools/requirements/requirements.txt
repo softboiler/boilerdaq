@@ -7,7 +7,7 @@ matplotlib==3.8.0
 mcculw==1.0.0
 nbformat==5.9.2
 pydantic==1.10.12
-pandas[hdf5,performance]==2.0.2
+pandas[hdf5,performance]==2.1.1
 pandas-stubs~=2.0.2
 ploomber-engine==0.0.31
 pyqtgraph==0.13.3
@@ -17,7 +17,7 @@ seaborn==0.12.2
 simple-pid==2.0.0
 # Numba only supports numpy<1.25 https://github.com/numba/numba/issues/8698
 # ! Unpin numba once it supports numpy>=1.25
-numba==0.57.1
-numpy==1.24.4
+numba==0.58.0
+numpy==1.26.1
 # ! boilercore specified differently in dev and CI to allow editable package in dev
 # boilercore==...

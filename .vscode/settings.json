@@ -50,12 +50,11 @@
   //* pytest
   "python.testing.unittestEnabled": false,
   "python.testing.pytestEnabled": true,
-  //* black
-  "black-formatter.importStrategy": "fromEnvironment",
-  "black-formatter.args": [],
   //* ruff
   "ruff.importStrategy": "fromEnvironment",
-  "ruff.args": [],
+  "ruff.enableExperimentalFormatter": true,
+  "ruff.format.args": [],
+  "ruff.lint.args": [],
 
   //! GitHub Actions
   "github-actions.workflows.pinned.workflows": [".github/workflows/main.yml"],
@@ -183,11 +182,11 @@
   },
   //* PYTHON
   "[python]": {
-    "editor.defaultFormatter": "ms-python.black-formatter"
+    "editor.defaultFormatter": "charliermarsh.ruff"
   },
   //* IPYNB
   "[ipynb]": {
-    "editor.defaultFormatter": "ms-python.black-formatter"
+    "editor.defaultFormatter": "charliermarsh.ruff"
   },
   // ? So our Markdown table previews don't wrap
   // //* TXT

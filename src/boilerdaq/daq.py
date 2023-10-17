@@ -335,11 +335,7 @@ class ScaledResult(Result):
         The unscaled result.
     """
 
-    def __init__(
-        self,
-        scaled_param: ScaledParam,
-        results: list[Result],
-    ):
+    def __init__(self, scaled_param: ScaledParam, results: list[Result]):
         super().__init__()
         self.source: ScaledParam = scaled_param  # type: ignore
         self.unscaled_result = get_result(scaled_param.unscaled_sensor, results)
@@ -368,11 +364,7 @@ class Flux(Result):
         The result of the source not at the origin.
     """
 
-    def __init__(
-        self,
-        flux_param: FluxParam,
-        results: list[Result],
-    ):
+    def __init__(self, flux_param: FluxParam, results: list[Result]):
         super().__init__()
         self.source: FluxParam = flux_param  # type: ignore
         self.origin_result = get_result(flux_param.origin_sensor, results)
@@ -406,11 +398,7 @@ class ExtrapResult(Result):
         The result of the source not at the origin.
     """
 
-    def __init__(
-        self,
-        extrap_param: ExtrapParam,
-        results: list[Result],
-    ):
+    def __init__(self, extrap_param: ExtrapParam, results: list[Result]):
         super().__init__()
         self.source: ExtrapParam = extrap_param  # type: ignore
         self.origin_result = get_result(extrap_param.origin_sensor, results)
@@ -470,12 +458,7 @@ class PowerResult(Result):
         The current limit to be set.
     """
 
-    def __init__(
-        self,
-        power_param: PowerParam,
-        instrument: str,
-        current_limit: float,
-    ):
+    def __init__(self, power_param: PowerParam, instrument: str, current_limit: float):
         super().__init__()
         self.source: PowerParam = power_param  # type: ignore
         self.resource_manager = ResourceManager()
@@ -486,9 +469,7 @@ class PowerResult(Result):
     def open(self):  # noqa: A003
         """Open the instrument."""
         self.instrument = self.resource_manager.open_resource(  # type: ignore
-            self.instrument_name,
-            read_termination="\n",
-            write_termination="\n",
+            self.instrument_name, read_termination="\n", write_termination="\n"
         )
         self.instrument.write("output:state on")  # type: ignore
         self.instrument.write(f"source:current {self.current_limit}")  # type: ignore
@@ -635,11 +616,7 @@ class Writer:
         The time that the last value was taken.
     """
 
-    def __init__(
-        self,
-        path: Path,
-        results: list[Result],
-    ):
+    def __init__(self, path: Path, results: list[Result]):
         self.paths: list[Path] = []
         self.results: list[Any] = []
         self.result_groups: list[list[Result]] = []
@@ -737,13 +714,7 @@ class Plotter:
     time: List[int]
     """
 
-    def __init__(
-        self,
-        title: str,
-        results: list[Result],
-        row: int = 0,
-        col: int = 0,
-    ):
+    def __init__(self, title: str, results: list[Result], row: int = 0, col: int = 0):
         self.window = GraphicsLayoutWidget()
         self.all_results: list[Result] = []
         self.all_curves: list[PlotCurveItem] = []

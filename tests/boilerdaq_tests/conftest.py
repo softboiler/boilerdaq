@@ -44,9 +44,7 @@ def _disable_power_supply():
         yield
     finally:
         instrument: MessageBasedResource = ResourceManager().open_resource(  # type: ignore
-            INSTRUMENT_NAME,
-            read_termination="\n",
-            write_termination="\n",
+            INSTRUMENT_NAME, read_termination="\n", write_termination="\n"
         )
         for instruction in ["output:state off", "source:current 0", "source:voltage 0"]:
             instrument.write(instruction)

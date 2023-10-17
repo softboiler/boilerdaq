@@ -240,10 +240,7 @@ async def run_process(command: str, venv: bool = True):
     # Handle exceptions
     if process.returncode:
         exception = CalledProcessError(
-            returncode=process.returncode,
-            cmd=command,
-            output=stdout,
-            stderr=stderr,
+            returncode=process.returncode, cmd=command, output=stdout, stderr=stderr
         )
         exception.add_note(message)
         exception.add_note("Arguments:\n" + "    \n".join(args))

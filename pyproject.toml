@@ -59,6 +59,10 @@ ignore_unused = [
 boilercore = ["boilercore"]
 ipykernel = ["IPython"]
 
+# Use ruff for sorting, but configure this in case isort is being used in IDE tooling
+[tool.isort]
+profile = "black"
+
 [tool.pyright]
 
 # * -------------------------------------------------------------------------------- * #
@@ -143,6 +147,7 @@ ignore = [
     "G0",      # Allow f-strings, etc. in Loguru logging
     "INP001",  # False positives. Checks for packages missing `__init__.py`
     "ISC",     # False positives. Implicit string concatenation is fine.
+    "PD009",   # Allow `iat`. It has its uses.
     "PD013",   # Allow `stack` instead of `melt`. They're not a direct swap.
     "PD101",   # Allow use of nunique(). False positives
     "PD901",   # Allow `df` variable name. We are all consenting adults here.
@@ -182,14 +187,6 @@ skip-magic-trailing-comma = true
 
 [tool.ruff.pydocstyle]
 convention = "google"
-
-[tool.ruff.isort]
-# * ---------------------------------------------------------------------------- * #
-# * Changes below should persist in significant template updates.
-
-# * ---------------------------------------------------------------------------- * #
-# * Changes below may be lost in significant template updates.
-split-on-trailing-comma = false
 
 [tool.ruff.per-file-ignores]
 "docs/**" = [

@@ -190,7 +190,7 @@
   },
   //* IPYNB
   "[ipynb]": {
-    "editor.defaultFormatter": "ms-python.black-formatter"
+    "editor.defaultFormatter": "charliermarsh.ruff"
   },
   // ? So our Markdown table previews don't wrap
   // //* TXT

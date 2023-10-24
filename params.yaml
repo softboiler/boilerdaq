@@ -1,5 +1,9 @@
 paths:
   project: .
+  data: data
+  benchmarks: data/benchmarks
+  results: data/results
+  notes: data/notes
   package: src/boilerdaq
   stages:
     calibrate: src/boilerdaq/stages/calibrate.py
@@ -9,19 +13,11 @@ paths:
     controlled_control: src/boilerdaq/stages/controlled/control.py
     controlled_set_voltage: src/boilerdaq/stages/controlled/set_voltage.py
     controlled_surface_control: src/boilerdaq/stages/controlled/surface_control.py
-  data: data
+  config: data/config
   plot_config: data/plotting
   mpl_base: data/plotting/base.mplstyle
   mpl_hide_title: data/plotting/hide_title.mplstyle
-  scripts: data/scripts
-  zotero: data/scripts/zotero.lua
-  csl: data/scripts/international-journal-of-heat-and-mass-transfer.csl
-  template: data/scripts/template.dotx
   model: data/model.dillpickle
-  config: data/config
-  benchmarks: data/benchmarks
-  results: data/results
-  notes: data/notes
   sensors_path: data/config/1_sensors.csv
   scaled_params_path: data/config/2_scaled_params.csv
   flux_params_path: data/config/3_flux_params.csv

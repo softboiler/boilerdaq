@@ -21,11 +21,11 @@ DEBUG = is_client_connected()
 
 INSTRUMENT_NAME = "USB0::0x0957::0x0807::US25N3188G::0::INSTR"
 
-BOILERDAQ = Path("src") / "boilerdaq"
+STAGES_DIR = Path("src") / "boilerdaq" / "stages"
 STAGES: list[Any] = []
-for module in walk_modules(BOILERDAQ / "stages", BOILERDAQ):
-    rel_to_controlled = get_module_rel(module, "controlled")
-    marks = [pytest.mark.skip] if rel_to_controlled in {"set_voltage"} else []
+for module in (f"boilerdaq.{module}" for module in walk_modules(STAGES_DIR)):
+    rel_to_stages = get_module_rel(module, "stages")
+    marks = [pytest.mark.skip] if rel_to_stages in {"controlled.set_voltage"} else []
     STAGES.append(
         pytest.param(module, id=get_module_rel(module, "stages"), marks=marks)
     )

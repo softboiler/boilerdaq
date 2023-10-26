@@ -5,28 +5,29 @@
 
 # ? DVC is an external tool used in this repo
 dvc[gs]==3.27.0
-# ? Install tests package so modules can be run in debugging
--e tests/.
 # ? For using the latest version of this core package during development
 -e ../boilercore
 
 # * -------------------------------------------------------------------------------- * #
 # * Changes below may be lost in significant template updates.
 
+# Install tests package so modules can be run in debugging
+-e tests/.
 # Introspection
 fawltydeps==0.13.1
 # Experiment
-# ipykernel==6.25.2  # ? Migrated to `requirements_both.txt` since it's part of package deps
+# ipykernel  # ? Migrated to `requirements_both.txt` since it's part of package deps
 # Debug
 debugpy==1.8.0
 # For `pythonstartup.py`
 rich==13.6.0
 # Format
-sourcery-cli==1.10.0
+black[jupyter]==23.7.0
+sourcery-cli==1.11.0
 # Profiling
 snakeviz==2.2.0
 # Pre-commit
-pre-commit==3.4.0
+pre-commit==3.5.0
 # For local publishing to PyPi with flit
 keyring==24.2.0
 

@@ -30,75 +30,6 @@
     // * -------------------------------------------------------------------------- * //
     // * Changes below should persist in significant template updates.
 
-    {
-      "label": "proj: update boilercore",
-      "type": "shell",
-      "options": { "shell": { "executable": "pwsh" } },
-      "command": ".tools/scripts/Update-Boilercore.ps1",
-      "icon": { "id": "graph" },
-      "problemMatcher": []
-    },
-    {
-      "label": "proj: local pyrightconfig",
-      "type": "shell",
-      "options": { "shell": { "executable": "pwsh", "args": ["-Command"] } },
-      "command": "python .tools/scripts/local_pyrightconfig.py",
-      "icon": { "id": "graph" },
-      "problemMatcher": []
-    },
-    {
-      "label": "dvc: repro",
-      "dependsOrder": "sequence",
-      "dependsOn": ["dvc: synchronize params"],
-      "type": "process",
-      "command": "pwsh",
-      "args": ["-Command", "dvc repro ${input:stage}"],
-      "icon": { "id": "graph" },
-      "problemMatcher": []
-    },
-    {
-      "label": "dvc: repro force downstream",
-      "dependsOrder": "sequence",
-      "dependsOn": ["dvc: synchronize params"],
-      "type": "process",
-      "command": "pwsh",
-      "args": ["-Command", "dvc repro --force-downstream ${input:stage}"],
-      "icon": { "id": "graph" },
-      "problemMatcher": []
-    },
-    {
-      "label": "dvc: repro force",
-      "dependsOrder": "sequence",
-      "dependsOn": ["dvc: synchronize params"],
-      "type": "process",
-      "command": "pwsh",
-      "args": ["-Command", "dvc repro --force ${input:stage}"],
-      "icon": { "id": "graph" },
-      "problemMatcher": []
-    },
-
-    {
-      "label": "dvc: dag",
-      "dependsOrder": "sequence",
-      "dependsOn": ["dvc: synchronize params"],
-      "type": "process",
-      "command": "pwsh",
-      "args": [
-        "-Command",
-        "(dvc dag --md) -Replace 'mermaid', '{mermaid}' > docs/dag.md && . '~/.local/nodeenvs/markdownlint/Scripts/Activate.ps1' && markdownlint --fix docs/dag.md"
-      ],
-      "icon": { "id": "graph" },
-      "problemMatcher": []
-    },
-    {
-      "label": "dvc: synchronize params",
-      "type": "process",
-      "command": "pwsh",
-      "args": ["-Command", "python -m boilerdaq.models.params"],
-      "icon": { "id": "graph" },
-      "problemMatcher": []
-    },
-
     // * -------------------------------------------------------------------------- * //
     // * Changes below may be lost in significant template updates.
 
@@ -151,6 +82,7 @@
 
     // * -------------------------------------------------------------------------- * //
     // * PRE-COMMIT * //
+
     {
       "label": "pre-commit",
       "type": "shell",
@@ -170,6 +102,7 @@
 
     // * -------------------------------------------------------------------------- * //
     // * GIT * //
+
     {
       "label": "git: Rebase back to fork",
       "type": "shell",
@@ -180,33 +113,13 @@
     },
 
     // * -------------------------------------------------------------------------- * //
-    // * BLACK * //
-    {
-      "label": "black: Ignore magic comma in this file",
-      "type": "shell",
-      "options": { "shell": { "executable": "pwsh", "args": ["-Command"] } },
-      "command": "black -C ${file}",
-      "icon": { "id": "code" },
-      "problemMatcher": []
-    },
-    {
-      "label": "black: Ignore magic comma in all project files",
-      "type": "shell",
-      "options": { "shell": { "executable": "pwsh", "args": ["-Command"] } },
-      "command": "black -C src tests",
-      "icon": { "id": "code" },
-      "problemMatcher": []
-    },
-
-    // * -------------------------------------------------------------------------- * //
     // * OTHER TASKS * //
+
     {
-      "label": "task: format and clear notebook",
-      "dependsOrder": "sequence",
-      "dependsOn": ["task: format notebook"],
+      "label": "task: format notebook",
       "type": "shell",
       "options": { "shell": { "executable": "pwsh", "args": ["-Command"] } },
-      "command": "nbqa ruff --fix-only ${file}; nb-clean clean --remove-empty-cells --preserve-cell-metadata special tags -- ${file}; black ${file}",
+      "command": "nb-clean clean --remove-empty-cells --preserve-cell-outputs --preserve-cell-metadata special tags -- ${file}; ruff --fix-only ${file}; ruff format ${file}",
       "icon": { "id": "notebook" },
       "problemMatcher": []
     },

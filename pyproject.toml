@@ -48,10 +48,6 @@ deps = ["pyproject.toml"]
 boilercore = ["boilercore"]
 ipykernel = ["IPython"]
 
-# Use ruff for sorting, but configure this in case isort is being used in IDE tooling
-[tool.isort]
-profile = "black"
-
 [tool.pyright]
 
 # * -------------------------------------------------------------------------------- * #
@@ -173,6 +169,9 @@ unfixable = [
 [tool.ruff.format]
 preview = true
 skip-magic-trailing-comma = true
+
+[tool.ruff.isort]
+split-on-trailing-comma = false
 
 [tool.ruff.pydocstyle]
 convention = "google"

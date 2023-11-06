@@ -6,9 +6,6 @@ on:
     - cron: "0 0 * * 0" # Every Sunday at midnight.
 
 jobs:
-  # * ------------------------------------------------------------------------------ * #
-  # * Changes below may be lost in significant template updates.
-
   pytest:
     runs-on: "ubuntu-latest"
     steps:
@@ -16,6 +13,3 @@ jobs:
         with:
           python-version: "3.11"
           latest-pins: false
-
-  # * ------------------------------------------------------------------------------ * #
-  # * Changes below should persist in significant template updates.

@@ -1,12 +1,7 @@
 # Requirements for both CI and dev environments.
 
-# * -------------------------------------------------------------------------------- * #
-# * Changes below should persist in significant template updates.
-
 ipykernel==6.25.2
-
 # * -------------------------------------------------------------------------------- * #
-# * Changes below may be lost in significant template updates.
 
 # Type checking
 pyright==1.1.333

@@ -6,6 +6,7 @@ from csv import DictReader, DictWriter
 from datetime import datetime, timedelta
 from pathlib import Path
 from typing import Any, NamedTuple, Self
+from warnings import warn
 
 from boilercore.fits import fit_from_params
 from boilercore.modelfun import get_model
@@ -498,7 +499,7 @@ class PowerResult(Result):
             elif self.source.name == "I":
                 self.value = float(self.instrument.query("measure:current?"))  # type: ignore
         except VisaIOError as exc:
-            print(exc)
+            warn(str(exc), stacklevel=2)
         super().update()
 
     def write(self, value):
@@ -509,7 +510,7 @@ class PowerResult(Result):
             elif self.source.name == "I":
                 self.instrument.write(f"source:current {value!s}")  # type: ignore
         except VisaIOError as exc:
-            print(exc)
+            warn(str(exc), stacklevel=2)
 
 
 class ResultGroup(UserDict[str, list[Result]]):

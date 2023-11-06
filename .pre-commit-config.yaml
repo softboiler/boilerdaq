@@ -1,6 +1,11 @@
 ci:
   skip:
+    # * ---------------------------------------------------------------------------- * #
     - "local-pyrightconfig"
+    - "synchronize-params"
+    - "dvc-post-checkout"
+    - "dvc-pre-push"
+    # * ---------------------------------------------------------------------------- * #
     - "core-update"
     - "pytest-fast-only"
     - "fawltydeps"
@@ -14,6 +19,7 @@ repos:
       - id: "check-useless-excludes"
   - repo: "local"
     hooks:
+      # * -------------------------------------------------------------------------- * #
       - id: "local-pyrightconfig"
         name: "local-pyrightconfig"
         language: "system"
@@ -73,6 +79,15 @@ repos:
     hooks:
       - id: "end-of-file-fixer"
       - id: "trailing-whitespace"
+  # * ------------------------------------------------------------------------------ * #
+  - repo: "https://github.com/iterative/dvc"
+    rev: "3.27.0"
+    hooks:
+      - id: "dvc-post-checkout"
+        additional_dependencies: ["dvc[gs]"]
+      - id: "dvc-pre-push"
+        additional_dependencies: ["dvc[gs]"]
+  # * ------------------------------------------------------------------------------ * #
   - repo: "https://github.com/srstevenson/nb-clean"
     rev: "3.1.0"
     hooks:

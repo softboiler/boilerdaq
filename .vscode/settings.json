@@ -1,13 +1,7 @@
 {
-  // * ---------------------------------------------------------------------------- * //
-  //! Schema
-  "yaml.schemas": {
-    "params_schema.json": "params.yaml"
-  },
   // Environment variables don't load properly otherwise
   // See: https://github.com/microsoft/vscode-python/issues/944#issuecomment-808516207
   "terminal.integrated.defaultProfile.linux": "pwsh",
-  // * ---------------------------------------------------------------------------- * //
 
   //! Pylance
   "python.languageServer": "Pylance",
@@ -93,13 +87,13 @@
   //* File associations
   "files.associations": {
     ".coveragerc": "ini",
-    ".dvcignore": "ignore",
     ".env": "dotenv",
     ".pylintrc": "ini",
-    "pyrightconfig.json": "jsonc",
-    "*requirements*.txt": "pip-requirements",
     ".root": "plaintext",
-    ".sourcery.yaml": "yaml"
+    ".sourcery.yaml": "yaml",
+    "*requirements*.txt": "pip-requirements",
+    "*ipython-input*": "python",
+    "pyrightconfig.json": "jsonc"
   },
   //* File icon associations
   "workbench.iconTheme": "vscode-icons",

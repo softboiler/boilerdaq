@@ -1,7 +1,6 @@
 # Requirements for both CI and dev environments.
 
 ipykernel==6.25.2
-# * -------------------------------------------------------------------------------- * #
 
 # Type checking
 pyright==1.1.333

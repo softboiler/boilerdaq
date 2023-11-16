@@ -1,8 +1,10 @@
 # Requirements for the dev environment.
+
 # ? DVC is an external tool used in this repo
 dvc[gs]==3.27.0
 # ? For using the latest version of this core package during development
 -e ../boilercore
+
 # Install tests package so modules can be run in debugging
 -e tests/.
 # Introspection

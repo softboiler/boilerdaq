@@ -1,6 +1,6 @@
 # Latest working requirements of your package, should be ahead of pyproject.toml.
 
-dulwich==0.21.5
+dulwich==0.21.6
 
 # ? Already specified in `requirements_both.txt`
 # ipykernel

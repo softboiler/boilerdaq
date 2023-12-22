@@ -43,10 +43,10 @@
       "ignoreDeps": ["pandas-stubs"]
     },
     {
-      "description": "Don't bump pydantic until we're ready for migration.",
+      "description": "IPython issue https://github.com/ipython/ipython/issues/14255",
       "matchManagers": ["pip_requirements"],
-      "matchPaths": [".tools/requirements/*"],
-      "ignoreDeps": ["pydantic"]
+      "matchFileNames": [".tools/requirements/*"],
+      "ignoreDeps": ["ipython"]
     },
     {
       "description": "Ignore changerelease.yml workflow deps managed by the template",

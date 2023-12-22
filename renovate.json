@@ -100,7 +100,6 @@
         "psf/black",
         "charliermarsh/ruff-pre-commit",
         "srstevenson/nb-clean",
-        "nbQA-dev/nbQA",
         "asottile/blacken-docs",
         "DavidAnson/markdownlint-cli2"
       ]
@@ -114,9 +113,14 @@
         "pytest",
         "pytest-cov",
         "pytest-custom-exit-code",
-        "nb-clean",
-        "nbqa"
+        "nb-clean"
       ]
+    },
+    {
+      "description": "Ignore requirements_ci.txt deps managed by this template",
+      "matchManagers": ["pip_requirements"],
+      "matchFileNames": [".tools/requirements/*"],
+      "ignoreDeps": ["flit"]
     },
     {
       "description": "Ignore requirements_core.txt deps managed by this template",

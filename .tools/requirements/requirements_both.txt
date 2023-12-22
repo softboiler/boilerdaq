@@ -3,7 +3,7 @@
 ipykernel==6.27.1
 
 # Type checking
-pyright==1.1.336
+pyright==1.1.342
 # Pre-commit common requirements
 ruff==0.1.9
 # Testing

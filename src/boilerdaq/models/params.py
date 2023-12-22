@@ -5,7 +5,7 @@ from pathlib import Path
 from boilercore.models import SynchronizedPathsYamlModel
 from boilercore.models.fit import Fit
 from boilercore.models.geometry import Geometry
-from pydantic import Field
+from pydantic.v1 import Field
 
 from boilerdaq import get_params_file
 from boilerdaq.models.paths import Paths

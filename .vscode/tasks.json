@@ -21,6 +21,15 @@
     }
   ],
   "tasks": [
+    {
+      "label": "proj: update boilercore",
+      "type": "shell",
+      "options": { "shell": { "executable": "pwsh" } },
+      "command": ".tools/scripts/Update-Boilercore.ps1",
+      "icon": { "id": "graph" },
+      "problemMatcher": []
+    },
+
     // * -------------------------------------------------------------------------- * //
     // * PROJECT SETUP * //
 

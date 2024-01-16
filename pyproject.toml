@@ -11,7 +11,7 @@ license = { file = "LICENSE" }
 requires-python = ">=3.11"
 classifiers = ["License :: OSI Approved :: MIT License"]
 dependencies = [
-    "boilercore>=0.0.0",
+    "boilercore>=0.0.4",
     "ipykernel>=6.25.0",
     "matplotlib>=3.7.2",
     "mcculw>=1.0.0",
@@ -43,45 +43,86 @@ boilercore = ["boilercore"]
 ipykernel = ["IPython"]
 
 [tool.pyright]
-# Paths
 include = ["src", "tests", "docs"]
-# Stubs
-stubPath = "submodules/typings"
-# Type inference helps with untyped upstream but can be unpredictable
 useLibraryCodeForTypes = true
-# Sets most checks to "error". See overrides below
 typeCheckingMode = "strict"
-# These flags are "true" by default in strict mode
-strictListInference = true
-strictDictionaryInference = true
-strictSetInference = true
+# Default "true" in strict
 analyzeUnannotatedFunctions = true
 strictParameterNoneValue = true
 enableTypeIgnoreComments = true
-# Override these errors
-reportConstantRedefinition = "none"
-reportMissingParameterType = "none"
+disableBytesTypePromotions = true
+strictListInference = true
+strictDictionaryInference = true
+strictSetInference = true
+# Default "false" in strict
+deprecateTypingAliases = false
+enableExperimentalFeatures = false
+# Default "error" in strict
+reportMissingModuleSource = "warning"
+reportMissingImports = "warning"
+reportUndefinedVariable = "warning"
+reportAssertAlwaysTrue = "warning"
+reportInvalidStringEscapeSequence = "warning"
+reportInvalidTypeVarUse = "warning"
+# Default "warning" in strict
 reportMissingTypeStubs = "none"
+# Default "error" in strict
+reportSelfClsParameterName = "warning"
+reportUnsupportedDunderAll = "warning"
+reportUnusedExpression = "none"
+reportWildcardImportFromLibrary = "warning"
+reportGeneralTypeIssues = "warning"
+reportOptionalSubscript = "warning"
+reportOptionalMemberAccess = "warning"
+reportOptionalCall = "warning"
+reportOptionalIterable = "warning"
+reportOptionalContextManager = "warning"
+reportOptionalOperand = "warning"
+reportTypedDictNotRequiredAccess = "warning"
+reportPrivateImportUsage = "warning"
+reportUnboundVariable = "warning"
+reportUnusedCoroutine = "none"
+reportFunctionMemberAccess = "warning"
+reportIncompatibleMethodOverride = "warning"
+reportIncompatibleVariableOverride = "warning"
+reportOverlappingOverload = "warning"
+reportConstantRedefinition = "none"
+reportDeprecated = "warning"
+reportDuplicateImport = "warning"
+reportIncompleteStub = "warning"
+reportInconsistentConstructor = "warning"
+reportInvalidStubStatement = "warning"
+reportMatchNotExhaustive = "warning"
+reportMissingParameterType = "none"
+reportMissingTypeArgument = "warning"
+reportPrivateUsage = "none"                    # Ruff checks this well enough
+reportTypeCommentUsage = "warning"
 reportUnknownArgumentType = "none"
 reportUnknownLambdaType = "none"
 reportUnknownMemberType = "none"
 reportUnknownParameterType = "none"
 reportUnknownVariableType = "none"
+reportUnnecessaryCast = "warning"
+reportUnnecessaryComparison = "warning"
+reportUnnecessaryContains = "warning"
+reportUnnecessaryIsInstance = "warning"
 reportUnusedClass = "none"
-reportUnusedCoroutine = "none"
-reportUnusedExpression = "none"
-reportUnusedFunction = "none"
 reportUnusedImport = "none"
+reportUnusedFunction = "none"
 reportUnusedVariable = "none"
 reportUntypedBaseClass = "none"
-# Override these disabled diagnostics
-reportShadowedImports = "error"
-reportCallInDefaultInitializer = "error"
-reportPropertyTypeMismatch = "error"
-reportUninitializedInstanceVariable = "error"
-# These diagnostics are "none" by default in strict mode
+reportUntypedClassDecorator = "warning"
+reportUntypedFunctionDecorator = "warning"
+reportUntypedNamedTuple = "warning"
+# Defualt "none" in strict
+reportCallInDefaultInitializer = "none"
+reportImplicitOverride = "none"
 reportImplicitStringConcatenation = "none"
+reportImportCycles = "none"
 reportMissingSuperCall = "none"
+reportPropertyTypeMismatch = "none"
+reportShadowedImports = "warning"
+reportUninitializedInstanceVariable = "warning"
 reportUnnecessaryTypeIgnoreComment = "none"
 reportUnusedCallResult = "none"
 

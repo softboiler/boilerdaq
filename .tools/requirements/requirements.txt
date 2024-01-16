@@ -1,4 +1,4 @@
-# Latest working requirements of your package, should be ahead of pyproject.toml.
+# Latest working requirements of your package, should be ahead of pyproject.toml
 dulwich==0.21.6
 ipykernel==6.29.0
 loguru==0.7.2

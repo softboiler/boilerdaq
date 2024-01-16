@@ -1,4 +1,4 @@
-# Requirements for the dev environment.
+# Requirements for the dev environment
 # * ---------------------------------------------------------------------------------- *
 # ? DVC is an external tool used in this repo
 dvc[gs]==3.35.0

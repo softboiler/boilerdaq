@@ -1,17 +1,16 @@
 # Requirements for both CI and dev environments.
-
-ipykernel==6.27.1
-
+# * ---------------------------------------------------------------------------------- *
 # Type checking
 pyright==1.1.347
+# * ---------------------------------------------------------------------------------- *
 # Pre-commit common requirements
-ruff==0.1.9
+ruff==0.1.11
 # Testing
-pytest==7.4.3
+pytest==7.4.4
 # Testing plugins
 pytest-cov==4.1.0
 pytest-custom-exit-code==0.3.0
 # Format notebooks
-nb-clean==3.1.0
+nb-clean==3.2.0
 
 -r requirements_docs.txt

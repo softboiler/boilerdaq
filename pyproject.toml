@@ -12,7 +12,7 @@ requires-python = ">=3.11"
 classifiers = ["License :: OSI Approved :: MIT License"]
 dependencies = [
     "boilercore>=0.0.4",
-    "ipykernel>=6.25.0",
+    "ipykernel>=6.29.0",
     "matplotlib>=3.7.2",
     "mcculw>=1.0.0",
     "nbformat>=5.9.2",
@@ -39,8 +39,20 @@ output_format = "human_detailed"
 code = ["src"]
 deps = ["pyproject.toml"]
 [tool.fawltydeps.custom_mapping]
-boilercore = ["boilercore"]
 ipykernel = ["IPython"]
+
+[tool.pytest.ini_options]
+addopts = """\
+    --strict-config \
+    --strict-markers \
+    --color yes \
+    -p no:legacypaths \
+    -r a \
+    """
+cache_dir = ".cache/.pytest_cache"
+markers = "slow"
+testpaths = "tests"
+xfail_strict = true
 
 [tool.pyright]
 include = ["src", "tests", "docs"]
@@ -112,7 +124,7 @@ reportUnusedFunction = "none"
 reportUnusedVariable = "none"
 reportUntypedBaseClass = "none"
 reportUntypedClassDecorator = "warning"
-reportUntypedFunctionDecorator = "warning"
+reportUntypedFunctionDecorator = "none"        # Often out of our control
 reportUntypedNamedTuple = "warning"
 # Defualt "none" in strict
 reportCallInDefaultInitializer = "none"
@@ -127,29 +139,38 @@ reportUnnecessaryTypeIgnoreComment = "none"
 reportUnusedCallResult = "none"
 
 [tool.ruff]
-include = ["*.py", "*.pyi", "**/pyproject.toml", "*.ipynb"]
 fix = true
+force-exclude = true
+show-fixes = true
+show-source = true
+preview = false
+unsafe-fixes = false
 cache-dir = ".cache/.ruff_cache"
+fixable = ["ALL"]
+extend-include = ["*.ipynb"]
 select = ["ALL"]
 src = ["src", "tests"]
 target-version = "py311"
-extend-exclude = ["submodules", ".github"]
-ignore = [
+extend-unfixable = [
+    "F841", # Unused variables
+]
+extend-ignore = [
     "ANN",     # Don't require type annotations
     "ARG005",  # Allow unused lambda argument. For consistency across df pipelines.
     "C408",    # Allow dict calls
     "COM",     # Allow magic commas and magic missing commas
+    "CPY001",  # Don't check for copyright
     "D10",     # Missing docstrings
     "D20",     # Don't reformat docstrings in these ways
     "D213",    # Multi-line docstring summary should start at the second line
     "D402",    # False positives for parens in first line
+    "D412",    # Allow blanks below headers in Google-style docstrings
     "DTZ",     # Timezones are important, but only contextually necessary.
     "E501",    # Don't check line length. Black handles this.
     "EM",      # Don't check for exception message issues
     "ERA",     # False positives. Don't get rid of commented out code.
     "FBT",     # Allow boolean "traps"
     "FIX002",  # Allow TODOs
-    "F841",    # Don't check for or fix unused variables
     "FLY002",  # Allow different string representations
     "G0",      # Allow f-strings, etc. in Loguru logging
     "INP001",  # False positives. Checks for packages missing `__init__.py`
@@ -195,10 +216,8 @@ convention = "google"
 "tests/**" = [
     "ARG001", # Allow unused arguments in tests
     "S101",   # Allow assert in tests
+    "SIM300", # Allow constants (expectations) on the RHS in tests
 ]
 
 [tool.ruff.flake8-bugbear]
 extend-immutable-calls = ["typer.Argument", "typer.Option"]
-
-[tool.ruff.pep8-naming]
-classmethod-decorators = ["pydantic.validator"]

@@ -4,18 +4,17 @@ from importlib import import_module
 from pathlib import Path
 from typing import Any
 
+import boilerdaq
 import pytest
 from boilercore import filter_certain_warnings
 from boilercore.paths import get_module_rel, walk_modules
 from boilercore.testing import get_session_path
+from boilerdaq.daq import Looper
 from debugpy import is_client_connected
 from PySide6.QtCore import QTimer
 from PySide6.QtWidgets import QApplication
 from pyvisa import ResourceManager
 from pyvisa.resources import MessageBasedResource
-
-import boilerdaq
-from boilerdaq.daq import Looper
 
 DEBUG = is_client_connected()
 

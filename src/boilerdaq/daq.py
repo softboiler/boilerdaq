@@ -467,7 +467,7 @@ class PowerResult(Result):
         self.instrument: MessageBasedResource | None = None  # type: ignore
         self.current_limit = current_limit
 
-    def open(self):  # noqa: A003
+    def open(self):
         """Open the instrument."""
         self.instrument = self.resource_manager.open_resource(  # type: ignore
             self.instrument_name, read_termination="\n", write_termination="\n"

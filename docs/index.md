@@ -1,9 +1,11 @@
-```{include} ../README.md
-:relative-docs: docs/
-:relative-images:
-```
+# `boilerdaq`
 
-```{toctree}
+Data processing pipeline for a nucleate pool boiling apparatus.
+
+:::{toctree}
 :hidden:
+contributing
 changelog
-```
+apidocs/index
+references
+:::

@@ -4,5 +4,29 @@ build-backend = "flit_core.buildapi"
 
 [project]
 name = "boilerdaq_tests"
-description = "Tests."
 version = "0.0.0"
+description = "Tests."
+dependencies = [
+    # ? Core testing
+    "pytest-cov==4.1.0",
+    "pytest-custom-exit-code==0.3.0",
+    "pytest-github-actions-annotate-failures==0.2.0",
+    "pytest==8.0.0",
+]
+
+[tool.fawltydeps]
+deps = ["tests/pyproject.toml"]
+code = ["tests/boilerdaq_tests"]
+ignore_undeclared = [
+    "boilerdaq_docs",
+    "boilerdaq_tests",
+    "boilerdaq_tools",
+    "boilerdaq",
+]
+ignore_unused = [
+    # ? Core testung tools or plugins
+    "pytest-cov",
+    "pytest-custom-exit-code",
+    "pytest-github-actions-annotate-failures",
+    "pytest",
+]

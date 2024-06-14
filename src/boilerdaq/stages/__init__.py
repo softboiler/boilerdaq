@@ -15,7 +15,6 @@ from boilerdaq.daq import (
 from boilerdaq.models.params import PARAMS
 
 RESULTS_PATH = PARAMS.paths.results / "results.csv"
-INSTRUMENT = "USB0::0x0957::0x0807::US25N3188G::0::INSTR"
 CURRENT_LIMIT = 4
 CONTROL_SENSOR_NAME = "V"
 OUTPUT_LIMITS = (0, 300)

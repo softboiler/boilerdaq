@@ -1,5 +1,8 @@
 # Ignore schema, which has absolute paths that will vary by system
 params_schema.json
+# Ignore temporary files downloaded on some machines during development
+examples
+*uldaq*
 
 # * -------------------------------------------------------------------------------- * #
 # * Template gitignore

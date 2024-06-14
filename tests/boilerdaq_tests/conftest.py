@@ -13,11 +13,11 @@ from PySide6.QtCore import QTimer
 from PySide6.QtWidgets import QApplication
 
 import boilerdaq
+from boilerdaq import INSTRUMENT
 from boilerdaq.daq import Looper, open_instrument
 
 DEBUG = is_client_connected()
 
-INSTRUMENT_NAME = "USB0::0x0957::0x0807::US25N3188G::0::INSTR"
 
 STAGES_DIR = Path("src") / "boilerdaq" / "stages"
 STAGES: list[Any] = []
@@ -41,7 +41,7 @@ def _disable_power_supply():
     try:
         yield
     finally:
-        instrument = open_instrument(INSTRUMENT_NAME)
+        instrument = open_instrument(INSTRUMENT)
         for instruction in ["output:state off", "source:current 0", "source:voltage 0"]:
             instrument.write(instruction)
         instrument.close()
@@ -54,8 +54,8 @@ def _filter_certain_warnings():
     filter_certain_warnings([
         WarningFilter(category=ResourceWarning, message=msg)
         for msg in (
-            "unclosed event loop <ProactorEventLoop running=False closed=False debug=False",
-            r"unclosed <socket\.socket fd=\d+, family=\d+, type=\d+, proto=\d+, laddr=\('\d+\.\d+\.\d+\.\d+', \d+\)>",
+            r"unclosed event loop <.+EventLoop running=False closed=False debug=False>",
+            r"unclosed <socket\.socket fd=\d+, family=\d+, type=\d+, proto=\d+.*>",
         )
     ])
 
@@ -65,8 +65,7 @@ def looper(request: pytest.FixtureRequest):
     """Test example procedures."""
     module = import_module(request.param)
     looper: Looper = getattr(module, "looper", lambda: None)() or module.main()
-    # sourcery skip: move-assign
-    app: QApplication = looper.app
     if not DEBUG:
+        app: QApplication = looper.app
         QTimer.singleShot(2000, app.closeAllWindows)
     return looper

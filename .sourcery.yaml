@@ -12,6 +12,9 @@ ignore:
   - "vendor"
   # Extras
   - ".*"
+  # Project-specific
+  - "examples"
+  - "src/boilerdaq/shim.py"
 
 rule_settings:
   python_version: "3.11"

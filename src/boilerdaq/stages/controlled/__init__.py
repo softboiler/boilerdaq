@@ -1,14 +1,9 @@
 """Prepare the feedback-controlled data acquisition loop."""
 
+from boilerdaq import INSTRUMENT
 from boilerdaq.daq import Plotter, PowerParam, PowerResult, ResultGroup, Writer
 from boilerdaq.models.params import PARAMS
-from boilerdaq.stages import (
-    BASE_RESULTS,
-    CURRENT_LIMIT,
-    GROUP_DICT,
-    INSTRUMENT,
-    RESULTS_PATH,
-)
+from boilerdaq.stages import BASE_RESULTS, CURRENT_LIMIT, GROUP_DICT, RESULTS_PATH
 
 # Get power supply values
 all_power_supplies = PowerParam.get(PARAMS.paths.power_supplies_path)

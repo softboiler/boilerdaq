@@ -4,6 +4,7 @@ from collections import UserDict, deque
 from contextlib import suppress
 from csv import DictReader, DictWriter
 from datetime import datetime, timedelta
+from os import environ
 from pathlib import Path
 from tempfile import NamedTemporaryFile
 from textwrap import dedent
@@ -15,7 +16,6 @@ from boilercore.modelfun import get_model
 from boilercore.models.fit import Fit
 from boilercore.models.geometry import GEOMETRY
 from boilercore.types import Rod
-from mcculw.ul import ULError, t_in, v_in
 from pyqtgraph import (
     DateAxisItem,
     GraphicsLayoutWidget,
@@ -28,6 +28,18 @@ from PySide6.QtCore import QTimer
 from pyvisa import ResourceManager, VisaIOError
 from pyvisa.resources import MessageBasedResource
 from simple_pid import PID
+
+try:
+    from mcculw.enums import InterfaceType
+    from mcculw.ul import ULError, get_daq_device_inventory, t_in, v_in
+except NameError:
+    from uldaq import InterfaceType, get_daq_device_inventory
+
+    from boilerdaq.shim import t_in, v_in
+
+    environ["QT_QPA_PLATFORM"] = "xcb"
+if not get_daq_device_inventory(InterfaceType.USB):  # pyright: ignore[reportArgumentType]
+    from boilerdaq.dummy import t_in, v_in
 
 setConfigOptions(antialias=True)
 

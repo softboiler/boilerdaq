@@ -284,6 +284,7 @@ types-pytz==2024.1.0.20240417
 typing-extensions==4.12.2
 tzdata==2024.1
 uc-micro-py==1.0.3
+uldaq==1.2.3
 uncertainties==3.1.7
 urllib3==2.2.1
 userpath==1.9.2

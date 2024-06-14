@@ -23,6 +23,7 @@ dependencies = [
     "pyvisa-py>=0.7.2",
     "simple-pid>=2.0.0",
     "pyvisa-sim>=0.6.0",
+    "uldaq>=1.2.3",
     "zeroconf>=0.132.2",
 ]
 [project.urls]
@@ -89,6 +90,7 @@ exclude = [
     "submodules/template",
     "submodules/typings",
 ]
+ignore = ["examples"]
 stubPath = "submodules/typings"
 typeCheckingMode = "strict"
 # Default "true" in strict
@@ -188,7 +190,7 @@ reportUnusedCallResult = "none"
 
 [tool.ruff]
 cache-dir = ".cache/.ruff_cache"
-extend-exclude = ["bin", "submodules"]
+extend-exclude = ["bin", "examples", "submodules"]
 extend-include = ["*.ipynb"]
 src = ["src", "docs", "scripts", "tests"]
 output-format = "grouped"

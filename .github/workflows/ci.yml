@@ -147,11 +147,51 @@ jobs:
           python-version: "${{ matrix.python }}"
       - run: "scripts/Sync-Py.ps1"
       - run: pyright
+  test:
+    needs: "sync"
+    strategy:
+      matrix:
+        runner:
+          - "macos-13"
+          - "ubuntu-22.04"
+          - "windows-2022"
+        python:
+          # - "3.10"  # ? `scripts` currently requires `tomllib`, which is > 3.10
+          - "3.11"
+          # - "3.12" # ? No support in my commit-pinned fork of cachier
+          # - "3.13.0-alpha.5"  # ? https://github.com/PyO3/pyo3/issues/3555
+    runs-on: "${{ matrix.runner }}"
+    steps:
+      # ! https://askubuntu.com/questions/900285/libegl-so-1-is-not-a-symbolic-link
+      - if: "startsWith(matrix.runner, 'ubuntu')"
+        name: "Install PySide6 system dependencies"
+        run: "sudo apt update && sudo apt install libegl1"
+      - uses: "actions/checkout@692973e3d937129bcbf40652eb9f2f61becf3332" # v4.1.7
+        with:
+          submodules: True
+      - uses: "actions/download-artifact@65a9edc5881444af0b9093a5e628f2fe47ea3b2e" # v4.1.7
+        with:
+          name: "lock"
+      - uses: "actions/cache@0c45773b623bea8c8e75f6c82b208c3cf94ea4f9" # v4.0.2
+        with:
+          path: "${{ env.UV_CACHE_DIR }}"
+          key: "uv-${{ matrix.runner }}-${{ matrix.python }}-${{ hashFiles('lock.json') }}"
+      - uses: "actions/setup-python@82c7e631bb3cdc910f68e0081d67478d79c6982d" # v5.1.0
+        with:
+          python-version: "${{ matrix.python }}"
+      - run: "scripts/Sync-Py.ps1 -Version '${{ matrix.python }}'"
+      # ! https://github.com/pytest-dev/pytest-cov/issues/479#issuecomment-1247444988
+      - run: "pytest --cov --cov-config pyproject.toml"
+      - if: "startsWith(matrix.runner, 'ubuntu') && matrix.python == '3.11'"
+        uses: "codecov/codecov-action@e28ff129e5465c2c0dcc6f003fc735cb6ae0c673" # v4.5.0
+        env:
+          CODECOV_TOKEN: "${{ secrets.CODECOV_TOKEN }}"
   lock:
     needs:
       - "ruff"
       - "fawltydeps"
       - "pyright"
+      - "test"
     permissions:
       contents: "write"
     strategy:

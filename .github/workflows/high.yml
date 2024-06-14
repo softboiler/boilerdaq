@@ -15,7 +15,7 @@ jobs:
   sync:
     strategy:
       matrix:
-        runner: ["ubuntu-latest"]
+        runner: ["ubuntu-22.04"]
         python: ["3.11"]
     runs-on: "${{ matrix.runner }}"
     steps:
@@ -34,7 +34,7 @@ jobs:
     needs: "sync"
     strategy:
       matrix:
-        runner: ["ubuntu-latest"]
+        runner: ["ubuntu-22.04"]
         python: ["3.11"]
     runs-on: "${{ matrix.runner }}"
     steps:
@@ -54,7 +54,7 @@ jobs:
     needs: "sync"
     strategy:
       matrix:
-        runner: ["ubuntu-latest"]
+        runner: ["ubuntu-22.04"]
         python: ["3.11"]
     runs-on: "${{ matrix.runner }}"
     steps:
@@ -73,7 +73,7 @@ jobs:
     needs: "sync"
     strategy:
       matrix:
-        runner: ["ubuntu-latest"]
+        runner: ["ubuntu-22.04"]
         python: ["3.11"]
     runs-on: "${{ matrix.runner }}"
     steps:
@@ -92,7 +92,7 @@ jobs:
     needs: "sync"
     strategy:
       matrix:
-        runner: ["ubuntu-latest"]
+        runner: ["ubuntu-22.04"]
         python: ["3.11"]
     runs-on: "${{ matrix.runner }}"
     steps:
@@ -143,7 +143,7 @@ jobs:
       contents: "write"
     strategy:
       matrix:
-        runner: ["ubuntu-latest"]
+        runner: ["ubuntu-22.04"]
         python: ["3.11"]
     runs-on: "${{ matrix.runner }}"
     steps:

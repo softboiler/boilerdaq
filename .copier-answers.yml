@@ -1,7 +1,7 @@
 # Changes here will be overwritten by Copier; NEVER EDIT MANUALLY
 _commit: 2acfd3d
 _src_path: gh:blakeNaccarato/copier-python
-actions_runner: windows-2022
+actions_runner: ubuntu-22.04
 active: true
 github_repo_name: boilerdaq
 project_description: Data processing pipeline for a nucleate pool boiling apparatus.

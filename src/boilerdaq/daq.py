@@ -30,16 +30,20 @@ from pyvisa.resources import MessageBasedResource
 from simple_pid import PID
 
 try:
-    from mcculw.enums import InterfaceType
-    from mcculw.ul import ULError, get_daq_device_inventory, t_in, v_in
-except NameError:
-    from uldaq import InterfaceType, get_daq_device_inventory
+    try:
+        from mcculw.enums import InterfaceType
+        from mcculw.ul import ULError, get_daq_device_inventory, t_in, v_in
+    except NameError:
+        from uldaq import InterfaceType, get_daq_device_inventory
 
-    from boilerdaq.shim import t_in, v_in
+        from boilerdaq.shim import t_in, v_in
 
-    environ["QT_QPA_PLATFORM"] = "xcb"
-if not get_daq_device_inventory(InterfaceType.USB):  # pyright: ignore[reportArgumentType]
+        environ["QT_QPA_PLATFORM"] = "xcb"
+    if not get_daq_device_inventory(InterfaceType.USB):  # pyright: ignore[reportArgumentType]
+        from boilerdaq.dummy import t_in, v_in
+except FileNotFoundError:
     from boilerdaq.dummy import t_in, v_in
+
 
 setConfigOptions(antialias=True)
 

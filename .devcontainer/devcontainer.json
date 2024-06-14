@@ -17,10 +17,16 @@
     "ghcr.io/joshuanianji/devcontainer-features/gcloud-cli-persistence:1.0.3": {}
   },
   "onCreateCommand": {
+    "install-pyqtgraph-deps": ["pwsh", "scripts/Initialize-Linux.ps1"],
     "set-up-profile": [
       "pwsh",
       "-Command",
       "New-Item -Force $PROFILE && Copy-Item scripts/Initialize-Shell.ps1 $PROFILE"
+    ],
+    "gcloud-login-for-dvc": [
+      "pwsh",
+      "-Command",
+      "if (!(Test-Path /.codespaces)) { gcloud auth application-default login }"
     ]
   },
   "postCreateCommand": {

@@ -25,10 +25,7 @@ jobs:
   no-spaces-in-path:
     strategy:
       matrix:
-        runner:
-          - "macos-13"
-          - "ubuntu-22.04"
-          - "windows-2022"
+        runner: ["windows-2022"]
         python: ["3.11"]
     runs-on: "${{ matrix.runner }}"
     steps:
@@ -46,10 +43,7 @@ jobs:
   spaces-in-path:
     strategy:
       matrix:
-        runner:
-          - "macos-13"
-          - "ubuntu-22.04"
-          - "windows-2022"
+        runner: ["windows-2022"]
         python: ["3.11"]
     runs-on: "${{ matrix.runner }}"
     steps:

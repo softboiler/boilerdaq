@@ -13,7 +13,7 @@ jobs:
   changerelease:
     strategy:
       matrix:
-        runner: ["ubuntu-latest"]
+        runner: ["windows-2022"]
         python: ["3.11"]
     permissions:
       contents: "write"

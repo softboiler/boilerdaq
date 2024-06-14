@@ -1,3 +1,6 @@
+# Ignore schema, which has absolute paths that will vary by system
+params_schema.json
+
 # * -------------------------------------------------------------------------------- * #
 # * Template gitignore
 

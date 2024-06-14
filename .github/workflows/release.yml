@@ -12,7 +12,7 @@ jobs:
   release:
     strategy:
       matrix:
-        runner: ["windows-2022"]
+        runner: ["ubuntu-latest"]
         python: ["3.11"]
     runs-on: "${{ matrix.runner }}"
     steps:

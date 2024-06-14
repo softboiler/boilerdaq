@@ -18,7 +18,7 @@ jobs:
   sync:
     strategy:
       matrix:
-        runner: ["windows-2022"]
+        runner: ["ubuntu-latest"]
         python: ["3.11"]
     runs-on: "${{ matrix.runner }}"
     steps:
@@ -41,7 +41,7 @@ jobs:
     needs: "sync"
     strategy:
       matrix:
-        runner: ["windows-2022"]
+        runner: ["ubuntu-latest"]
         python: ["3.11"]
     runs-on: "${{ matrix.runner }}"
     steps:
@@ -69,7 +69,7 @@ jobs:
       id-token: "write"
     strategy:
       matrix:
-        runner: ["windows-2022"]
+        runner: ["ubuntu-latest"]
         python: ["3.11"]
     environment:
       name: "github-pages"
@@ -82,7 +82,7 @@ jobs:
     needs: "sync"
     strategy:
       matrix:
-        runner: ["windows-2022"]
+        runner: ["ubuntu-latest"]
         python: ["3.11"]
     runs-on: "${{ matrix.runner }}"
     steps:
@@ -105,7 +105,7 @@ jobs:
     needs: "sync"
     strategy:
       matrix:
-        runner: ["windows-2022"]
+        runner: ["ubuntu-latest"]
         python: ["3.11"]
     runs-on: "${{ matrix.runner }}"
     steps:
@@ -128,7 +128,7 @@ jobs:
     needs: "sync"
     strategy:
       matrix:
-        runner: ["windows-2022"]
+        runner: ["ubuntu-latest"]
         python: ["3.11"]
     runs-on: "${{ matrix.runner }}"
     steps:
@@ -152,8 +152,8 @@ jobs:
     strategy:
       matrix:
         runner:
-          # - "macos-13"  # ? Until we've figured out `uldaq`
-          # - "ubuntu-22.04"  # ? Until we've figured out `uldaq`
+          - "macos-13"
+          - "ubuntu-22.04"
           - "windows-2022"
         python:
           # - "3.10"  # ? `scripts` currently requires `tomllib`, which is > 3.10
@@ -162,6 +162,10 @@ jobs:
           # - "3.13.0-alpha.5"  # ? https://github.com/PyO3/pyo3/issues/3555
     runs-on: "${{ matrix.runner }}"
     steps:
+      # ! https://askubuntu.com/questions/900285/libegl-so-1-is-not-a-symbolic-link
+      - if: "startsWith(matrix.runner, 'ubuntu')"
+        name: "Install PySide6 system dependencies"
+        run: "sudo apt update && sudo apt install libegl1"
       - uses: "actions/checkout@692973e3d937129bcbf40652eb9f2f61becf3332" # v4.1.7
         with:
           submodules: True
@@ -178,8 +182,8 @@ jobs:
       - run: "scripts/Sync-Py.ps1 -Version '${{ matrix.python }}'"
       # ! https://github.com/pytest-dev/pytest-cov/issues/479#issuecomment-1247444988
       - run: "pytest --cov --cov-config pyproject.toml"
-      - if: "startsWith(matrix.runner, 'windows') && matrix.python == '3.11'"
-        uses: "codecov/codecov-action@125fc84a9a348dbcf27191600683ec096ec9021c" # v4.4.1
+      - if: "startsWith(matrix.runner, 'ubuntu') && matrix.python == '3.11'"
+        uses: "codecov/codecov-action@e28ff129e5465c2c0dcc6f003fc735cb6ae0c673" # v4.5.0
         env:
           CODECOV_TOKEN: "${{ secrets.CODECOV_TOKEN }}"
   lock:
@@ -192,7 +196,7 @@ jobs:
       contents: "write"
     strategy:
       matrix:
-        runner: ["windows-2022"]
+        runner: ["ubuntu-latest"]
         python: ["3.11"]
     runs-on: "${{ matrix.runner }}"
     steps:

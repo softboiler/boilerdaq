@@ -160,7 +160,7 @@ omegaconf==2.3.0
 orjson==3.10.5
 packaging==24.1
 pandas-stubs==2.2.2.240514
-pandas==2.2.0
+pandas==2.2.2
 pandocfilters==1.5.1
 parso==0.8.4
 pathspec==0.12.1

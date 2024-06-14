@@ -99,6 +99,7 @@ h11==0.14.0
 hydra-core==1.3.2
 identify==2.5.36
 idna==3.7
+ifaddr==0.2.0
 imagesize==1.4.1
 importlib-metadata==7.1.0
 incremental==22.10.0
@@ -124,13 +125,14 @@ keyring==25.2.1
 kiwisolver==1.4.5
 kombu==5.3.7
 latexcodec==3.0.0
+libusb==1.0.27
 linkify-it-py==2.0.3
 llvmlite==0.43.0
-loguru==0.7.2
+loguru==0.7.0
 markdown-it-py==3.0.0
 markupsafe==2.1.5
 matplotlib-inline==0.1.7
-matplotlib==3.8.3
+matplotlib==3.7.2
 mcculw==1.0.0
 mdit-py-plugins==0.4.1
 mdurl==0.1.2
@@ -155,7 +157,7 @@ numpy==1.26.0
 numpydoc==1.7.0
 oauthlib==3.2.2
 omegaconf==2.3.0
-orjson==3.10.4
+orjson==3.10.5
 packaging==24.1
 pandas-stubs==2.2.2.240514
 pandas==2.2.0
@@ -166,6 +168,7 @@ pexpect==4.9.0
 pillow==10.3.0
 pip-requirements-parser==32.0.1
 pipx==1.6.0
+pkg-about==1.1.5
 platformdirs==3.11.0
 ploomber-core==0.2.25
 ploomber-engine==0.0.30
@@ -192,7 +195,7 @@ pydot==2.0.0
 pygit2==1.15.0
 pygments==2.18.0
 pygtrie==2.5.0
-pyparsing==3.1.2
+pyparsing==3.0.9
 pyqtgraph==0.13.3
 pyright==1.1.367
 pyside6 == 6.7.1 ; sys_platform == 'linux'
@@ -207,6 +210,9 @@ pytest-github-actions-annotate-failures==0.2.0
 pytest==8.0.0
 python-dateutil==2.9.0.post0
 pytz==2024.1
+pyusb==1.2.1
+pyvisa-py==0.7.2
+pyvisa-sim==0.6.0
 pyvisa==1.14.1
 pywin32-ctypes==0.2.2
 pywin32==306
@@ -225,7 +231,6 @@ ruamel-yaml==0.18.6
 ruff==0.4.8
 scipy==1.11.1
 scmrepo==3.3.5
-seaborn==0.13.2
 secretstorage==3.3.3
 semver==3.0.2
 setuptools==70.0.0
@@ -263,6 +268,7 @@ sqlalchemy==2.0.30
 sqltrie==0.11.0
 stack-data==0.6.3
 starlette==0.37.2
+stringparser==0.7
 sympy==1.12
 tables==3.9.2
 tabulate==0.9.0
@@ -293,4 +299,5 @@ wheel==0.43.0
 win32-setctime==1.1.0
 yarl==1.9.4
 zc-lockfile==3.0.post1
+zeroconf==0.132.2
 zipp==3.19.2

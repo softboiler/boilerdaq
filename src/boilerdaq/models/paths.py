@@ -25,7 +25,7 @@ class Paths(CreatePathsModel):
     # * Git-tracked inputs
     # ! Package
     package: DirectoryPath = get_package_dir(boilerdaq)
-    stages: dict[str, FilePath] = map_stages(package / "stages", package)
+    stages: dict[str, FilePath] = map_stages(package / "stages")
     # ! Config
     # Careful, "Config" is a special member of BaseClass
     config: DirectoryPath = data / "config"

@@ -11,7 +11,7 @@ TEMP_FEEDBACK_GAINS = (12, 0.08, 1)
 TEMP_FEEDBACK_SENSOR_NAME = "T0cal"
 
 
-def main() -> Looper:
+def main() -> Looper:  # noqa: D103
     writer = Writer(RESULTS_PATH, CONTROLLED_RESULTS)
     control_sensor = get_result(CONTROL_SENSOR_NAME, CONTROLLED_RESULTS)
     controller = Controller(

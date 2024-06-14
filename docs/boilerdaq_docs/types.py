@@ -2,7 +2,6 @@
 
 from typing import NamedTuple, TypeAlias
 
-# * -------------------------------------------------------------------------------- * #
 # * intersphinx
 
 
@@ -13,7 +12,6 @@ class IspxMappingValue(NamedTuple):
     path: str | None = None
 
 
-# * -------------------------------------------------------------------------------- * #
 # * docstrings
 
 

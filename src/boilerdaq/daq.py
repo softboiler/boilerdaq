@@ -5,6 +5,8 @@ from contextlib import suppress
 from csv import DictReader, DictWriter
 from datetime import datetime, timedelta
 from pathlib import Path
+from tempfile import NamedTemporaryFile
+from textwrap import dedent
 from typing import Any, NamedTuple, Self
 from warnings import warn
 
@@ -31,10 +33,8 @@ setConfigOptions(antialias=True)
 
 PLOT_HISTORY_DURATION = 5  # (min)
 """Duration of plot history."""
-
 POLLING_INTERVAL = 2000
 """Minimum time between sampling cycles in milliseconds."""
-
 PLOT_HISTORY_LENGTH = PLOT_HISTORY_DURATION * 60 * 1000 // POLLING_INTERVAL
 """Length of plot history in number of samples."""
 
@@ -257,7 +257,7 @@ class PowerParam(NamedTuple):
 class Result:
     """A result.
 
-    Attributes:
+    Attributes
     ----------
     source: str
         The source of the result.
@@ -297,7 +297,7 @@ class Reading(Result):
     sensor: Sensor
         The sensor parameters used to get a result.
 
-    Attributes:
+    Attributes
     ----------
     unit_types: Dict[str: int]
         Enumeration of unit types supported by the board on which the sensor resides.
@@ -330,7 +330,7 @@ class ScaledResult(Result):
     results: List[Result]
         A list of results containing the source to be scaled.
 
-    Attributes:
+    Attributes
     ----------
     unscaled_result: Result
         The unscaled result.
@@ -357,7 +357,7 @@ class Flux(Result):
     results: List[Result]
         A list of results containing the source to be scaled.
 
-    Attributes:
+    Attributes
     ----------
     origin_result: Result
         The result of the source at the origin.
@@ -391,7 +391,7 @@ class ExtrapResult(Result):
     results: List[Result]
         A list of results containing the source to be scaled.
 
-    Attributes:
+    Attributes
     ----------
     origin_result: Result
         The result of the source at the origin.
@@ -446,6 +446,42 @@ class FitResult(Result):
         super().update()
 
 
+def open_instrument(name: str) -> MessageBasedResource:
+    """Open an instrument by name, falling back to a simulated instrument."""
+    rm = ResourceManager()
+    if rm.list_resources(name):
+        return rm.open_resource(name, read_termination="\n", write_termination="\n")  # pyright: ignore[reportReturnType]
+    with NamedTemporaryFile(encoding="utf-8", mode="w", delete=False) as f:
+        # sourcery skip: extract-method
+        f.write(
+            dedent(rf"""
+                spec: "1.0"
+                devices:
+                    device:
+                        eom:
+                            USB INSTR:
+                                q: "\n"
+                                r: "\n"
+                        dialogues:
+                            - q: "measure:voltage?"
+                              r: "1"
+                            - q: "measure:current?"
+                              r: "1"
+                resources:
+                    {name}:
+                        device: "device"
+                """).strip()
+            + "\n"
+        )
+        f.close()
+        path = Path(f.name)
+        inst = ResourceManager(f"{path.as_posix()}@sim").open_resource(
+            name, read_termination="\n", write_termination="\n"
+        )
+        path.unlink()
+        return inst  # pyright: ignore[reportReturnType]
+
+
 class PowerResult(Result):
     """A result from a power supply.
 
@@ -462,18 +498,15 @@ class PowerResult(Result):
     def __init__(self, power_param: PowerParam, instrument: str, current_limit: float):
         super().__init__()
         self.source: PowerParam = power_param  # type: ignore
-        self.resource_manager = ResourceManager()
         self.instrument_name: str = instrument
         self.instrument: MessageBasedResource | None = None  # type: ignore
         self.current_limit = current_limit
 
-    def open(self):  # noqa: A003
+    def open(self):
         """Open the instrument."""
-        self.instrument = self.resource_manager.open_resource(  # type: ignore
-            self.instrument_name, read_termination="\n", write_termination="\n"
-        )
+        self.instrument = open_instrument(self.instrument_name)
         self.instrument.write("output:state on")  # type: ignore
-        self.instrument.write(f"source:current {self.current_limit}")  # type: ignore
+        self.instrument.write(f"source:current {self.current_limit}")
 
     def close(self):
         """Close the instrument."""
@@ -553,7 +586,7 @@ class Controller:
     start_delay: float
         Time to wait before activating PID.
 
-    Attributes:
+    Attributes
     ----------
     pid: PID
         The PID controller.
@@ -605,7 +638,7 @@ class Writer:
     results: List[Result]
         The first list of results to be written to a file.
 
-    Attributes:
+    Attributes
     ----------
     paths: List[str]
         Base names of multiple results CSVs to be written to.
@@ -637,7 +670,6 @@ class Writer:
         results: List[Result]
             Additonal list of results to be written to a file.
         """
-
         # The ":" in ISO time strings is not supported by filenames
         file_time = self.time.isoformat(timespec="seconds").replace(":", "-")  # type: ignore
         path = path.with_stem(f"{path.name}_{file_time}")
@@ -707,7 +739,7 @@ class Plotter:
     col: int = 0
         The window column to place the first plot.
 
-    Attributes:
+    Attributes
     ----------
     all_results: List[Result]
     all_curves: List[PlotCurveItem]
@@ -774,7 +806,7 @@ class Looper:
     controller: Optional[Controller]
         The controller.
 
-    Attributes:
+    Attributes
     ----------
     plot_window_open: bool
         Whether the plot window is currently open.
@@ -803,12 +835,12 @@ class Looper:
             self.controller.close()
 
     def plot(self):
-        """The function to be looped in the plot thread."""
+        """Plot function."""
         self.plotter.update()
         self.writer.update()
 
     def plot_control(self):
-        """The CSV writer function to be looped in the write/control thread."""
+        """Plot and control."""
         self.plotter.update()
         self.writer.update()
         self.controller.update()

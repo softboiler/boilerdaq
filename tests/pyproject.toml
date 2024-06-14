@@ -16,8 +16,6 @@ dependencies = [
     # ? Other testing
     # ? Wheels are missing on Linux for PySide6, `uv` doesn't like it
     "pyside6==6.7.1 ; sys_platform != 'linux'",
-    # ? Other deps
-    "pyvisa>=1.14.1",
 ]
 
 [tool.fawltydeps]

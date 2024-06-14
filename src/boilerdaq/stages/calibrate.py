@@ -12,7 +12,7 @@ GROUP_DICT = dict(
 )
 
 
-def main() -> Looper:
+def main() -> Looper:  # noqa: D103
     # Combine calculated results into one list
     results = READINGS + SCALED_RESULTS
     # Start writing

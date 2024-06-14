@@ -43,7 +43,7 @@ ignore_errors = true
 deps = ["pyproject.toml"]
 code = ["src"]
 ignore_undeclared = ["boilercore"]
-ignore_unused = ["libusb", "pyusb", "pyvisa-py", "pyvisa-sim"]
+ignore_unused = ["libusb", "pyusb", "pyvisa-py", "pyvisa-sim", "zeroconf"]
 
 [tool.pytest.ini_options]
 addopts = '''

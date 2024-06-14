@@ -20,11 +20,11 @@ SURFACE_TEMP = "T_s"
 SURFACE_TEMP_UNIT = "C"
 
 
-def main(surface_temp_setpoint: float = SURFACE_TEMP_SETPOINT):
+def main(surface_temp_setpoint: float = SURFACE_TEMP_SETPOINT):  # noqa: D103
     looper(surface_temp_setpoint).start()
 
 
-def looper(surface_temp_setpoint: float = SURFACE_TEMP_SETPOINT) -> Looper:
+def looper(surface_temp_setpoint: float = SURFACE_TEMP_SETPOINT) -> Looper:  # noqa: D103
     fit_result = FitResult(
         name=SURFACE_TEMP,
         unit=SURFACE_TEMP_UNIT,

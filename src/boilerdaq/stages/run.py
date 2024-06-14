@@ -4,7 +4,7 @@ from boilerdaq.daq import Looper, Writer
 from boilerdaq.stages import BASE_RESULTS, PLOTTER, RESULTS_PATH
 
 
-def main() -> Looper:
+def main() -> Looper:  # noqa: D103
     return Looper(Writer(RESULTS_PATH, BASE_RESULTS), PLOTTER)
 
 

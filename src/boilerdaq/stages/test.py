@@ -6,7 +6,7 @@ from boilerdaq.stages import READINGS, RESULTS_PATH
 GROUP_DICT = dict(base="T1")
 
 
-def main() -> Looper:
+def main() -> Looper:  # noqa: D103
     writer = Writer(RESULTS_PATH, READINGS)
     group = ResultGroup(GROUP_DICT, READINGS)
     plotter = Plotter("base", group["base"], 0, 0)

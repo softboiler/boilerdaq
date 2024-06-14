@@ -162,12 +162,11 @@ jobs:
           # - "3.13.0-alpha.5"  # ? https://github.com/PyO3/pyo3/issues/3555
     runs-on: "${{ matrix.runner }}"
     steps:
-      - if: startsWith(matrix.runner, 'ubuntu')
-        name: "Install PySide6 system dependencies"
-        run: "scripts/Initialize-Linux.ps1"
       - uses: "actions/checkout@692973e3d937129bcbf40652eb9f2f61becf3332" # v4.1.7
         with:
           submodules: True
+      - if: startsWith(matrix.runner, 'ubuntu')
+        run: "scripts/Initialize-Linux.ps1"
       - uses: "actions/download-artifact@65a9edc5881444af0b9093a5e628f2fe47ea3b2e" # v4.1.7
         with:
           name: "lock"

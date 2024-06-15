@@ -4,7 +4,6 @@ from collections import UserDict, deque
 from contextlib import suppress
 from csv import DictReader, DictWriter
 from datetime import datetime, timedelta
-from os import environ
 from pathlib import Path
 from tempfile import NamedTemporaryFile
 from textwrap import dedent
@@ -39,7 +38,7 @@ try:
 
         from boilerdaq.shim import t_in, v_in
 
-        environ["QT_QPA_PLATFORM"] = "xcb"
+        # environ["QT_QPA_PLATFORM"] = "xcb"
     if not get_daq_device_inventory(InterfaceType.USB):  # pyright: ignore[reportArgumentType]
         from boilerdaq.dummy import t_in, v_in
 except FileNotFoundError:

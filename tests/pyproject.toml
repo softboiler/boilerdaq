@@ -8,7 +8,6 @@ version = "0.0.0"
 description = "Tests."
 dependencies = [
     # ? Core testing
-    "debugpy==1.8.1",
     "pytest-cov==4.1.0",
     "pytest-custom-exit-code==0.3.0",
     "pytest-github-actions-annotate-failures==0.2.0",
@@ -16,6 +15,7 @@ dependencies = [
     # ? Other testing
     # ? Wheels are missing on Linux for PySide6, `uv` doesn't like it
     "pyside6==6.7.1 ; sys_platform != 'linux'",
+    "pytest-qt==4.4.0",
 ]
 
 [tool.fawltydeps]
@@ -34,4 +34,5 @@ ignore_unused = [
     "pytest-custom-exit-code",
     "pytest-github-actions-annotate-failures",
     "pytest",
+    "pytest-qt",
 ]

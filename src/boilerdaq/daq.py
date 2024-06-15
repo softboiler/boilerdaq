@@ -24,7 +24,8 @@ from pyqtgraph import (
     mkQApp,
     setConfigOptions,
 )
-from PySide6.QtCore import QTimer
+from PySide6.QtCore import Qt, QTimer, Signal
+from PySide6.QtGui import QKeyEvent
 from pyvisa import ResourceManager, VisaIOError
 from pyvisa.resources import MessageBasedResource
 from simple_pid import PID
@@ -741,6 +742,17 @@ class Writer:
                 csv_writer.writerow(to_write)
 
 
+class GraphicsLayoutWidgetWithKeySignal(GraphicsLayoutWidget):
+    """Emit key signals on `key_signal`."""
+
+    key_signal = Signal(QKeyEvent)
+
+    def keyPressEvent(self, ev: QKeyEvent):  # noqa: N802
+        """Handle keypresses."""
+        super().keyPressEvent(ev)
+        self.key_signal.emit(ev)
+
+
 class Plotter:
     """A plotter for data.
 
@@ -764,7 +776,9 @@ class Plotter:
     """
 
     def __init__(self, title: str, results: list[Result], row: int = 0, col: int = 0):
-        self.window = GraphicsLayoutWidget()
+        self.window = GraphicsLayoutWidgetWithKeySignal()
+        self.app = mkQApp()
+        self.window.key_signal.connect(self.keyPressEvent)
         self.all_results: list[Result] = []
         self.all_curves: list[PlotCurveItem] = []
         self.all_histories: list[deque[float]] = []
@@ -775,6 +789,12 @@ class Plotter:
             for i in range(PLOT_HISTORY_LENGTH)
         )
         self.add(title, results, row, col)
+
+    def keyPressEvent(self, ev: QKeyEvent):  # noqa: N802
+        """Handle quit events and propagate keypresses to image views."""
+        if ev.key() in (Qt.Key.Key_Escape, Qt.Key.Key_Q, Qt.Key.Key_Enter):
+            self.app.closeAllWindows()
+            ev.accept()
 
     def add(self, title: str, results: list[Result], row: int, col: int):
         """Plot results to a new pane in the plot window.
@@ -831,7 +851,6 @@ class Looper:
     def __init__(
         self, writer: Writer, plotter: Plotter, controller: Controller | None = None
     ):
-        self.app = mkQApp()
         self.writer = writer
         self.plotter = plotter
         self.controller: Controller = controller or None  # type: ignore
@@ -845,8 +864,8 @@ class Looper:
         timer.timeout.connect(self.plot_control if self.controller else self.plot)
         timer.start(POLLING_INTERVAL)
         self.plotter.window.show()
-        self.app.exec()
-        self.app.quit()
+        self.plotter.app.exec()
+        self.plotter.app.quit()
         if self.controller:
             self.controller.close()
 

@@ -8,16 +8,12 @@ import pytest
 from boilercore import WarningFilter, filter_certain_warnings
 from boilercore.paths import get_module_rel, walk_modules
 from boilercore.testing import get_session_path
-from debugpy import is_client_connected
-from PySide6.QtCore import QTimer
-from PySide6.QtWidgets import QApplication
+from PySide6.QtCore import Qt, QTimer
+from PySide6.QtTest import QTest
 
 import boilerdaq
 from boilerdaq import INSTRUMENT
 from boilerdaq.daq import Looper, open_instrument
-
-DEBUG = is_client_connected()
-
 
 STAGES_DIR = Path("src") / "boilerdaq" / "stages"
 STAGES: list[Any] = []
@@ -48,7 +44,7 @@ def _disable_power_supply():
 
 
 # Can't be session scope
-@pytest.fixture(autouse=True)
+@pytest.fixture()
 def _filter_certain_warnings():
     """Filter certain warnings."""
     filter_certain_warnings([
@@ -61,11 +57,17 @@ def _filter_certain_warnings():
 
 
 @pytest.fixture(params=STAGES)
-def looper(request: pytest.FixtureRequest):
+def looper(qtbot, request: pytest.FixtureRequest):
     """Test example procedures."""
     module = import_module(request.param)
     looper: Looper = getattr(module, "looper", lambda: None)() or module.main()
-    if not DEBUG:
-        app: QApplication = looper.app
-        QTimer.singleShot(2000, app.closeAllWindows)
+    QTimer.singleShot(
+        2000,
+        lambda: qtbot.keyEvent(
+            QTest.KeyAction.Press,
+            looper.plotter.window,
+            Qt.Key.Key_Escape,
+            Qt.KeyboardModifier.NoModifier,
+        ),
+    )
     return looper

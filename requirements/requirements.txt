@@ -68,7 +68,7 @@ dvc-task==0.4.0
 dvc==3.51.2
 entrypoints==0.4
 executing==2.0.1
-fastjsonschema==2.19.1
+fastjsonschema==2.20.0
 fawltydeps==0.15.0
 filelock==3.15.1
 flatten-dict==0.4.2
@@ -207,6 +207,7 @@ pyside6==6.7.1
 pytest-cov==4.1.0
 pytest-custom-exit-code==0.3.0
 pytest-github-actions-annotate-failures==0.2.0
+pytest-qt==4.4.0
 pytest==8.0.0
 python-dateutil==2.9.0.post0
 pytz==2024.1

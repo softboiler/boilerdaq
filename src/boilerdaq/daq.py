@@ -38,7 +38,6 @@ try:
 
         from boilerdaq.shim import t_in, v_in
 
-        # environ["QT_QPA_PLATFORM"] = "xcb"
     if not get_daq_device_inventory(InterfaceType.USB):  # pyright: ignore[reportArgumentType]
         from boilerdaq.dummy import t_in, v_in
 except FileNotFoundError:

@@ -2,6 +2,9 @@
 .SYNOPSIS
 Initialization commands for PowerShell shells in pre-commit and tasks.#>
 
+# ? Disable GUI in CI
+if ($Env:CI) {$Env:QT_QPA_PLATFORM = "offscreen"}
+
 # ? Error-handling
 $ErrorActionPreference = 'Stop'
 ($PSNativeCommandUseErrorActionPreference = $true) | Out-Null

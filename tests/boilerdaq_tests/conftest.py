@@ -57,13 +57,13 @@ def _filter_certain_warnings():
 
 
 @pytest.fixture(params=STAGES)
-def looper(qtbot, request: pytest.FixtureRequest):
+def looper(request: pytest.FixtureRequest):
     """Test example procedures."""
     module = import_module(request.param)
     looper: Looper = getattr(module, "looper", lambda: None)() or module.main()
     QTimer.singleShot(
         2000,
-        lambda: qtbot.keyEvent(
+        lambda: QTest.keyEvent(
             QTest.KeyAction.Press,
             looper.plotter.window,
             Qt.Key.Key_Escape,

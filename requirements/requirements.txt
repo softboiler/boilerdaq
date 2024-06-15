@@ -207,7 +207,6 @@ pyside6==6.7.1
 pytest-cov==4.1.0
 pytest-custom-exit-code==0.3.0
 pytest-github-actions-annotate-failures==0.2.0
-pytest-qt==4.4.0
 pytest==8.0.0
 python-dateutil==2.9.0.post0
 pytz==2024.1

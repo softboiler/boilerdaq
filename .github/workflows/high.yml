@@ -130,7 +130,8 @@ jobs:
         with:
           python-version: "${{ matrix.python }}"
       - run: "scripts/Sync-Py.ps1 -Version '${{ matrix.python }}'"
-      - run: ". scripts/Initialize-Shell.ps1; pytest"
+      - if: startsWith(matrix.runner, 'windows')
+        run: ". scripts/Initialize-Shell.ps1; pytest"
   lock:
     needs:
       - "ruff"

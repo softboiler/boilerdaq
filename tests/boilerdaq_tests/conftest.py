@@ -44,7 +44,7 @@ def _disable_power_supply():
 
 
 # Can't be session scope
-@pytest.fixture()
+@pytest.fixture(autouse=True)
 def _filter_certain_warnings():
     """Filter certain warnings."""
     filter_certain_warnings([

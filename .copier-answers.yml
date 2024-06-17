@@ -7,7 +7,7 @@ github_repo_name: boilerdaq
 project_description: Data processing pipeline for a nucleate pool boiling apparatus.
 project_email: blake.naccarato@gmail.com
 project_name: boilerdaq
-project_owner_github_username: blakeNaccarato
+project_owner_github_username: softboiler
 project_owner_name: Blake Naccarato
 project_version: 0.4.0
 python_version: '3.11'

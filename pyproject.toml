@@ -27,10 +27,10 @@ dependencies = [
     "zeroconf>=0.132.2",
 ]
 [project.urls]
-Changes = "https://blakeNaccarato.github.io/boilerdaq/changelog.html"
-Docs = "https://blakeNaccarato.github.io/boilerdaq"
-Home = "https://github.com/blakeNaccarato/boilerdaq"
-Tracker = "https://github.com/blakeNaccarato/boilerdaq/issues"
+Changes = "https://softboiler.github.io/boilerdaq/changelog.html"
+Docs = "https://softboiler.github.io/boilerdaq"
+Home = "https://github.com/softboiler/boilerdaq"
+Tracker = "https://github.com/softboiler/boilerdaq/issues"
 [[project.authors]]
 name = "Blake Naccarato"
 email = "blake.naccarato@gmail.com"
@@ -64,7 +64,7 @@ directory = "changelog"
 filename = "CHANGELOG.md"
 template = "changelog/towncrier_template.md.jinja"
 title_format = ""
-issue_format = "[#{issue}](https://github.com/blakeNaccarato/boilerdaq/{issue})"
+issue_format = "[#{issue}](https://github.com/softboiler/boilerdaq/{issue})"
 underlines = ["", "", ""]
 [[tool.towncrier.section]]
 path = ""

@@ -47,13 +47,16 @@ def _disable_power_supply():
 @pytest.fixture(autouse=True)
 def _filter_certain_warnings():
     """Filter certain warnings."""
-    filter_certain_warnings([
-        WarningFilter(category=ResourceWarning, message=msg)
-        for msg in (
-            r"unclosed event loop <.+EventLoop running=False closed=False debug=False>",
-            r"unclosed <socket\.socket fd=\d+, family=\d+, type=\d+, proto=\d+.*>",
-        )
-    ])
+    filter_certain_warnings(
+        package="boilerdaq",
+        other_warnings=[
+            WarningFilter(category=ResourceWarning, message=msg)
+            for msg in (
+                r"unclosed event loop <.+EventLoop running=False closed=False debug=False>",
+                r"unclosed <socket\.socket fd=\d+, family=\d+, type=\d+, proto=\d+.*>",
+            )
+        ],
+    )
 
 
 @pytest.fixture(params=STAGES)

@@ -13,7 +13,6 @@ jobs:
   changerelease:
     continue-on-error: true
     strategy:
-      fail-fast: false
       matrix:
         runner: ["ubuntu-22.04"]
         python: ["3.11"]

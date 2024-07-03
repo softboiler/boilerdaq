@@ -17,7 +17,7 @@ paths:
   plot_config: data/plotting
   mpl_base: data/plotting/base.mplstyle
   mpl_hide_title: data/plotting/hide_title.mplstyle
-  model: data/model.dillpickle
+  models: data/models
   sensors_path: data/config/1_sensors.csv
   scaled_params_path: data/config/2_scaled_params.csv
   flux_params_path: data/config/3_flux_params.csv

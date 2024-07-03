@@ -3,4 +3,5 @@
 !*.dvcignore
 !*.dvc
 !config
+!models
 !plotting

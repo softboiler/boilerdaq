@@ -436,7 +436,7 @@ class FitResult(Result):
         name: str,
         unit: str,
         fit: Fit,
-        model: Path,
+        models: Path,
         results_to_fit: list[Result],
         rod: Rod = "R",
     ):
@@ -446,7 +446,7 @@ class FitResult(Result):
         self.fit = fit
         self.source = Param(name, unit)  # type: ignore
         self.results_to_fit = results_to_fit
-        self.model, _ = get_model(model)
+        self.model, _ = get_model(models)
         self.x = GEOMETRY.rods[rod]
 
     def update(self):

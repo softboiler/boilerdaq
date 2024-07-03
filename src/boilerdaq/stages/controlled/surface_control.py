@@ -29,7 +29,7 @@ def looper(surface_temp_setpoint: float = SURFACE_TEMP_SETPOINT) -> Looper:  # n
         name=SURFACE_TEMP,
         unit=SURFACE_TEMP_UNIT,
         fit=PARAMS.fit,
-        model=PARAMS.paths.model,
+        models=PARAMS.paths.models,
         results_to_fit=[
             get_result(name=result, results=CONTROLLED_RESULTS)
             for result in "T1cal T2cal T3cal T4cal T5cal".split()

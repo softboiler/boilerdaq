@@ -4,7 +4,7 @@ _src_path: gh:blakeNaccarato/copier-python
 actions_runner: ubuntu-22.04
 active: true
 github_repo_name: boilerdaq
-project_description: Data processing pipeline for a nucleate pool boiling apparatus.
+project_description: Data processing pipeline for a nucleate pool boiling apparatus
 project_email: blake.naccarato@gmail.com
 project_name: boilerdaq
 project_owner_github_username: softboiler

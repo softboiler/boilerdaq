@@ -96,7 +96,7 @@ def query_gh_issue(
 ) -> dict[str, Any]:
     """Query GitHub for an issue."""
     result = run(
-        [  # noqa: S603, S607
+        [  # noqa: S607, S603
             "gh",
             "api",
             "graphql",

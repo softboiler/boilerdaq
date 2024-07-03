@@ -1,4 +1,4 @@
-# `boilerdaq`
+# boilerdaq
 
 [![All Contributors](https://img.shields.io/github/all-contributors/softboiler/boilerdaq?color=ee8449&style=flat-square)](../README.md#contributors)
 

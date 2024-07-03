@@ -4,8 +4,8 @@ build-backend = "flit_core.buildapi"
 
 [project]
 name = "boilerdaq"
-version = "0.4.0"
-description = "Data processing pipeline for a nucleate pool boiling apparatus"
+version = "2024.1.1"
+description = "Data acquisition for a nucleate pool boiling experimental apparatus"
 readme = "README.md"
 license = { file = "LICENSE" }
 requires-python = ">=3.11"

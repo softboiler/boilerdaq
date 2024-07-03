@@ -2,7 +2,7 @@
 
 [![All Contributors](https://img.shields.io/github/all-contributors/softboiler/boilerdaq?color=ee8449&style=flat-square)](../README.md#contributors)
 
-Data processing pipeline for a nucleate pool boiling apparatus.
+Data acquisition for a nucleate pool boiling experimental apparatus.
 
 ## Installation on WSL
 

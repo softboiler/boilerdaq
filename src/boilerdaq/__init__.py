@@ -1,4 +1,4 @@
-"""Data processing pipeline for a nucleate pool boiling apparatus."""
+"""Data acquisition for a nucleate pool boiling experimental apparatus."""
 
 from pathlib import Path
 

@@ -6,7 +6,9 @@ from re import finditer
 
 from cyclopts import App
 
+from boilerdaq_tools import add_changes
 from boilerdaq_tools.sync import check_compilation, escape
+from boilerdaq_tools.types import ChangeType
 
 APP = App(help_format="markdown")
 """CLI."""
@@ -20,6 +22,12 @@ def main():  # noqa: D103
 def compile(high: bool = False):  # noqa: A001
     """Compile."""
     log(check_compilation(high))
+
+
+@APP.command
+def add_change(change: ChangeType = "change"):
+    """Add change."""
+    add_changes.add_change(change)
 
 
 @APP.command

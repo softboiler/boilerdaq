@@ -9,15 +9,24 @@ description = "Data processing pipeline for a nucleate pool boiling apparatus."
 readme = "README.md"
 license = { file = "LICENSE" }
 requires-python = ">=3.11"
-classifiers = ["License :: OSI Approved :: MIT License"]
+classifiers = [
+    "License :: OSI Approved :: MIT License",
+    # ? Also in CI (https://github.com/actions/python-versions/releases)
+    # "Programming Language :: Python :: 3.7",  # ? EOL (https://devguide.python.org/versions/)
+    # "Programming Language :: Python :: 3.8",  # ? EOL soon (https://devguide.python.org/versions/)
+    # "Programming Language :: Python :: 3.9",  # ? `sphinx-autobuild` broken even when pointing to fix (https://github.com/sphinx-doc/sphinx-autobuild/issues/166)
+    # "Programming Language :: Python :: 3.10",  # ? `boilercore` uses some 3.11-specific features
+    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
+    # "Programming Language :: Python :: 3.13",  # ? (via myst-nb) https://github.com/crate-py/rpds/issues/72
+    # "Programming Language :: Python :: 3.14",  # ? Unreleased (https://peps.python.org/pep-0745)
+]
 dependencies = [
     "libusb>=1.0.27",
     "mcculw>=1.0.0",
     "pandas[hdf5,performance]>=2.2.0",
     "pydantic>=2.6.1",
     "pyqtgraph>=0.13.3",
-    # ? Wheels are missing on Linux for PySide6, `uv` doesn't like it
-    "pyside6==6.7.1 ; sys_platform != 'linux'",
     "pyvisa>=1.14.1",
     "pyusb>=1.2.1",
     "pyvisa-py>=0.7.2",
@@ -43,7 +52,7 @@ ignore_errors = true
 [tool.fawltydeps]
 deps = ["pyproject.toml"]
 code = ["src"]
-ignore_undeclared = ["boilercore"]
+ignore_undeclared = ["boilercore", "PySide6"]
 ignore_unused = ["libusb", "pyusb", "pyvisa-py", "pyvisa-sim", "zeroconf"]
 
 [tool.pytest.ini_options]
@@ -64,7 +73,7 @@ directory = "changelog"
 filename = "CHANGELOG.md"
 template = "changelog/towncrier_template.md.jinja"
 title_format = ""
-issue_format = "[#{issue}](https://github.com/softboiler/boilerdaq/{issue})"
+issue_format = "[#{issue}](https://github.com/softboiler/boilerdaq/issues/{issue})"
 underlines = ["", "", ""]
 [[tool.towncrier.section]]
 path = ""

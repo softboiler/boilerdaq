@@ -1,5 +1,5 @@
-# ? Wheels are missing on Linux for PySide6, `uv` doesn't like it
-pyside6 == 6.7.1 ; sys_platform == 'linux'
-pyside6-addons == 6.7.1 ; sys_platform == 'linux'
-pyside6-essentials==6.7.1 ; sys_platform == 'linux'
-shiboken6==6.7.1 ; sys_platform == 'linux'
+# ? Missing wheels
+pyside6==6.7.2 ; sys_platform == 'linux'
+pyside6-addons==6.7.2 ; sys_platform == 'linux'
+pyside6-essentials==6.7.2 ; sys_platform == 'linux'
+shiboken6==6.7.2 ; sys_platform == 'linux'

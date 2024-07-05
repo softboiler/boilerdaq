@@ -12,6 +12,8 @@ dependencies = [
     "pytest-custom-exit-code==0.3.0",
     "pytest-github-actions-annotate-failures==0.2.0",
     "pytest==8.2.2",
+    # ? Other testing
+    "boilercore>=2024.1.3",
 ]
 
 [tool.fawltydeps]
@@ -21,7 +23,6 @@ ignore_undeclared = [
     "boilerdaq_docs",
     "boilerdaq_tests",
     "boilerdaq_tools",
-    "boilercore",
     "boilerdaq",
     "PySide6",
 ]
@@ -33,3 +34,5 @@ ignore_unused = [
     "pytest",
     "pytest-qt",
 ]
+[tool.fawltydeps.custom_mapping]
+boilercore = ["boilercore"]

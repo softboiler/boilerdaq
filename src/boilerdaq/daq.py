@@ -7,7 +7,7 @@ from datetime import datetime, timedelta
 from pathlib import Path
 from tempfile import NamedTemporaryFile
 from textwrap import dedent
-from typing import Any, NamedTuple, Self
+from typing import TYPE_CHECKING, Any, NamedTuple, Self
 from warnings import warn
 
 from boilercore.fits import fit_from_params
@@ -23,11 +23,16 @@ from pyqtgraph import (
     mkQApp,
     setConfigOptions,
 )
-from PySide6.QtCore import Qt, QTimer, Signal
-from PySide6.QtGui import QKeyEvent
 from pyvisa import ResourceManager, VisaIOError
 from pyvisa.resources import MessageBasedResource
 from simple_pid import PID
+
+if TYPE_CHECKING:
+    from PySide6.QtCore import Qt, QTimer, Signal
+    from PySide6.QtGui import QKeyEvent
+else:
+    from pyqtgraph.Qt.QtCore import Qt, QTimer, Signal
+    from pyqtgraph.Qt.QtGui import QKeyEvent
 
 try:
     try:

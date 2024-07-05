@@ -8,5 +8,6 @@ authors:
     given-names: "Kwang"
     orcid: "https://orcid.org/0000-0003-2134-4964"
 title: "boilerdaq"
+doi: "10.5281/zenodo.12668833"
 date-released: 2024-07-03
 url: "https://github.com/softboiler/boilerdaq"

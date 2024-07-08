@@ -6,7 +6,7 @@ Data acquisition for a nucleate pool boiling experimental apparatus.
 
 ## Installation on WSL
 
-Run [](../scripts/Initialize-Linux.ps1).
+Run [](../scripts/Initialize-UldaqLinuxMacOS.ps1).
 
 :::{toctree}
 :hidden:

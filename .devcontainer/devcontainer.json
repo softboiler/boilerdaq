@@ -17,7 +17,10 @@
     "ghcr.io/joshuanianji/devcontainer-features/gcloud-cli-persistence:1.0.3": {}
   },
   "onCreateCommand": {
-    "install-pyqtgraph-deps": ["pwsh", "scripts/Initialize-Linux.ps1"],
+    "install-pyqtgraph-deps": [
+      "pwsh",
+      "scripts/Initialize-UldaqLinuxMacOS.ps1"
+    ],
     "set-up-profile": [
       "pwsh",
       "-Command",

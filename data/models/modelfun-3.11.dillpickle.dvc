@@ -1,12 +1,12 @@
-md5: a2d8f534e958e3213da9e560e3e6697e
+md5: 7952f6be4194ca8011e1ad9c61d2785f
 frozen: true
 deps:
 - path: data/models/modelfun-3.11.dillpickle
   repo:
-    url: ../boilercore
-    rev_lock: 7a776c8e3b35f8077056922e5f0138ece71a9028
+    url: submodules/boilercore
+    rev_lock: 780ca1358fe8a1959b6602fd603327d37baf57b7
 outs:
-- md5: 79f36b9dd6d19be02ab360ae7a8d801c
-  size: 63301
+- md5: 5496feba82331752a39059cb49cae48a
+  size: 1293
   hash: md5
   path: modelfun-3.11.dillpickle

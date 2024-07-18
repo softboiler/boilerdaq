@@ -10,9 +10,7 @@ from textwrap import dedent
 from typing import TYPE_CHECKING, Any, NamedTuple, Self
 from warnings import warn
 
-from boilercore.fits import fit_from_params
-from boilercore.modelfun import get_model
-from boilercore.models.fit import Fit
+from boilercore.fits import Fit, fit_from_params
 from boilercore.models.geometry import GEOMETRY
 from boilercore.types import Rod
 from pyqtgraph import (
@@ -451,7 +449,7 @@ class FitResult(Result):
         self.fit = fit
         self.source = Param(name, unit)  # type: ignore
         self.results_to_fit = results_to_fit
-        self.model, _ = get_model(models)
+        self.model, _ = self.fit.get_models(models)
         self.x = GEOMETRY.rods[rod]
 
     def update(self):

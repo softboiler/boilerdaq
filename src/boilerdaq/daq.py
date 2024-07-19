@@ -6,6 +6,7 @@ from csv import DictReader, DictWriter
 from datetime import datetime, timedelta
 from math import isnan
 from pathlib import Path
+from statistics import mean
 from tempfile import NamedTemporaryFile
 from textwrap import dedent
 from typing import TYPE_CHECKING, Any, NamedTuple, Self
@@ -621,6 +622,7 @@ class Controller:
         gains: tuple[float, float, float],
         output_limits: tuple[float, float],
         backup_feedback_result: Result | None = None,
+        periods: int = 1,
     ):
         self.control_result: PowerResult = control_result  # type: ignore
         self.feedback_result: Result = feedback_result
@@ -635,6 +637,7 @@ class Controller:
         self.feedback_value = (
             self.feedback_result.value or self.backup_feedback_result.value
         )
+        self.periods = periods
 
     def start(self):
         """Start the controller."""
@@ -646,11 +649,19 @@ class Controller:
 
     def update(self):
         """Update the PID controller."""
-        self.feedback_value = (
-            self.backup_feedback_result.value
-            if isnan(self.feedback_result.value)
-            else self.backup_feedback_result.value
-        )
+        if self.periods == 1:
+            self.feedback_value = (
+                self.backup_feedback_result.value
+                if isnan(self.feedback_result.value)
+                else self.feedback_result.value
+            )
+        else:
+            feedback_result = mean(list(self.feedback_result.history)[-self.periods :])
+            self.feedback_value = (
+                mean(list(self.backup_feedback_result.history)[-self.periods :])
+                if isnan(feedback_result)
+                else feedback_result
+            )
         control_value = self.pid(self.feedback_value)
         self.control_result.write(control_value)
 

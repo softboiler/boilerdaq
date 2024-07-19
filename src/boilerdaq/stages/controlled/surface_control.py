@@ -41,6 +41,7 @@ def looper(surface_temp_setpoint: float = SURFACE_TEMP_SETPOINT) -> Looper:  # n
         control_result=get_result(name=CONTROL_SENSOR_NAME, results=results),
         feedback_result=fit_result,
         backup_feedback_result=get_result(name=BACKUP_TEMP, results=results),
+        periods=5,
         setpoint=surface_temp_setpoint,
         gains=PID_GAINS,
         output_limits=OUTPUT_LIMITS,

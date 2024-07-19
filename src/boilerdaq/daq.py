@@ -4,6 +4,7 @@ from collections import UserDict, deque
 from contextlib import suppress
 from csv import DictReader, DictWriter
 from datetime import datetime, timedelta
+from math import isnan
 from pathlib import Path
 from tempfile import NamedTemporaryFile
 from textwrap import dedent
@@ -595,6 +596,8 @@ class Controller:
         The result to control based on feedback.
     feedback_result: Result
         The result to get feedback from.
+    backup_feedback_result: Result
+        If the primary feedback result is `nan` (e.g. failure to fit), use this one.
     setpoint: float
         The value that the feedback should be coerced to through PID control.
     gains: List[float]
@@ -617,9 +620,11 @@ class Controller:
         setpoint: float,
         gains: tuple[float, float, float],
         output_limits: tuple[float, float],
+        backup_feedback_result: Result | None = None,
     ):
         self.control_result: PowerResult = control_result  # type: ignore
         self.feedback_result: Result = feedback_result
+        self.backup_feedback_result: Result = backup_feedback_result or feedback_result
         self.pid = PID(
             *gains,
             setpoint=setpoint,
@@ -627,7 +632,9 @@ class Controller:
             output_limits=output_limits,
             starting_output=self.control_result.value,
         )
-        self.feedback_value = self.feedback_result.value
+        self.feedback_value = (
+            self.feedback_result.value or self.backup_feedback_result.value
+        )
 
     def start(self):
         """Start the controller."""
@@ -639,7 +646,11 @@ class Controller:
 
     def update(self):
         """Update the PID controller."""
-        self.feedback_value = self.feedback_result.value
+        self.feedback_value = (
+            self.backup_feedback_result.value
+            if isnan(self.feedback_result.value)
+            else self.backup_feedback_result.value
+        )
         control_value = self.pid(self.feedback_value)
         self.control_result.write(control_value)
 

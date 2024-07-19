@@ -17,6 +17,7 @@ from boilerdaq.stages.controlled import CONTROLLED_RESULTS
 SURFACE_TEMP_SETPOINT = 30
 PID_GAINS = (12, 0.08, 1)
 SURFACE_TEMP = "T_s"
+BACKUP_TEMP = "T5cal"
 SURFACE_TEMP_UNIT = "C"
 
 
@@ -39,6 +40,7 @@ def looper(surface_temp_setpoint: float = SURFACE_TEMP_SETPOINT) -> Looper:  # n
     controller = Controller(
         control_result=get_result(name=CONTROL_SENSOR_NAME, results=results),
         feedback_result=fit_result,
+        backup_feedback_result=get_result(name=BACKUP_TEMP, results=results),
         setpoint=surface_temp_setpoint,
         gains=PID_GAINS,
         output_limits=OUTPUT_LIMITS,

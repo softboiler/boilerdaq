@@ -21,11 +21,11 @@ BACKUP_TEMP = "T5cal"
 SURFACE_TEMP_UNIT = "C"
 
 
-def main(surface_temp_setpoint: float = SURFACE_TEMP_SETPOINT):  # noqa: D103
+def main(surface_temp_setpoint: float = SURFACE_TEMP_SETPOINT):
     looper(surface_temp_setpoint).start()
 
 
-def looper(surface_temp_setpoint: float = SURFACE_TEMP_SETPOINT) -> Looper:  # noqa: D103
+def looper(surface_temp_setpoint: float = SURFACE_TEMP_SETPOINT) -> Looper:
     fit_result = FitResult(
         name=SURFACE_TEMP,
         unit=SURFACE_TEMP_UNIT,
@@ -33,7 +33,7 @@ def looper(surface_temp_setpoint: float = SURFACE_TEMP_SETPOINT) -> Looper:  # n
         models=PARAMS.paths.models,
         results_to_fit=[
             get_result(name=result, results=CONTROLLED_RESULTS)
-            for result in "T1cal T2cal T3cal T4cal T5cal".split()
+            for result in ["T1cal", "T2cal", "T3cal", "T4cal", "T5cal"]
         ],
     )
     results: list[Result] = [*CONTROLLED_RESULTS, fit_result]

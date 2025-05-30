@@ -4,3 +4,6 @@
 [submodule "boilercore"]
 	path = submodules/boilercore
 	url = https://github.com/softboiler/boilercore.git
+[submodule "typings"]
+	path = typings
+	url = https://github.com/softboiler/python-type-stubs.git

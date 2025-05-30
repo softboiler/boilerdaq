@@ -11,7 +11,7 @@ from urllib.parse import urlparse
 
 from dulwich.repo import Repo
 
-from boilerdaq_tools.types import ChangeType
+from boilerdaq_dev.tools.types import ChangeType
 
 
 def add_change(typ: ChangeType = "change"):
@@ -20,9 +20,7 @@ def add_change(typ: ChangeType = "change"):
     change = get_change(owner, repo, issue)
     content = quote(f"{change.name}\n")
     run(
-        split(  # noqa: S603
-            f"""towncrier create --content {content} {change.id}.{typ}.md"""
-        ),
+        args=split(f"""towncrier create --content {content} {change.id}.{typ}.md"""),
         check=True,
     )
 
@@ -49,7 +47,7 @@ def get_issue_from_active_branch() -> Issue:
         .split("/")
     )
     (_, ref), _ = repository.refs.follow(b"HEAD")
-    issue = ref.decode("utf-8").split("/")[-1].split("=")[0].split("-")[0]
+    issue = int(ref.decode("utf-8").split("/")[-1].split("=")[0].split("-")[0])
     return Issue(owner, repo, issue)
 
 
@@ -96,7 +94,7 @@ def query_gh_issue(
 ) -> dict[str, Any]:
     """Query GitHub for an issue."""
     result = run(
-        [  # noqa: S607, S603
+        args=[
             "gh",
             "api",
             "graphql",

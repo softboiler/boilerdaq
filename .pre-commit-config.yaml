@@ -2,22 +2,17 @@ exclude: |
   (?x)^(
     \.copier-answers\.yml
     |changelog/towncrier_template\.md\.jinja
-    |lock.*\.json
-  $)
+  )$
 ci:
   skip:
     - "sync"
-    - "fawltydeps-src"
-    - "fawltydeps-docs"
-    - "fawltydeps-scripts"
-    - "fawltydeps-tests"
-    - "pyright"
+    - "fawltydeps"
+    - "fawltydeps-dev"
     - "pytest-fast-only"
-    - "synchronize-params"
   autoupdate_schedule: "quarterly"
 default_install_hook_types:
-  - pre-commit
-  - post-checkout # sync
+  - "pre-commit"
+  - "post-checkout" # sync
 repos:
   - repo: "meta"
     hooks:
@@ -34,52 +29,33 @@ repos:
         pass_filenames: false
         language: "system"
         entry: |
-          pwsh -Command ". scripts/Initialize-Shell.ps1; scripts/Sync-Py.ps1"
-      - id: "fawltydeps-src"
-        name: "fawltydeps-src"
+          pwsh -Command "./j.ps1 uv-sync"
+      - id: "fawltydeps"
+        name: "fawltydeps"
         pass_filenames: false
         language: "system"
-        entry: |
-          pwsh -Command ". scripts/Initialize-Shell.ps1; fawltydeps --config-file pyproject.toml"
+        entry: "pwsh -NonInteractive -NoProfile -Command './j.ps1 fawltydeps'"
         files: |
           (?x)^(
-            pyproject.toml
-            |src/.*$
+            src/.*
+            |pyproject\.toml
           )$
-      - id: "fawltydeps-docs"
-        name: "fawltydeps-docs"
+      - id: "fawltydeps-dev"
+        name: "fawltydeps-dev"
         pass_filenames: false
         language: "system"
-        files: "^docs/.*$"
-        entry: |
-          pwsh -Command ". scripts/Initialize-Shell.ps1; fawltydeps --config-file docs/pyproject.toml"
-      - id: "fawltydeps-scripts"
-        name: "fawltydeps-scripts"
-        pass_filenames: false
-        language: "system"
-        files: "^scripts/.*$"
-        entry: |
-          pwsh -Command ". scripts/Initialize-Shell.ps1; fawltydeps --config-file scripts/pyproject.toml"
-      - id: "fawltydeps-tests"
-        name: "fawltydeps-tests"
-        pass_filenames: false
-        language: "system"
-        files: "^tests/.*$"
-        entry: |
-          pwsh -Command ". scripts/Initialize-Shell.ps1; fawltydeps --config-file tests/pyproject.toml"
-      - id: "pyright"
-        name: "pyright"
-        pass_filenames: false
-        language: "system"
-        entry: |
-          pwsh -Command ". scripts/Initialize-Shell.ps1; pyright"
-        types_or: ["python", "pyi"]
+        entry: "pwsh -NonInteractive -NoProfile -Command './j.ps1 fawltydeps --config-file packages/_dev/pyproject.toml'"
+        files: |
+          (?x)^(
+            packages/_dev/.*
+            |docs/.*
+            |tests/.*
+          )$
       - id: "pytest-fast-only"
         name: "pytest-fast-only"
         pass_filenames: false
         language: "system"
-        entry: |
-          pwsh -Command ". scripts/Initialize-Shell.ps1; pytest -m 'not slow'"
+        entry: 'pwsh -NonInteractive -NoProfile -Command ''./j.ps1 pytest -m `"not slow`"'''
         files: |
           (?x)^(
             .*/pyproject\.toml
@@ -99,9 +75,16 @@ repos:
             |params.yaml
           )$
   - repo: "https://github.com/pre-commit/pre-commit-hooks"
-    rev: "v4.6.0"
+    rev: "v5.0.0"
     hooks:
+      - id: "check-illegal-windows-names"
+      - id: "check-merge-conflict"
+      - id: "destroyed-symlinks"
+      - id: "detect-private-key"
       - id: "end-of-file-fixer"
+      - id: "mixed-line-ending"
+      - id: "trailing-whitespace"
+        args: [--markdown-linebreak-ext=md]
       - id: "trailing-whitespace"
   - repo: "https://github.com/iterative/dvc"
     rev: "3.51.2"
@@ -131,8 +114,16 @@ repos:
             |src/.*
             |tests/.*
           )$
+  - repo: "https://github.com/rbubley/mirrors-prettier"
+    rev: "v3.5.1"
+    hooks:
+      - id: prettier
+  - repo: https://github.com/ComPWA/taplo-pre-commit
+    rev: v0.9.3
+    hooks:
+      - id: taplo-format
   - repo: "https://github.com/charliermarsh/ruff-pre-commit"
-    rev: "v0.4.10"
+    rev: "v0.9.3"
     hooks:
       - id: "ruff"
         args: ["--extend-fixable", "PIE790"]

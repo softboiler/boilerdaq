@@ -1,7 +1,9 @@
 {
   "recommendations": [
     "aaron-bond.better-comments",
+    "bierner.markdown-mermaid",
     "bierner.markdown-preview-github-styles",
+    "charliermarsh.ruff",
     "davidanson.vscode-markdownlint",
     "donjayamanne.githistory",
     "eamodio.gitlens",
@@ -11,10 +13,13 @@
     "GitHub.remotehub",
     "github.vscode-github-actions",
     "github.vscode-pull-request-github",
+    "iterative.dvc",
     "ms-azuretools.vscode-docker",
+    "ms-python.debugpy",
+    "ms-python.python",
     "ms-toolsai.jupyter",
-    "ms-vscode.powershell",
     "ms-vscode-remote.remote-containers",
+    "ms-vscode.powershell",
     "njpwerner.autodocstring",
     "redhat.vscode-yaml",
     "rodolphebarbanneau.python-docstring-highlighter",
@@ -23,6 +28,7 @@
     "stkb.rewrap",
     "TakumiI.markdowntable",
     "tamasfe.even-better-toml",
+    "yy0931.mplstyle",
     "yzhang.markdown-all-in-one"
   ]
 }

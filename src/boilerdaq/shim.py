@@ -47,7 +47,7 @@ def _check_err(errcode):
         raise ULError(errcode)
 
 
-class ULError(Exception):  # noqa: D101
+class ULError(Exception):
     def __init__(self, errorcode):
         super().__init__()
         self.errorcode = errorcode
@@ -83,7 +83,7 @@ def get_err_msg(error_code):
     return msg.value.decode("utf-8")
 
 
-class TInOptions(IntFlag):  # noqa: D101
+class TInOptions(IntFlag):
     FILTER = 0x0000  # Filter thermocouple inputs
     NOFILTER = 0x0400  # Disable filtering for thermocouple
 

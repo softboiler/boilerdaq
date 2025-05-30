@@ -13,7 +13,6 @@ ignore:
   # Extras
   - ".*"
   # Project-specific
-  - "examples"
   - "src/boilerdaq/shim.py"
 
 rule_settings:

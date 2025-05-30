@@ -1,6 +1,6 @@
 {
   "name": "devcontainer",
-  "image": "mcr.microsoft.com/devcontainers/base:1.1.2-ubuntu-22.04",
+  "image": "mcr.microsoft.com/devcontainers/base:1.1.2-ubuntu-24.04",
   "features": {
     "ghcr.io/devcontainers/features/powershell:1.4.0": {
       "version": "7.4.1"
@@ -21,44 +21,24 @@
     "set-up-profile": [
       "pwsh",
       "-Command",
-      "New-Item -Force $PROFILE && Copy-Item scripts/Initialize-Shell.ps1 $PROFILE"
-    ],
-    "gcloud-login-for-dvc": [
-      "pwsh",
-      "-Command",
-      "if (!(Test-Path /.codespaces)) { gcloud auth application-default login }"
+      "New-Item -Force $PROFILE && Copy-Item dev.ps1 $PROFILE"
     ]
   },
   "postCreateCommand": {
     "sync-py-in-codespace": [
       "pwsh",
       "-Command",
-      "if (Test-Path /.codespaces) { scripts/Sync-Py.ps1 }"
+      "if (Test-Path /.codespaces) { ./Invoke-Uv.ps1 -Sync -Update }"
     ]
   },
-  "postAttachCommand": {
-    "sync-py": ["pwsh", "scripts/Sync-Py.ps1"]
-  },
-  "containerEnv": {
-    "DEVCONTAINER": "1",
-    "PIP_DISABLE_PIP_VERSION_CHECK": "1",
-    "PYDEVD_DISABLE_FILE_VALIDATION": "1",
-    "PYTHONIOENCODING": "utf-8:strict",
-    "PYTHONUTF8": "1",
-    "PYTHONWARNDEFAULTENCODING": "1",
-    "PYTHONWARNINGS": "ignore"
-  },
+  "postAttachCommand": { "sync-py": ["./Invoke-Uv.ps1 -Sync -Update"] },
+  "containerEnv": { "DEVCONTAINER": "1" },
   "customizations": {
     "vscode": {
       "settings": {
         "notebook.experimental.remoteSave": true,
         "python.experiments.enabled": true,
-        "python.experiments.optInto": [
-          "pythonDiscoveryUsingWorkers",
-          "pythonREPLSmartSend",
-          "pythonTestAdapter",
-          "pythonTerminalEnvVarActivation"
-        ],
+        "python.experiments.optInto": ["pythonTestAdapter"],
         // ? Not picked up in workspace settings in Codespaces
         "[python]": {
           "editor.defaultFormatter": "charliermarsh.ruff",

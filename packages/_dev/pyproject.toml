@@ -1,0 +1,45 @@
+[build-system]
+requires = ["uv-build==0.7.2"]
+build-backend = "uv_build"
+
+[project]
+name = "boilerdaq-dev"
+version = "0.0.0"
+requires-python = ">=3.11"
+dependencies = [
+  "cappa>=0.26.4",
+  "cyclopts>=3.14.2",
+  "dulwich>=0.22.1",
+  "pydantic-settings>=2.5.2",
+  "python-dotenv>=1.0.1",
+  # ? Docs
+  "docutils>=0.21.2",
+  "myst-parser>=3.0.1",
+  "numpydoc>=1.7.0",
+  "ruamel-yaml>=0.18.6",
+  "sphinx>=7.3.7",
+  # ? Direct usage of pytest
+  "pytest>=8.3.4",
+  # ? Direct usage of PySide6
+  "pyside6==6.7.2 ; sys_platform != 'linux'",
+  "pyside6==6.7.2 ; sys_platform == 'linux'",
+  "pyside6-addons==6.7.2 ; sys_platform == 'linux'",
+  "pyside6-essentials==6.7.2 ; sys_platform == 'linux'",
+  "shiboken6==6.7.2 ; sys_platform == 'linux'",
+]
+[project.scripts]
+boilerdaq-dev = "boilerdaq_dev.__main__:main"
+
+[tool.fawltydeps]
+deps = ["packages/_dev/pyproject.toml"]
+code = ["packages/_dev", "docs", "tests"]
+ignore_undeclared = [
+  "boilercore",
+  "boilerdaq_dev",
+  "boilerdaq_pipeline",
+  "boilerdaq",
+  "toml",
+]
+ignore_unused = ["shiboken6"]
+[tool.fawltydeps.custom_mapping]
+ruamel-yaml = ["ruamel"]

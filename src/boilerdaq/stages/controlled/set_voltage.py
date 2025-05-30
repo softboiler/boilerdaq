@@ -9,7 +9,7 @@ CURRENT_LIMIT = 4
 VOLTAGE = 30
 
 
-def main():  # noqa: D103
+def main():
     result = get_result("V", CONTROLLED_RESULTS)
     result.open()  # type: ignore
     instrument: MessageBasedResource = result.instrument  # type: ignore

@@ -1,25 +1,23 @@
 paths:
-  project: .
-  data: data
   benchmarks: data/benchmarks
   results: data/results
   notes: data/notes
-  package: src/boilerdaq
-  stages:
-    calibrate: src/boilerdaq/stages/calibrate.py
-    run: src/boilerdaq/stages/run.py
-    test: src/boilerdaq/stages/test.py
-    controlled_benchmark: src/boilerdaq/stages/controlled/benchmark.py
-    controlled_control: src/boilerdaq/stages/controlled/control.py
-    controlled_set_voltage: src/boilerdaq/stages/controlled/set_voltage.py
-    controlled_surface_control: src/boilerdaq/stages/controlled/surface_control.py
   config: data/config
-  plot_config: data/plotting
-  mpl_base: data/plotting/base.mplstyle
-  mpl_hide_title: data/plotting/hide_title.mplstyle
-  models: data/models
   sensors_path: data/config/1_sensors.csv
   scaled_params_path: data/config/2_scaled_params.csv
   flux_params_path: data/config/3_flux_params.csv
   extrap_params_path: data/config/4_extrap_params.csv
   power_supplies_path: data/config/0_power_supplies.csv
+  plot_config: data/plotting
+  mpl_base: data/plotting/base.mplstyle
+  mpl_hide_title: data/plotting/hide_title.mplstyle
+  models: data/models
+package_paths:
+  stages:
+    calibrate: src/boilerdaq/stages/calibrate.py
+    controlled_benchmark: src/boilerdaq/stages/controlled/benchmark.py
+    controlled_control: src/boilerdaq/stages/controlled/control.py
+    controlled_set_voltage: src/boilerdaq/stages/controlled/set_voltage.py
+    controlled_surface_control: src/boilerdaq/stages/controlled/surface_control.py
+    run: src/boilerdaq/stages/run.py
+    test: src/boilerdaq/stages/test.py

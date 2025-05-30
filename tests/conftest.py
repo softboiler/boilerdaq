@@ -5,9 +5,9 @@ from pathlib import Path
 from typing import Any
 
 import pytest
-from boilercore import WarningFilter, filter_certain_warnings
 from boilercore.paths import get_module_rel, walk_modules
 from boilercore.testing import get_session_path
+from boilercore.warnings import WarningFilter, filter_boiler_warnings
 from PySide6.QtCore import Qt, QTimer
 from PySide6.QtTest import QTest
 
@@ -47,15 +47,14 @@ def _disable_power_supply():
 @pytest.fixture(autouse=True)
 def _filter_certain_warnings():
     """Filter certain warnings."""
-    filter_certain_warnings(
-        package="boilerdaq",
+    filter_boiler_warnings(
         other_warnings=[
             WarningFilter(category=ResourceWarning, message=msg)
             for msg in (
                 r"unclosed event loop <.+EventLoop running=False closed=False debug=False>",
                 r"unclosed <socket\.socket fd=\d+, family=\d+, type=\d+, proto=\d+.*>",
             )
-        ],
+        ]
     )
 
 

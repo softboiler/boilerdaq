@@ -833,7 +833,7 @@ class Plotter:
         col: int = 0
             The window column to place an additional plot.
         """
-        plot = self.window.addPlot(row, col)
+        plot = self.window.addPlot(row, col)  # pyright: ignore[reportAttributeAccessIssue]
         plot.addLegend()
         plot.setAxisItems({"bottom": DateAxisItem()})
         plot.setLabel("left", units=results[0].source.unit)

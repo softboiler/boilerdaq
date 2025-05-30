@@ -68,7 +68,7 @@ repos:
       - id: "synchronize-params"
         name: "synchronize-params"
         language: "system"
-        entry: "pwsh -Command python -m boilerdaq.models.params"
+        entry: "pwsh -Command ./uv run -m boilerdaq.models.params"
         files: |
           (?x)^(
             src/boilerdaq/models/.*
